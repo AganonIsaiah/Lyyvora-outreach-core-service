@@ -1,0 +1,38 @@
+clinic_name,specialty,city,province,phone,website,email,notes
+"Dr. Sarah Chen's Clinic",Family Medicine,Toronto,ON,416-555-0123,www.drchen.ca,info@drchen.ca,Accepts new patients
+"Dr. Sarah Chen - Family Practice",Family Medicine,Toronto,Ontario,(416) 555-0123,http://www.drchen.ca,INFO@DRCHEN.CA,
+"Chen, Dr. Sarah (Family Med)",family medicine,toronto,ON,4165550123,drchen.ca,,Member since 2015
+"Riverside Medical Centre",Pediatrics,Ottawa,ON,613.555.9876,http://riversidemedical.com,contact@riversidemedical.com,Booth #234
+Riverside Medical Center,Paediatrics,Ottawa,Ontario,613-555-9876,www.riversidemedical.com,,Walk-ins welcome
+"Thompson Chiropractic Clinic",Chiropractic,Vancouver,BC,604-555-4321,https://thompsonchiro.ca,dr.thompson@thompsonchiro.ca,
+"Thompson's Chiropractic",Chiropractor,Vancouver,British Columbia,6045554321,thompsonchiro.ca,DrThompson@thompsonchiro.ca,
+"Healthy Smiles Dental",Dentistry,Calgary,AB,,healthysmiles.dental,appointments@healthysmiles.dental,PERMANENTLY CLOSED
+"HealthySmiles Dental Clinic",Dental,Calgary,Alberta,403-555-7890,http://www.healthysmiles.dental,info@healthysmiles.dental,
+"North York Physiotherapy",Physiotherapy,North York,ON,416-555-3344,www.nyphysio.com,contact@nyphysio.com,
+"North York Physio",Physical Therapy,North York,Ontario,(416)555-3344,nyphysio.com,,Parking available
+"Martinez Dermatology Clinic",Dermatology,Montreal,QC,514-555-6677,https://martinez-derm.ca,dr.martinez@martinez-derm.ca,
+"Dr. Martinez Skin Clinic",Dermatology,Montréal,Quebec,514 555 6677,martinez-derm.ca,info@martinez-derm.ca,
+"Westside Mental Health Services",Psychiatry,Victoria,BC,250-555-1122,www.westsidemh.com,,Telehealth available
+"West Side Mental Health",Psychiatric Care,Victoria,BC,2505551122,http://westsidemh.com,intake@westsidemh.com,
+"Oakville Sports Medicine",Sports Med,Oakville,ON,905-555-8899,oakvillesportsmedicine.ca,info@oakvillesportsmedicine.ca,
+"Oakville Sports Medicine Clinic",Sports Medicine,Oakville,Ontario,905.555.8899,www.oakvillesportsmedicine.ca,,
+"Summit Orthopedic Centre",Orthopedics,Edmonton,AB,780-555-2233,summit-ortho.com,referrals@summit-ortho.com,
+"Summit Orthopaedic Center",Orthopaedics,Edmonton,Alberta,7805552233,https://www.summit-ortho.com,contact@summit-ortho.com,New location 2024
+"Lakeview Optometry",Optometry,Mississauga,ON,CALL FOR APPT,lakevieweyes.ca,appointments@lakevieweyes.ca,
+"Lake View Eye Care",Optometry,Mississauga,Ontario,905-555-4455,www.lakevieweyes.ca,,
+"Halifax Women's Health Collective",Obstetrics & Gynecology,Halifax,NS,902-555-3366,halifaxwomenshealth.ca,info@halifaxwomenshealth.ca,
+"Halifax Women's Health",OBGYN,Halifax,Nova Scotia,902.555.3366,https://halifaxwomenshealth.ca,,
+"Burnaby Naturopathic Clinic",Naturopathy,Burnaby,BC,604-555-7788,,dr.lee@burnaby-naturo.com,
+"Dr. Lee's Naturopathic Practice",Naturopathic Medicine,Burnaby,British Columbia,604-555-7788,burnaby-naturo.com,DR.LEE@BURNABY-NATURO.COM,
+"Kingston Cardiology Associates",Cardiology,Kingston,ON,613-555-9900,kingstonheart.ca,referrals@kingstonheart.ca,
+"Kingston Cardiology",Cardiac Care,Kingston,Ontario,6135559900,www.kingstonheart.ca,info@kingstonheart.ca,
+"Winnipeg Allergy & Asthma Centre",Allergy/Immunology,Winnipeg,MB,204-555-1133,winnipeg-allergy.com,bookings@winnipeg-allergy.com,
+"Wpg Allergy Center",Allergist,Winnipeg,Manitoba,204.555.1133,www.winnipeg-allergy.com,,
+"St. John's Foot Clinic",Podiatry,St. John's,NL,709-555-6644,stjohnsfootclinic.ca,foot-care@stjohnsfootclinic.ca,
+"St Johns Podiatry",Podiatric Medicine,St. John's,Newfoundland and Labrador,7095566644,http://stjohnsfootclinic.ca,,
+"",Acupuncture,Saskatoon,SK,306-555-8877,www.saskatoon-acupuncture.ca,hello@saskatoon-acupuncture.ca,
+"Saskatoon Acupuncture & TCM",Traditional Chinese Medicine,Saskatoon,Saskatchewan,3065558877,saskatoon-acupuncture.ca,info@saskatoon-acupuncture.ca,Herbs available
+"invalid-email-test@",Nutrition,Regina,SK,306-555-2211,regina-nutrition.ca,invalid-email-test@,TEST RECORD
+"Central Toronto Wellness",Multiple,Toronto,ON,416-555-9999,WEBSITE UNDER CONSTRUCTION,wellness@central-to.ca,
+"Dr. Patel & Associates",Internal Medicine,Brampton,ON,905-555-3322,patel-internalmedicine.ca,dr.patel@patel-internalmedicine.ca,
+"Patel Internal Medicine",Internal Med,Brampton,Ontario,(905)555-3322,www.patel-internalmedicine.ca,,Masks required
