@@ -151,11 +151,6 @@ def main():
     df["website"] = df["website"].apply(clean_website)
     df["email"] = df["email"].apply(clean_email)
 
-    # Remove missing essential fields
-    before = len(df)
-    df = df.dropna(subset=["clinic_name", "email"], how="all")
-    logging.info(f"Dropped {before - len(df)} rows missing clinic_name or email")
-
     # Deduplicate by name + city
     before = len(df)
     df = df.drop_duplicates(subset=["clinic_name", "city"], keep='first')
@@ -171,6 +166,11 @@ def main():
     df = df[df['email'].isna() | ~df.duplicated(subset=['email'], keep='first')]
     logging.info(f"Dropped {before - len(df)} duplicates by email")
 
+    # Remove missing essential fields
+    before = len(df)
+    df = df.dropna(subset=["clinic_name", "email"], how="any")
+    logging.info(f"Dropped {before - len(df)} rows missing clinic_name or email")
+    
     # Reorder
     df = df[["clinic_name", "specialty", "city", "province", "phone", "website", "email", "notes"]]
 
