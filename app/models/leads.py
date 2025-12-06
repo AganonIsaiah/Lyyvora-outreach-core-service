@@ -13,7 +13,4 @@ class Lead(Base):
     website = Column(String)
     email = Column(String)
     notes = Column(String)
-    source_url = Column(String)
-    discovered_at = Column(DateTime)
-    dedupe_hash = Column(String)
-    is_valid = Column(Boolean, default=True)
+    

@@ -29,3 +29,6 @@ data/clean/*
 # Mac / Linux system files
 .DS_Store
 *.bak
+
+# Logs
+logs/
