@@ -3,7 +3,7 @@
 
 ## To Open Notebook
 
-- [Click here to open `data_pipeline.ipynb` in GitHub](lead_data_pipeline/data_pipeline.ipynb)
+- Click here to open [`data_pipeline.ipynb`](lead_data_pipeline/data_pipeline.ipynb) in GitHub 
 
 ## Setup and run FastAPI Locally
 

@@ -8,9 +8,8 @@ import os
 # Paths
 # --------------------------------
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-INPUT_FILE = os.path.join(BASE_DIR, "data", "mock_data_sets", "mock_dirty_data.csv")
-# OUTPUT_FILE = os.path.join(BASE_DIR, "data", "mock_data_sets", "mock_cleaned_data.csv")
-DB_FILE = os.path.join(BASE_DIR, "data", "mock_data_sets", "cleaned_data.db")
+INPUT_FILE = os.path.join(BASE_DIR, "data", "mock_data_sets", "mock_lead_dirty_data.csv")
+DB_FILE = os.path.join(BASE_DIR, "data", "mock_data_sets", "mock_lead_cleaned_data.db")
 
 # --------------------------------
 # Logging Setup
@@ -23,6 +22,20 @@ logging.basicConfig(
 
 EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
 PHONE_REGEX = r"\d{10}"
+
+LEADS_TABLE_SCHEMA = """
+                   CREATE TABLE IF NOT EXISTS leads (
+                       id INTEGER PRIMARY KEY AUTOINCREMENT,
+                       clinic_name TEXT NOT NULL,
+                       specialty TEXT,
+                       city TEXT,
+                       province TEXT,
+                       phone TEXT UNIQUE,
+                       website TEXT,
+                       email TEXT UNIQUE NOT NULL,
+                       notes TEXT
+                   )
+                   """
 
 # --------------------------------
 # Cleaning functions
@@ -123,20 +136,7 @@ def save_to_sqlite(df: pd.DataFrame):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
-    cursor.execute("""
-                   CREATE TABLE IF NOT EXISTS leads (
-                       id INTEGER PRIMARY KEY AUTOINCREMENT,
-                       clinic_name TEXT NOT NULL,
-                       specialty TEXT,
-                       city TEXT,
-                       province TEXT,
-                       phone TEXT UNIQUE,
-                       website TEXT,
-                       email TEXT UNIQUE NOT NULL,
-                       notes TEXT
-                   )
-                   """)
-    
+    cursor.execute(LEADS_TABLE_SCHEMA)
     
     df.to_sql("leads", conn, if_exists="replace", index=False)
     conn.commit()
@@ -198,4 +198,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # print(clean_text("Dr. O'Brien's Clinic"))
