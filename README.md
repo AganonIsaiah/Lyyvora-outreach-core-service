@@ -1,8 +1,9 @@
 # Lyyvora-outreach-core-service
 - Backend service for Lyyvora.
 
-## Startup (with Makefile)
+## To Open Notebook
 
+- [Click here to open `data_pipeline.ipynb` in GitHub](lead_data_pipeline/data_pipeline.ipynb)
 
 ## Setup and run FastAPI Locally
 
@@ -24,5 +25,8 @@ visit http://127.0.0.1:8000/docs to see available API endpoints
 ## Libraries
 - FastAPI
 - SQLite3 
+- pytest
+- scikit-learn
+- pandas
 
 # Architecture Layout
