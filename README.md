@@ -17,6 +17,10 @@
 
 visit http://127.0.0.1:8000/docs to see available API endpoints
 
+### To Run Tests
+- pytest
+- pytest -vv (Runs tests and shows more details)
+
 ## Libraries
 - FastAPI
 - SQLite3 

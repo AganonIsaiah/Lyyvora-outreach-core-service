@@ -65,13 +65,24 @@ def clean_text(s: str):
     s = s.strip()
     words = s.split()
     
-    lower_words = {"and", "or", "the", "of", "in", "for"}
+    lower_words = {"and", "or", "the", "of", "in", "for", "as"}
     cleaned_words = []
     
     for i, word in enumerate(words):
         if "'" in word:
             parts = word.split("'")
-            word = "'".join([parts[0].capitalize()] + [p.lower() for p in parts[1:]])
+            cleaned_parts = []
+            
+            cleaned_parts.append(parts[0].capitalize())
+            
+            for p in parts[1:]:
+                if p.lower() == "s":
+                    cleaned_parts.append("s")
+                else:
+                    cleaned_parts.append(p.capitalize())
+                    
+            word = "'".join(cleaned_parts)
+            
         elif word.lower() in lower_words and i != 0:
             word = word.lower()
         else: 
@@ -187,3 +198,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # print(clean_text("Dr. O'Brien's Clinic"))
