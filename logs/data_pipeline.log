@@ -7,3 +7,41 @@
 2025-12-05 21:48:32,358 - INFO - Dropped 7 duplicates by phone
 2025-12-05 21:48:32,429 - INFO - Saved cleaned dataset to SQLite: /home/isaie/Projects/Lyyvora-outreach-core-service/data/mock_data_sets/cleaned_data.db
 2025-12-05 21:48:32,429 - INFO - Pipeline completed successfully.
+2025-12-05 22:17:12,206 - INFO - Pipeline started.
+2025-12-05 22:17:12,209 - INFO - Loaded 37 rows from /home/isaie/Projects/Lyyvora-outreach-core-service/data/mock_data_sets/mock_dirty_data.csv
+2025-12-05 22:17:12,211 - WARNING - Dropping invalid phone: CALL FOR APPT
+2025-12-05 22:17:12,212 - WARNING - Dropping invalid email: invalid-email-test@
+2025-12-05 22:17:12,214 - INFO - Dropped 12 rows missing clinic_name or email
+2025-12-05 22:17:12,216 - INFO - Dropped 0 duplicates by clinic_name+city
+2025-12-05 22:17:12,216 - INFO - Dropped 7 duplicates by phone
+2025-12-05 22:17:12,287 - INFO - Saved cleaned dataset to SQLite: /home/isaie/Projects/Lyyvora-outreach-core-service/data/mock_data_sets/cleaned_data.db
+2025-12-05 22:17:12,287 - INFO - Pipeline completed successfully.
+2025-12-05 22:17:47,998 - INFO - Pipeline started.
+2025-12-05 22:17:48,002 - INFO - Loaded 37 rows from /home/isaie/Projects/Lyyvora-outreach-core-service/data/mock_data_sets/mock_dirty_data.csv
+2025-12-05 22:17:48,004 - WARNING - Dropping invalid phone: CALL FOR APPT
+2025-12-05 22:17:48,005 - WARNING - Dropping invalid email: invalid-email-test@
+2025-12-05 22:17:48,008 - INFO - Dropped 12 rows missing clinic_name or email
+2025-12-05 22:17:48,009 - INFO - Dropped 0 duplicates by clinic_name+city
+2025-12-05 22:17:48,010 - INFO - Dropped 7 duplicates by phone
+2025-12-05 22:17:48,146 - INFO - Saved cleaned dataset to SQLite: /home/isaie/Projects/Lyyvora-outreach-core-service/data/mock_data_sets/cleaned_data.db
+2025-12-05 22:17:48,146 - INFO - Pipeline completed successfully.
+2025-12-05 22:50:51,051 - WARNING - Dropping invalid phone: CALL FOR APPT
+2025-12-05 22:54:59,671 - WARNING - Dropping invalid email: invalid-email-test@
+2025-12-05 23:02:50,745 - WARNING - Dropping invalid phone: CALL FOR APPT
+2025-12-05 23:02:55,978 - WARNING - Dropping invalid email: invalid-email-test@
+2025-12-05 23:18:16,985 - INFO - Pipeline started.
+2025-12-05 23:18:16,987 - INFO - Loaded 192 rows from /home/isaie/Projects/Lyyvora-outreach-core-service/data/mock_data_sets/mock_dirty_data.csv
+2025-12-05 23:18:16,991 - INFO - Dropped 2 rows missing clinic_name or email
+2025-12-05 23:18:16,992 - INFO - Dropped 1 duplicates by clinic_name+city
+2025-12-05 23:18:16,992 - INFO - Dropped 3 duplicates by phone
+2025-12-05 23:18:16,992 - INFO - Dropped 6 duplicates by email
+2025-12-05 23:18:17,055 - INFO - Saved cleaned dataset to SQLite: /home/isaie/Projects/Lyyvora-outreach-core-service/data/mock_data_sets/cleaned_data.db
+2025-12-05 23:18:17,055 - INFO - Pipeline completed successfully.
+2025-12-05 23:19:43,204 - INFO - Pipeline started.
+2025-12-05 23:19:43,206 - INFO - Loaded 192 rows from /home/isaie/Projects/Lyyvora-outreach-core-service/data/mock_data_sets/mock_dirty_data.csv
+2025-12-05 23:19:43,209 - INFO - Dropped 2 rows missing clinic_name or email
+2025-12-05 23:19:43,210 - INFO - Dropped 1 duplicates by clinic_name+city
+2025-12-05 23:19:43,210 - INFO - Dropped 3 duplicates by phone
+2025-12-05 23:19:43,211 - INFO - Dropped 6 duplicates by email
+2025-12-05 23:19:43,306 - INFO - Saved cleaned dataset to SQLite: /home/isaie/Projects/Lyyvora-outreach-core-service/data/mock_data_sets/cleaned_data.db
+2025-12-05 23:19:43,306 - INFO - Pipeline completed successfully.

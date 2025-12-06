@@ -1,38 +1,196 @@
 clinic_name,specialty,city,province,phone,website,email,notes
-"Dr. Sarah Chen's Clinic",Family Medicine,Toronto,ON,416-555-0123,www.drchen.ca,info@drchen.ca,Accepts new patients
-"Dr. Sarah Chen - Family Practice",Family Medicine,Toronto,Ontario,(416) 555-0123,http://www.drchen.ca,INFO@DRCHEN.CA,
-"Chen, Dr. Sarah (Family Med)",family medicine,toronto,ON,4165550123,drchen.ca,,Member since 2015
-"Riverside Medical Centre",Pediatrics,Ottawa,ON,613.555.9876,http://riversidemedical.com,contact@riversidemedical.com,Booth #234
-Riverside Medical Center,Paediatrics,Ottawa,Ontario,613-555-9876,www.riversidemedical.com,,Walk-ins welcome
-"Thompson Chiropractic Clinic",Chiropractic,Vancouver,BC,604-555-4321,https://thompsonchiro.ca,dr.thompson@thompsonchiro.ca,
-"Thompson's Chiropractic",Chiropractor,Vancouver,British Columbia,6045554321,thompsonchiro.ca,DrThompson@thompsonchiro.ca,
-"Healthy Smiles Dental",Dentistry,Calgary,AB,,healthysmiles.dental,appointments@healthysmiles.dental,PERMANENTLY CLOSED
-"HealthySmiles Dental Clinic",Dental,Calgary,Alberta,403-555-7890,http://www.healthysmiles.dental,info@healthysmiles.dental,
-"North York Physiotherapy",Physiotherapy,North York,ON,416-555-3344,www.nyphysio.com,contact@nyphysio.com,
-"North York Physio",Physical Therapy,North York,Ontario,(416)555-3344,nyphysio.com,,Parking available
-"Martinez Dermatology Clinic",Dermatology,Montreal,QC,514-555-6677,https://martinez-derm.ca,dr.martinez@martinez-derm.ca,
-"Dr. Martinez Skin Clinic",Dermatology,Montréal,Quebec,514 555 6677,martinez-derm.ca,info@martinez-derm.ca,
-"Westside Mental Health Services",Psychiatry,Victoria,BC,250-555-1122,www.westsidemh.com,,Telehealth available
-"West Side Mental Health",Psychiatric Care,Victoria,BC,2505551122,http://westsidemh.com,intake@westsidemh.com,
-"Oakville Sports Medicine",Sports Med,Oakville,ON,905-555-8899,oakvillesportsmedicine.ca,info@oakvillesportsmedicine.ca,
-"Oakville Sports Medicine Clinic",Sports Medicine,Oakville,Ontario,905.555.8899,www.oakvillesportsmedicine.ca,,
-"Summit Orthopedic Centre",Orthopedics,Edmonton,AB,780-555-2233,summit-ortho.com,referrals@summit-ortho.com,
-"Summit Orthopaedic Center",Orthopaedics,Edmonton,Alberta,7805552233,https://www.summit-ortho.com,contact@summit-ortho.com,New location 2024
-"Lakeview Optometry",Optometry,Mississauga,ON,CALL FOR APPT,lakevieweyes.ca,appointments@lakevieweyes.ca,
-"Lake View Eye Care",Optometry,Mississauga,Ontario,905-555-4455,www.lakevieweyes.ca,,
-"Halifax Women's Health Collective",Obstetrics & Gynecology,Halifax,NS,902-555-3366,halifaxwomenshealth.ca,info@halifaxwomenshealth.ca,
-"Halifax Women's Health",OBGYN,Halifax,Nova Scotia,902.555.3366,https://halifaxwomenshealth.ca,,
-"Burnaby Naturopathic Clinic",Naturopathy,Burnaby,BC,604-555-7788,,dr.lee@burnaby-naturo.com,
-"Dr. Lee's Naturopathic Practice",Naturopathic Medicine,Burnaby,British Columbia,604-555-7788,burnaby-naturo.com,DR.LEE@BURNABY-NATURO.COM,
-"Kingston Cardiology Associates",Cardiology,Kingston,ON,613-555-9900,kingstonheart.ca,referrals@kingstonheart.ca,
-"Kingston Cardiology",Cardiac Care,Kingston,Ontario,6135559900,www.kingstonheart.ca,info@kingstonheart.ca,
-"Winnipeg Allergy & Asthma Centre",Allergy/Immunology,Winnipeg,MB,204-555-1133,winnipeg-allergy.com,bookings@winnipeg-allergy.com,
-"Wpg Allergy Center",Allergist,Winnipeg,Manitoba,204.555.1133,www.winnipeg-allergy.com,,
-"St. John's Foot Clinic",Podiatry,St. John's,NL,709-555-6644,stjohnsfootclinic.ca,foot-care@stjohnsfootclinic.ca,
-"St Johns Podiatry",Podiatric Medicine,St. John's,Newfoundland and Labrador,7095566644,http://stjohnsfootclinic.ca,,
-"",Acupuncture,Saskatoon,SK,306-555-8877,www.saskatoon-acupuncture.ca,hello@saskatoon-acupuncture.ca,
-"Saskatoon Acupuncture & TCM",Traditional Chinese Medicine,Saskatoon,Saskatchewan,3065558877,saskatoon-acupuncture.ca,info@saskatoon-acupuncture.ca,Herbs available
-"invalid-email-test@",Nutrition,Regina,SK,306-555-2211,regina-nutrition.ca,invalid-email-test@,TEST RECORD
-"Central Toronto Wellness",Multiple,Toronto,ON,416-555-9999,WEBSITE UNDER CONSTRUCTION,wellness@central-to.ca,
-"Dr. Patel & Associates",Internal Medicine,Brampton,ON,905-555-3322,patel-internalmedicine.ca,dr.patel@patel-internalmedicine.ca,
-"Patel Internal Medicine",Internal Med,Brampton,Ontario,(905)555-3322,www.patel-internalmedicine.ca,,Masks required
+"Quebec City Medical Group",Family Medicine,Québec City,QC,418-555-7766,www.qcmedical.ca,contact@qcmedical.ca,Bilingual services
+"Québec City Medical",Family Practice,Quebec City,Quebec,418.555.7766,qcmedical.ca,,French & English
+"Dr. O'Brien's Clinic",General Practice,St. John's,NL,,obrien-clinic.ca,dr.obrien@obrien-clinic.ca,No phone listed
+"",Massage Therapy,,,416-555-0000,,,Missing clinic name and location
+"Duplicate Phone Test 1",Cardiology,London,ON,519-555-1234,london-cardio-1.ca,info1@londoncardio.ca,
+"Duplicate Phone Test 2",Neurology,London,Ontario,519-555-1234,london-neuro.ca,info2@londonneuro.ca,Same phone as above
+"Special Char's Clinic!",Urgent Care,Kitchener,ON,519-555-9999,special-clinic.ca,info@special-clinic.ca,"Apostrophe, exclamation"
+"Whitespace   Clinic",Ophthalmology,Waterloo,ON,519-555-8888,  whitespace-clinic.ca  ,  contact@whitespace.ca  ,Extra spaces everywhere
+"UPPERCASE CLINIC",ENT,HAMILTON,ON,905-555-7777,UPPERCASE.CA,INFO@UPPERCASE.CA,ALL CAPS
+"lowercase clinic",oncology,guelph,on,519-555-6666,lowercase.ca,info@lowercase.ca,all lowercase
+"The Clinic (Formerly Known As...)",Rheumatology,Windsor,ON,519-555-5555,the-clinic.ca,admin@the-clinic.ca,Name change
+"Clinic with | Pipe",Urology,Sarnia,ON,519-555-4444,pipe-clinic.ca,info@pipe-clinic.ca,Special character test
+"Very Long Clinic Name That Goes On And On And Includes Many Words To Test Character Limits",General Surgery,Sudbury,ON,705-555-3333,very-long-name-clinic.ca,contact@very-long-name-clinic.ca,Length test
+"123 Numeric Start Clinic",Walk-in,Barrie,ON,705-555-2222,123clinic.ca,info@123clinic.ca,Starts with numbers
+"Clinic, The",Family Medicine,Thunder Bay,ON,807-555-1111,theclinic.ca,contact@theclinic.ca,Comma in name
+"Multi-Line
+Clinic",Psychology,Sault Ste. Marie,ON,705-555-0000,multiline.ca,info@multiline.ca,Line break test
+"Email-Only-Clinic",,Charlottetown,PE,,no-website.com,email-only@clinic.ca,No phone or specialty
+"Dr. Smith & Dr. Jones & Partners",Family Medicine,Fredericton,NB,506-555-9988,smith-jones.ca,partners@smith-jones.ca,Multiple doctors
+"24/7 Emergency Clinic",Emergency Medicine,Moncton,NB,506-555-8877,emergency247.ca,urgent@emergency247.ca,Always open
+"Dr. Nguyen-Tremblay",Endocrinology,Gatineau,QC,819-555-7766,nguyen-tremblay.ca,dr.nt@nguyen-tremblay.ca,Hyphenated name
+"100% Natural Health",Homeopathy,Kelowna,BC,250-555-6655,100natural.ca,info@100natural.ca,Percentage in name
+"Clinic@Downtown",Primary Care,Prince George,BC,250-555-5544,clinic-downtown.ca,info@clinic-downtown.ca,@ symbol in name
+"The 'Best' Clinic",General Medicine,Kamloops,BC,250-555-4433,best-clinic.ca,quotes@best-clinic.ca,Quotes in name
+"",,,,,,,Completely empty row
+"Future Phone Format",(555) 123-4567,Whitehorse,YT,867-555-3322,future-clinic.ca,info@future-clinic.ca,Specialty in phone field
+"Yellowknife Health",,Yellowknife,NT,867-555-2211,,,Missing specialty and contact info
+"Iqaluit Medical Centre",Multiple Specialties,Iqaluit,NU,867-555-1100,iqaluit-medical.ca,contact@iqaluit-medical.ca,Northern territory
+"Clinic-Dash-Name",Pain Management,Red Deer,AB,403-555-9988,clinic-dash.ca,info@clinic-dash.ca,Dashes throughout
+"Dr.'s Clinic",Gastroenterology,Medicine Hat,AB,403-555-8877,drs-clinic.ca,multiple@drs-clinic.ca,Possessive apostrophe
+"Saint John Medical",Vascular Surgery,Saint John,NB,506-555-7766,saint-john-med.ca,info@stjohn-med.ca,Saint vs St
+"St-Jean Medical",Neurosurgery,St-Jean-sur-Richelieu,QC,450-555-6655,stjean-med.ca,info@stjean-med.ca,Hyphenated city
+"Niagara-on-the-Lake Clinic",Geriatrics,Niagara-on-the-Lake,ON,905-555-5544,notl-clinic.ca,info@notl-clinic.ca,Complex city name
+"Fort McMurray Health",Occupational Medicine,Fort McMurray,AB,780-555-4433,fortmac-health.ca,occ-med@fortmac.ca,Fort in city name
+"Dr. José García",Pediatric Surgery,Toronto,ON,416-555-3322,garcia-pediatrics.ca,dr.garcia@garcia-pediatrics.ca,Accented characters
+"Clinique Médical Montréal",Family Medicine,Montréal,QC,514-555-2211,clinique-mtl.ca,info@clinique-mtl.ca,French name with accents
+"TEST - DO NOT USE",Testing,Test City,ON,000-000-0000,test.ca,test@test.ca,Obvious test record
+"DUPLICATE EXACT",Cardiology,Toronto,ON,416-555-1111,duplicate.ca,dup@duplicate.ca,
+"DUPLICATE EXACT",Cardiology,Toronto,ON,416-555-1111,duplicate.ca,dup@duplicate.ca,Exact duplicate row
+"Trailing Spaces Clinic    ",Hematology,London,ON,519-555-0000,trailing.ca,info@trailing.ca,Spaces at end of name
+"   Leading Spaces Clinic",Infectious Disease,Cambridge,ON,519-555-9999,leading.ca,info@leading.ca,Spaces at start of name
+"Dr. A",Cardiology,Ajax,ON,905-555-0001,dra.ca,a@dra.ca,Single letter name
+"B Clinic",Dermatology,Bowmanville,ON,905-555-0002,bclinic.ca,b@bclinic.ca,Single letter start
+"Clinic #5",Orthopedics,Cobourg,ON,905-555-0003,clinic5.ca,info@clinic5.ca,Number in name
+"Dr. John Smith Jr.",Family Medicine,Cornwall,ON,613-555-0004,drsmith-jr.ca,jr@drsmith.ca,Jr. suffix
+"Dr. Mary Johnson III",Internal Medicine,Belleville,ON,613-555-0005,drjohnson3.ca,mary@drjohnson.ca,Roman numeral suffix
+"Clinic & Wellness Center",Naturopathy,Kingston,ON,613-555-0006,clinic-wellness.ca,info@clinic-wellness.ca,Ampersand in name
+"The/Clinic",General Practice,Brockville,ON,613-555-0007,theslashclinic.ca,contact@theslashclinic.ca,Slash in name
+"Dr. Al-Mansour",Neurology,Gananoque,ON,613-555-0008,almansour.ca,dr.al@almansour.ca,Hyphenated surname
+"Clinic\\Backslash",Psychiatry,Smiths Falls,ON,613-555-0009,backslash-clinic.ca,info@backslash.ca,Backslash in name
+"Dr. van der Berg",Ophthalmology,Trenton,ON,613-555-0010,vandenberg.ca,dr.vdb@vandenberg.ca,Lowercase particles
+"Dr. De La Rosa",Pediatrics,Picton,ON,613-555-0011,delarosa.ca,doctor@delarosa.ca,Multiple particles
+"Clinic (North)",Cardiology,Napanee,ON,613-555-0012,clinic-north.ca,north@clinic.ca,Parentheses location
+"[Urgent Care]",Emergency Medicine,Perth,ON,613-555-0013,urgent-brackets.ca,urgent@brackets.ca,Square brackets
+"Clinic {East}",Walk-in,Carleton Place,ON,613-555-0014,clinic-east.ca,east@clinic.ca,Curly braces
+"Dr. 'Mike' Wilson",Sports Medicine,Arnprior,ON,613-555-0015,drmike.ca,mike@drmike.ca,Nickname in quotes
+"Clinic=Health",Physiotherapy,Renfrew,ON,613-555-0016,clinic-equals.ca,info@clinic-equals.ca,Equals sign
+"Dr. O'Connor-Smith",Rheumatology,Pembroke,ON,613-555-0017,oconnor-smith.ca,doc@oconnor-smith.ca,Apostrophe and hyphen
+"Clinic+Plus",Chiropractic,Petawawa,ON,613-555-0018,clinic-plus.ca,info@clinic-plus.ca,Plus sign
+"Dr. de Silva",Endocrinology,Deep River,ON,613-555-0019,desilva.ca,dr@desilva.ca,Lowercase particle
+"Clinic*Star",Dermatology,Mattawa,ON,705-555-0020,clinic-star.ca,star@clinic.ca,Asterisk
+"Dr. Björk",Neurosurgery,North Bay,ON,705-555-0021,bjork.ca,dr.bjork@bjork.ca,Umlaut character
+"Clínica Española",Family Medicine,Timmins,ON,705-555-0022,clinica-espanola.ca,info@clinica.ca,Spanish accents
+"Dr. François Côté",Cardiology,Kapuskasing,ON,705-555-0023,cote.ca,francois@cote.ca,French accents
+"Клиника",General Practice,Cochrane,ON,705-555-0024,cyrillic-clinic.ca,info@cyrillic.ca,Cyrillic characters
+"诊所",Acupuncture,Iroquois Falls,ON,705-555-0025,chinese-clinic.ca,info@chinese.ca,Chinese characters
+"Dr. Müller-Schmidt",Oncology,Kirkland Lake,ON,705-555-0026,muller-schmidt.ca,dr@muller-schmidt.ca,German characters
+"Clinique Santé",Pediatrics,Hearst,ON,705-555-0027,sante.ca,info@sante.ca,French name
+"Dr. São Paulo",Psychiatry,Smooth Rock Falls,ON,705-555-0028,saopaulo.ca,dr@saopaulo.ca,Tilde character
+"Clinic™",Dermatology,Englehart,ON,705-555-0029,clinic-tm.ca,info@clinic-tm.ca,Trademark symbol
+"Dr. Smith©",Ophthalmology,Temagami,ON,705-555-0030,drsmith-c.ca,info@drsmith-c.ca,Copyright symbol
+"Clinic®",Urology,Temiskaming Shores,ON,705-555-0031,clinic-reg.ca,info@clinic-reg.ca,Registered trademark
+"Dr. 123",Cardiology,Haileybury,ON,705-555-0032,dr123.ca,info@dr123.ca,Only numbers in name
+"456 Clinic",Family Medicine,New Liskeard,ON,705-555-0033,456clinic.ca,info@456clinic.ca,Starts with numbers
+"Clinic 7/11",Walk-in,Latchford,ON,705-555-0034,clinic711.ca,info@clinic711.ca,Slash between numbers
+"Dr. 50%",General Practice,Cobalt,ON,705-555-0035,dr50percent.ca,info@dr50.ca,Number with percent
+"24-Hour Clinic",Emergency,Elk Lake,ON,705-555-0036,24hour.ca,info@24hour.ca,Number with hyphen
+"Clinic 2.0",Primary Care,Gowganda,ON,705-555-0037,clinic2.ca,info@clinic2.ca,Decimal in name
+"Dr. 1st Choice",Family Medicine,Chapleau,ON,705-555-0038,dr1stchoice.ca,info@dr1stchoice.ca,Ordinal number
+"3rd Street Clinic",Walk-in,Wawa,ON,705-555-0039,3rdstreet.ca,info@3rdstreet.ca,Ordinal in name
+"Dr. A-Z",General Practice,Hornepayne,ON,807-555-0040,draz.ca,info@draz.ca,Letter range
+"Clinic 9-5",Family Medicine,Marathon,ON,807-555-0041,clinic95.ca,info@clinic95.ca,Time range
+"",Cardiology,White River,ON,807-555-0042,no-name.ca,info@no-name.ca,No clinic name
+"Dr. Anonymous",Internal Medicine,Dubreuilville,ON,705-555-0043,,nocontact@anonymous.ca,No website
+"Mystery Clinic",Pediatrics,Manitouwadge,ON,807-555-0044,mystery.ca,,No email
+"Dr. Unreachable",Psychiatry,Terrace Bay,ON,807-555-0045,,,No contact info
+"Phone Only Clinic",,Schreiber,ON,807-555-0046,,,Only phone available
+"Website Only Clinic",Dermatology,Rossport,ON,,websiteonly.ca,,Only website available
+"Email Only Practice",Family Medicine,Nipigon,ON,,,emailonly@practice.ca,Only email available
+"Dr. (555) 123-4567",Cardiology,Red Rock,ON,807-555-0047,phone-name.ca,info@phone-name.ca,Phone in name field
+"123-456-7890",Neurology,Dorion,ON,807-555-0048,number-name.ca,info@number.ca,Phone as name
+"www.clinic.ca",Ophthalmology,Thunder Bay,ON,807-555-0049,,url@clinic.ca,URL as name
+"info@clinic.ca",Pediatrics,Fort William,ON,807-555-0050,email-name.ca,,Email as name
+"ON",Family Medicine,Port Arthur,ON,807-555-0051,province-name.ca,info@province.ca,Province as name
+"Canada",General Practice,Shuniah,ON,807-555-0052,country-name.ca,info@country.ca,Country as name
+"Dr. NULL",Cardiology,Oliver Paipoonge,ON,807-555-0053,drnull.ca,null@drnull.ca,SQL keyword
+"SELECT Clinic",Dermatology,Neebing,ON,807-555-0054,select-clinic.ca,select@clinic.ca,SQL command
+"DROP TABLE Clinic",Neurology,Conmee,ON,807-555-0055,drop-table.ca,drop@clinic.ca,SQL injection attempt
+"'; DROP TABLE--;",Psychiatry,Gillies,ON,807-555-0056,sql-inject.ca,sqli@clinic.ca,SQL injection
+"<script>alert()</script>",Ophthalmology,O'Connor,ON,807-555-0057,script-clinic.ca,xss@clinic.ca,XSS attempt
+"javascript:void(0)",Cardiology,Gorham,ON,807-555-0058,javascript-clinic.ca,js@clinic.ca,JavaScript injection
+"../../../etc/passwd",Family Medicine,Lappe,ON,807-555-0059,path-traversal.ca,path@clinic.ca,Path traversal
+"C:\Windows\System32",Dermatology,Murillo,ON,807-555-0060,windows-path.ca,win@clinic.ca,Windows path
+"../../../../",General Practice,Kakabeka Falls,ON,807-555-0061,dots.ca,dots@clinic.ca,Relative path
+"Dr. <b>Bold</b>",Neurology,Atikokan,ON,807-555-0062,bold-dr.ca,bold@clinic.ca,HTML tags
+"Clinic &amp; Health",Cardiology,Fort Frances,ON,807-555-0063,amp-clinic.ca,amp@clinic.ca,HTML entity
+"Dr. &lt;Less&gt;",Ophthalmology,Rainy River,ON,807-555-0064,lessthan.ca,lt@clinic.ca,Encoded HTML
+"Clinic&#39;s",Family Medicine,Emo,ON,807-555-0065,entity-clinic.ca,entity@clinic.ca,Numeric entity
+"Dr. %20Space",Dermatology,Devlin,ON,807-555-0066,urlencoded.ca,url@clinic.ca,URL encoded
+"Clinic%3DTest",General Practice,Mine Centre,ON,807-555-0067,urltest.ca,test@clinic.ca,URL encoded equals
+"Dr. \n Newline",Psychiatry,Morson,ON,807-555-0068,newline.ca,nl@clinic.ca,Escaped newline
+"Clinic \t Tab",Neurology,Stratton,ON,807-555-0069,tab-clinic.ca,tab@clinic.ca,Escaped tab
+"Dr. \r Return",Cardiology,Chapple,ON,807-555-0070,return.ca,return@clinic.ca,Escaped carriage return
+"Clinic \0 Null",Ophthalmology,LaVallee,ON,807-555-0071,null-byte.ca,null@clinic.ca,Null byte
+"Dr. \\",Family Medicine,Barwick,ON,807-555-0072,backslash-only.ca,bs@clinic.ca,Single backslash
+"Clinic //",Dermatology,Bergland,ON,807-555-0073,doubleslash.ca,slash@clinic.ca,Double forward slash
+"Dr. ||",General Practice,Kakabeka,ON,807-555-0074,doublepipe.ca,pipe@clinic.ca,Double pipe
+"Clinic &&",Psychiatry,Upsala,ON,807-555-0075,doubleamp.ca,amp@clinic.ca,Double ampersand
+"Dr. ;;",Neurology,Raith,ON,807-555-0076,semicolons.ca,semi@clinic.ca,Double semicolons
+"Clinic --",Cardiology,Savanne,ON,807-555-0077,doubledash.ca,dash@clinic.ca,Double dashes
+"Dr. ==",Ophthalmology,Ignace,ON,807-555-0078,doubleequals.ca,equals@clinic.ca,Double equals
+"Clinic !=",Family Medicine,Dryden,ON,807-555-0079,notequals.ca,ne@clinic.ca,Not equals operator
+"Dr. <>",Dermatology,Sioux Lookout,ON,807-555-0080,angles.ca,angle@clinic.ca,Angle brackets
+"Clinic []",General Practice,Red Lake,ON,807-555-0081,brackets.ca,bracket@clinic.ca,Empty brackets
+"Dr. {}",Psychiatry,Ear Falls,ON,807-555-0082,curlies.ca,curly@clinic.ca,Empty curly braces
+"Clinic ()",Neurology,Balmertown,ON,807-555-0083,parens.ca,paren@clinic.ca,Empty parentheses
+"Dr. ''",Cardiology,Cochenour,ON,807-555-0084,quotes.ca,quote@clinic.ca,Empty quotes
+"Clinic \"\"",Ophthalmology,McKenzie Island,ON,807-555-0085,doublequotes.ca,dq@clinic.ca,Empty double quotes
+"Dr. ``",Family Medicine,Madsen,ON,807-555-0086,backticks.ca,bt@clinic.ca,Backticks
+"Clinic ~~",Dermatology,Pickle Lake,ON,807-555-0087,tildes.ca,tilde@clinic.ca,Double tildes
+"Dr. ^^",General Practice,Casummit Lake,ON,807-555-0088,carets.ca,caret@clinic.ca,Double carets
+"Clinic **",Psychiatry,Cat Lake,ON,807-555-0089,asterisks.ca,star@clinic.ca,Double asterisks
+"Dr. __",Neurology,Kingfisher Lake,ON,807-555-0090,underscores.ca,under@clinic.ca,Double underscores
+"Clinic --",Cardiology,Wunnumin Lake,ON,807-555-0091,hyphens.ca,hyphen@clinic.ca,Double hyphens
+"Dr. ..",Ophthalmology,Webequie,ON,807-555-0092,dots.ca,dot@clinic.ca,Double periods
+"Clinic ,,",Family Medicine,Muskrat Dam,ON,807-555-0093,commas.ca,comma@clinic.ca,Double commas
+"Dr. ??",Dermatology,North Spirit Lake,ON,807-555-0094,questions.ca,question@clinic.ca,Double question marks
+"Clinic !!",General Practice,Bearskin Lake,ON,807-555-0095,exclamations.ca,exclaim@clinic.ca,Double exclamations
+"Dr. @@",Psychiatry,Fort Severn,ON,807-555-0096,ats.ca,at@clinic.ca,Double at signs
+"Clinic ##",Neurology,Peawanuck,ON,807-555-0097,hashes.ca,hash@clinic.ca,Double hashes
+"Dr. $$",Cardiology,Attawapiskat,ON,807-555-0098,dollars.ca,dollar@clinic.ca,Double dollars
+"Clinic %%",Ophthalmology,Kashechewan,ON,807-555-0099,percents.ca,percent@clinic.ca,Double percents
+"Dr. 999999999999",Family Medicine,Fort Albany,ON,807-555-0100,longnumber.ca,long@clinic.ca,Very long number
+"A",Dermatology,Moose Factory,ON,705-555-0101,single-a.ca,a@single.ca,Single character name
+"",General Practice,Moosonee,ON,705-555-0102,empty-name.ca,empty@clinic.ca,Empty string name
+"                    ",Psychiatry,Cochrane,ON,705-555-0103,spaces-only.ca,spaces@clinic.ca,Only spaces in name
+"Dr. Firstname",Neurology,Smooth Rock Falls,ON,705-555-0104,firstname-only.ca,first@clinic.ca,No surname
+"Lastname Clinic",Cardiology,Kapuskasing,ON,705-555-0105,lastname-only.ca,last@clinic.ca,No first name
+"Dr.",Ophthalmology,Val Rita-Harty,ON,705-555-0106,dr-only.ca,dr@clinic.ca,Title only
+"Clinic",Family Medicine,Moonbeam,ON,705-555-0107,clinic-only.ca,clinic@clinic.ca,Generic name only
+"The",Dermatology,Fauquier-Strickland,ON,705-555-0108,the-only.ca,the@clinic.ca,Article only
+"And",General Practice,Opasatika,ON,705-555-0109,and-only.ca,and@clinic.ca,Conjunction only
+"Or",Psychiatry,Mattice-Val Côté,ON,705-555-0110,or-only.ca,or@clinic.ca,Conjunction word
+"Dr. A B C D E",Neurology,Iroquois Falls,ON,705-555-0111,alphabet.ca,alphabet@clinic.ca,Single letters spaced
+"1 2 3 4 5 Clinic",Cardiology,Matheson,ON,705-555-0112,numbers-spaced.ca,numbers@clinic.ca,Numbers spaced
+"Dr. - - - -",Ophthalmology,Black River-Matheson,ON,705-555-0113,dashes-spaced.ca,dash@clinic.ca,Dashes spaced
+"Clinic_Without_Spaces",Family Medicine,Timmins,ON,705-555-0114,no-spaces.ca,nospace@clinic.ca,Underscores instead
+"Dr.NoSpacesAtAll",Dermatology,Porcupine,ON,705-555-0115,no-spaces-all.ca,nospace2@clinic.ca,No spaces anywhere
+"Clinic With     Many     Spaces",General Practice,South Porcupine,ON,705-555-0116,many-spaces.ca,manyspace@clinic.ca,Multiple spaces
+"Dr. 	Tab	Separated",Psychiatry,Schumacher,ON,705-555-0117,tab-separated.ca,tab@clinic.ca,Tab characters
+"Clinic
+With
+Linebreaks",Neurology,Mountjoy,ON,705-555-0118,linebreaks.ca,linebreak@clinic.ca,Multiple line breaks
+"Dr. MixedCASEname",Cardiology,Whitney,ON,705-555-0119,mixedcase.ca,mixed@clinic.ca,Mixed case name
+"cLiNiC",Ophthalmology,Madawaska Valley,ON,613-555-0120,alternating.ca,alt@clinic.ca,Alternating case
+"DR. ALL CAPS NAME",Family Medicine,Killaloe,ON,613-555-0121,allcaps.ca,caps@clinic.ca,All caps with spaces
+"dr. all lowercase name",Dermatology,Hagarty and Richards,ON,613-555-0122,alllower.ca,lower@clinic.ca,All lowercase
+"Dr. CamelCaseNameHere",General Practice,Brudenell,ON,613-555-0123,camelcase.ca,camel@clinic.ca,CamelCase name
+"Clinic_snake_case_name",Psychiatry,Sebastopol,ON,613-555-0124,snakecase.ca,snake@clinic.ca,Snake case name
+"Dr. kebab-case-name",Neurology,Wilberforce,ON,705-555-0125,kebabcase.ca,kebab@clinic.ca,Kebab case name
+"Clinic.dot.separated",Cardiology,Cardiff,ON,613-555-0126,dotseparated.ca,dot@clinic.ca,Dot separated
+"Dr. PascalCaseName",Ophthalmology,Monmouth,ON,613-555-0127,pascalcase.ca,pascal@clinic.ca,PascalCase name
+"CLINIC IN ALL CAPS",Family Medicine,Havelock-Belmont-Methuen,ON,705-555-0128,allcapsclinic.ca,capsclinic@clinic.ca,All caps multi-word
+"clinic in all lowercase",Dermatology,North Kawartha,ON,705-555-0129,lowercaseclinic.ca,lowerclinic@clinic.ca,All lowercase multi-word
+"Dr. First Middle Last Suffix Jr. III",General Practice,Trent Lakes,ON,705-555-0130,full-name.ca,fullname@clinic.ca,Very long full name
+"Clinic Name, Clinic Name, Clinic Name",Psychiatry,Douro-Dummer,ON,705-555-0131,repeated-name.ca,repeat@clinic.ca,Repeated name
+"Dr. Same Same Same",Neurology,Cavan Monaghan,ON,705-555-0132,same-name.ca,same@clinic.ca,Same word repeated
+"AAAAAAAAAAAAA Clinic",Cardiology,Otonabee-South Monaghan,ON,705-555-0133,a-repeated.ca,aaa@clinic.ca,Single character repeated
+"Dr. 000000000000",Ophthalmology,Selwyn,ON,705-555-0134,zeros.ca,zero@clinic.ca,Zeros repeated
+"Clinic !@#$%^&*()",Family Medicine,Smith-Ennismore-Lakefield,ON,705-555-0135,special-chars.ca,special@clinic.ca,Multiple special chars
+"Dr. αβγδε",Dermatology,Ashburnham,ON,705-555-0136,greek-letters.ca,greek@clinic.ca,Greek letters
+"Clinic ΑΒΓΔΕ",General Practice,Lakefield,ON,705-555-0137,greek-caps.ca,greekcaps@clinic.ca,Greek capitals
+"Dr. ½ ¾ ⅓",Psychiatry,Ennismore,ON,705-555-0138,fractions.ca,frac@clinic.ca,Fraction characters
+"Clinic № 1",Neurology,Bridgenorth,ON,705-555-0139,numero.ca,numero@clinic.ca,Numero sign
+"Dr. § Paragraph",Cardiology,Buckhorn,ON,705-555-0140,section.ca,section@clinic.ca,Section sign
+"Clinic ° Temperature",Ophthalmology,Curve Lake,ON,705-555-0141,degree.ca,degree@clinic.ca,Degree symbol
+"Dr. € Euro",Family Medicine,Hiawatha,ON,705-555-0142,euro.ca,euro@clinic.ca,Euro symbol
+"Clinic £ Pound",Dermatology,Keene,ON,705-555-0143,pound.ca,pound@clinic.ca,Pound symbol
+"Dr. ¥ Yen",General Practice,Indian River,ON,705-555-0144,yen.ca,yen@clinic.ca,Yen symbol
+"Clinic ¢ Cent",Psychiatry,Warsaw,ON,705-555-0145,cent.ca,cent@clinic.ca,Cent symbol
+"Dr. ₹ Rupee",Neurology,Burleigh Falls,ON,705-555-0146,rupee.ca,rupee@clinic.ca,Rupee symbol
+"Clinic ₽ Ruble",Cardiology,Gooderham,ON,705-555-0147,ruble.ca,ruble@clinic.ca,Ruble symbol
+"Dr. ₩ Won",Ophthalmology,Kinmount,ON,705-555-0148,won.ca,won@clinic.ca,Won symbol
+"Clinic ₪ Shekel",Family Medicine,Minden,ON,705-555-0149,shekel.ca,shekel@clinic.ca,Shekel symbol
+"Dr. ₦ Naira",Dermatology,Haliburton,ON,705-555-0150,naira.ca,naira@clinic.ca,Naira symbol
