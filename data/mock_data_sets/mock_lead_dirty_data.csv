@@ -1,13 +1,13 @@
 clinic_name,specialty,city,province,phone,website,email,notes
 "Quebec City Medical Group",Family Medicine,Québec City,QC,418-555-7766,www.qcmedical.ca,contact@qcmedical.ca,Bilingual services
-"Québec City Medical",Family Practice,Quebec City,Quebec,418.555.7766,qcmedical.ca,,French & English
+"Québec City Medical",Family Practice,quebec city,Quebec,418.555.7766,qcmedical.ca,,French & English
 "Dr. O'Brien's Clinic",General Practice,St. John's,NL,,obrien-clinic.ca,dr.obrien@obrien-clinic.ca,No phone listed
-"",Massage Therapy,,,416-555-0000,,,Missing clinic name and location
-"Duplicate Phone Test 1",Cardiology,London,ON,519-555-1234,london-cardio-1.ca,info1@londoncardio.ca,
-"Duplicate Phone Test 2",Neurology,London,Ontario,519-555-1234,london-neuro.ca,info2@londonneuro.ca,Same phone as above
-"Special Char's Clinic!",Urgent Care,Kitchener,ON,519-555-9999,special-clinic.ca,info@special-clinic.ca,"Apostrophe, exclamation"
-"Whitespace   Clinic",Ophthalmology,Waterloo,ON,519-555-8888,  whitespace-clinic.ca  ,  contact@whitespace.ca  ,Extra spaces everywhere
-"UPPERCASE CLINIC",ENT,HAMILTON,ON,905-555-7777,UPPERCASE.CA,INFO@UPPERCASE.CA,ALL CAPS
+"",Massage Therapy,,,4165550000,,,Missing clinic name and location
+"Duplicate Phone Test 1",Cardiology,Calgary,Alberta,519-555-1234,london-cardio-1.ca,info1@londoncardio.ca,
+"Duplicate Phone Test 2",Neurology,London,Ontario,519 555-1234,london-neuro.ca,info2@londonneuro.ca,Same phone as above
+"Special Char's Clinic!",Urgent Care,Vancouver,British Columbia,+1 (519) 555-9999,special-clinic.ca,info@special-clinic.ca,"Apostrophe, exclamation"
+,,,,,,,
+"Bad Email Example",ENT,HAMILTON,ON,905-555-7777,bademail.ca,bad email remove,BAD EMAIL
 "lowercase clinic",oncology,guelph,on,519-555-6666,lowercase.ca,info@lowercase.ca,all lowercase
 "The Clinic (Formerly Known As...)",Rheumatology,Windsor,ON,519-555-5555,the-clinic.ca,admin@the-clinic.ca,Name change
 "Clinic with | Pipe",Urology,Sarnia,ON,519-555-4444,pipe-clinic.ca,info@pipe-clinic.ca,Special character test

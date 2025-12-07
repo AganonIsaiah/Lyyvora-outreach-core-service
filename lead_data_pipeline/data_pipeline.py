@@ -21,7 +21,6 @@ logging.basicConfig(
 )
 
 EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
-PHONE_REGEX = r"\d{10}"
 
 LEADS_TABLE_SCHEMA = """
                    CREATE TABLE IF NOT EXISTS leads (
@@ -55,12 +54,15 @@ def clean_phone(phone: str):
     if not isinstance(phone, str): return None
     
     digits = re.sub(r"\D", "", phone)
-    valid = re.fullmatch(PHONE_REGEX, digits)
-    
-    if not valid:
-        logging.warning(f"Dropping invalid phone: {phone}")
         
-    return digits if valid else None
+    if len(digits) == 11 and digits.startswith("1"):
+        digits = digits[1:]
+        
+    if len(digits) != 10:
+        logging.warning(f"Dropping invalid phone: {phone}")
+        return None
+        
+    return digits
 
 def clean_website(site: str):
     if not isinstance(site, str) or not site.strip(): return None
@@ -185,10 +187,6 @@ def main():
     # Reorder
     df = df[["clinic_name", "specialty", "city", "province", "phone", "website", "email", "notes"]]
 
-    # Save CSV
-    # df.to_csv(OUTPUT_FILE, index=False)
-    # logging.info(f"Saved cleaned CSV: {OUTPUT_FILE}")
-    
     # Standardize missing fields for SQLite
     df = df.where(pd.notnull(df), None)
 
