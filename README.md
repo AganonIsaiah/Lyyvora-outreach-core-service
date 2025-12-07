@@ -42,7 +42,7 @@ Once the server is running, visit http://127.0.0.1:8000/docs to see available AP
 - pandas
 
 # Architecture Layout
-- The applications follows this logical flow: **1)** Perform data cleaning and validation with the compliant lead data pipeline, **2)** Perform lead scoring with cleaned data, **3)** Perform "bank-ready" audit checks, **4)** Generate personalized outreach (i.e., emails, SMS, LinkedIn DM) 
+- The applications follows this logical flow: **1)** Perform data cleaning and validation with the compliant lead data pipeline, and then store the cleaned data in our database, **2)** Perform lead scoring with cleaned data, **3)** Perform "bank-ready" audit checks, **4)** Generate personalized outreach (i.e., emails, SMS, LinkedIn DM) 
 
 1. **data_pipeline.py**: 
     - Performs data cleaning and validation on an uncleaned data set. It then stores the cleaned data in a `leads` table containing columns: `id`, `clinic_name`, `specialty`, `city`, `province`, `phone`, `website`, `email`, `notes`
