@@ -1,25 +1,23 @@
 # Lyyvora-outreach-core-service
-- Backend service for Lyyvora built with Python.
-- This service helps Lyyvora prioritize and engage healthcare clinics by cleaning public lead data, scoring prospects with ML, generating safe personalized outreach messages, and evaluating financing readiness with a rules engine.
+- Backend service for Lyyvora built with Python
+- This service helps Lyyvora prioritize and engage healthcare clinics by cleaning public lead data, scoring prospects with ML, generating safe personalized outreach messages, and evaluating financing readiness with a rules engine
 
 ## Table of Contents
+- [Setup and Run](#setup-and-run)
+    - [Quick Setup and Run](#quick-setup-and-run)
+    - [Setup and Run FastAPI or the Pipeline Locally](#setup-and-run-fastapi-or-the-pipeline-locally)
 - [To Open Notebook](#to-open-notebook)
-  1. [Compliant Lead Data Pipeline](#1-compliant-lead-data-pipeline)
-- [Setup and run FastAPI or the Pipeline Locally](#setup-and-run-fastapi-or-the-pipeline-locally)
-  - [Activate Virtual Environment](#first-activate-the-virtual-env-using-the-terminal)
-  - [Run FastAPI Server](#to-run-fastapi-server)
-  - [Run Tests](#to-run-tests)
+    1. [Compliant Lead Data Pipeline](#1-compliant-lead-data-pipeline)
 - [Libraries](#libraries)
 - [Architecture Layout](#architecture-layout)
+    - [Database Schema Diagram](#database-schema-diagram)
+    - [Pipeline Architecture](#pipeline-architecture)
 
-## To Open Notebook
-Jupyter Notebook is used here for interactive testing, data exploration, and clear documentation of the pipeline.
+# Setup and Run
+## Quick Setup and Run
+Run the command `make` in the terminal to view the run options
 
-### 1) Compliant Lead Data Pipeline
-- Click here to open [`data_pipeline.ipynb`](lead_data_pipeline/data_pipeline.ipynb) in GitHub 
-
-## Setup and run FastAPI or the Pipeline Locally
-
+## Setup and Run FastAPI or the Pipeline Locally
 ### First, activate the virtual env using the terminal
 1. python3 -m venv env
 2. source env/bin/activate
@@ -34,7 +32,13 @@ Once the server is running, visit http://127.0.0.1:8000/docs to see available AP
 - pytest
 - pytest -vv (Runs tests and shows more details)
 
-## Libraries
+# To Open Notebook
+Jupyter Notebook is used here for interactive testing, data exploration, and clear documentation of the pipeline
+
+### 1) Compliant Lead Data Pipeline
+- Click here to open [`data_pipeline.ipynb`](lead_data_pipeline/data_pipeline.ipynb) in GitHub 
+
+# Libraries
 - FastAPI
 - SQLite3 
 - pytest
@@ -42,6 +46,12 @@ Once the server is running, visit http://127.0.0.1:8000/docs to see available AP
 - pandas
 
 # Architecture Layout
+
+## Database Schema Diagram
+Click here to view the database diagram:
+https://dbdiagram.io/d/Riipen-Lyyvora-DB-Schema-69214ff8228c5bbc1affa94e
+
+## Pipeline Architecture
 - The applications follows this logical flow: **1)** Perform data cleaning and validation with the compliant lead data pipeline, and then store the cleaned data in our database, **2)** Perform lead scoring with cleaned data, **3)** Perform "bank-ready" audit checks, **4)** Generate personalized outreach (i.e., emails, SMS, LinkedIn DM) 
 
 1. **data_pipeline.py**: 
