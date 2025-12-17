@@ -31,4 +31,4 @@ data/clean/*
 *.bak
 
 # Logs
-logs/
+*.log

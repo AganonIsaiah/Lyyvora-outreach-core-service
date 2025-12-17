@@ -3,19 +3,29 @@ import sqlite3
 import logging
 import re
 import os
+from urllib.parse import urlparse
 
 # --------------------------------
 # Paths
 # --------------------------------
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-INPUT_FILE = os.path.join(BASE_DIR, "data", "mock_data_sets", "mock_lead_dirty_data.csv")
-DB_FILE = os.path.join(BASE_DIR, "data", "mock_data_sets", "mock_lead_cleaned_data.db")
+ 
+
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../")
+)
+
+INPUT_FILE = os.path.join(PROJECT_ROOT, "datasets", "real_set_v1", "records.csv")
+DB_FILE = os.path.join(PROJECT_ROOT, "datasets", "real_set_v1", "records.db")
+LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
 
 # --------------------------------
 # Logging Setup
 # --------------------------------
+ 
+os.makedirs(LOG_DIR, exist_ok=True)
+
 logging.basicConfig(
-    filename=os.path.join(BASE_DIR, "logs", "data_pipeline.log"),
+    filename=os.path.join(LOG_DIR, "data_pipeline.log"),
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
@@ -26,29 +36,37 @@ LEADS_TABLE_SCHEMA = """
                    CREATE TABLE IF NOT EXISTS leads (
                        id INTEGER PRIMARY KEY AUTOINCREMENT,
                        clinic_name TEXT NOT NULL,
-                       specialty TEXT,
+                       clinic_main_type TEXT,
+                       clinic_sub_type TEXT,
                        city TEXT,
                        province TEXT,
                        phone TEXT UNIQUE,
-                       website TEXT,
                        email TEXT UNIQUE NOT NULL,
-                       notes TEXT
-                   )
+                       website_url TEXT,
+                       website_desc TEXT,
+                       total_reviews INTEGER,
+                       average_rating REAL
+                   );
                    """
 
 # --------------------------------
 # Cleaning functions
 # --------------------------------
-def clean_email(email: str):
-    if not isinstance(email, str): return None
-    
-    email = email.strip().lower()
-    valid = re.match(EMAIL_REGEX, email)
-    
-    if not valid:
-        logging.warning(f"Dropping invalid email: {email}")
-        
-    return email if valid else None
+def get_primary_email(email1: str, email2: str):
+    for email in [email1, email2]:
+        if not isinstance(email, str):
+            continue
+        email_clean = email.strip().lower()
+        if re.match(EMAIL_REGEX, email_clean):
+            return email_clean
+        else:
+            logging.warning(f"Dropping invalid email: {email_clean}")
+    return None
+
+def clean_text(text: str):
+    if not isinstance(text, str):
+        return None
+    return text.strip()
 
 def clean_phone(phone: str):
     if not isinstance(phone, str): return None
@@ -65,48 +83,20 @@ def clean_phone(phone: str):
     return digits
 
 def clean_website(site: str):
-    if not isinstance(site, str) or not site.strip(): return None
+    if not isinstance(site, str) or not site.strip():
+        return None
     
-    site = site.strip().lower()
+    site = site.strip()
+    parsed = urlparse(site)
     
-    if not site.startswith("http"):
-        site = "https://" + site
-        
-    return site
-
-def clean_text(s: str):
-    if not isinstance(s, str): return None 
+    if parsed.scheme in ["http", "https"] and parsed.netloc:
+        return site
     
-    s = s.strip()
-    words = s.split()
+    if "." in site and " " not in site: 
+        return site
     
-    lower_words = {"and", "or", "the", "of", "in", "for", "as"}
-    cleaned_words = []
-    
-    for i, word in enumerate(words):
-        if "'" in word:
-            parts = word.split("'")
-            cleaned_parts = []
-            
-            cleaned_parts.append(parts[0].capitalize())
-            
-            for p in parts[1:]:
-                if p.lower() == "s":
-                    cleaned_parts.append("s")
-                else:
-                    cleaned_parts.append(p.capitalize())
-                    
-            word = "'".join(cleaned_parts)
-            
-        elif word.lower() in lower_words and i != 0:
-            word = word.lower()
-        else: 
-            word = word.capitalize()
-            
-        cleaned_words.append(word)
-        
-    return " ".join(cleaned_words)
-    
+    logging.warning(f"Invalid website URL: {site}")
+    return None
 
 def normalize_province(p: str):
     if not isinstance(p, str): return None
@@ -153,52 +143,56 @@ def main():
     logging.info("Pipeline started.")
     print("Pipeline started.")
     
+    # Load CSV
     df = pd.read_csv(INPUT_FILE)
     logging.info(f"Loaded {len(df)} rows from {INPUT_FILE}")
 
-    # Clean each column
+    # Map raw CSV columns to DB columns
+    df = df.rename(columns={
+        "business_name": "clinic_name",
+        "type": "clinic_main_type",
+        "sub_types": "clinic_sub_type",
+        "business_website": "website_url",
+        "state": "province",
+        "business_phone": "phone",
+        "website_desc": "website_desc"
+    })
+
+    # Clean & map
     df["clinic_name"] = df["clinic_name"].apply(clean_text)
-    df["specialty"] = df["specialty"].apply(clean_text)
+    df["clinic_main_type"] = df["clinic_main_type"].apply(clean_text)
+    df["clinic_sub_type"] = df["clinic_sub_type"].apply(clean_text)
     df["city"] = df["city"].apply(clean_text)
     df["province"] = df["province"].apply(normalize_province)
     df["phone"] = df["phone"].apply(clean_phone)
-    df["website"] = df["website"].apply(clean_website)
-    df["email"] = df["email"].apply(clean_email)
+    df["website_url"] = df["website_url"].apply(clean_website)
+    df["email"] = df.apply(lambda row: get_primary_email(row.get("email_1"), row.get("email_2")), axis=1)
+    df["total_reviews"] = pd.to_numeric(df["total_reviews"], errors="coerce")
+    df["average_rating"] = pd.to_numeric(df["average_rating"], errors="coerce")
 
-    # Deduplicate by name + city
-    before = len(df)
+    # Deduplicate
     df = df.drop_duplicates(subset=["clinic_name", "city"], keep='first')
-    logging.info(f"Dropped {before - len(df)} duplicates by clinic_name+city")
-    print(f"Dropped {before - len(df)} duplicates by clinic_name+city")
-
-    # Deduplicate by phone 
-    before = len(df)
     df = df[df['phone'].isna() | ~df.duplicated(subset=['phone'], keep='first')]
-    logging.info(f"Dropped {before - len(df)} duplicates by phone")
-    print(f"Dropped {before - len(df)} duplicates by phone")
-
-    # Deduplicate by email  
-    before = len(df)
     df = df[df['email'].isna() | ~df.duplicated(subset=['email'], keep='first')]
-    logging.info(f"Dropped {before - len(df)} duplicates by email")
-    print(f"Dropped {before - len(df)} duplicates by email")
 
-    # Remove missing essential fields
-    before = len(df)
+    # Drop missing essential fields
     df = df.dropna(subset=["clinic_name", "email"], how="any")
-    logging.info(f"Dropped {before - len(df)} rows missing clinic_name or email")
-    print(f"Dropped {before - len(df)} rows missing clinic_name or email")
-    
-    # Reorder
-    df = df[["clinic_name", "specialty", "city", "province", "phone", "website", "email", "notes"]]
 
-    # Standardize missing fields for SQLite
+    # Reorder for SQLite
+    df = df[[
+        "clinic_name", "clinic_main_type", "clinic_sub_type",
+        "city", "province", "phone", "email",
+        "website_url", "website_desc", "total_reviews", "average_rating"
+    ]]
+    
+    # Convert NaN to None for SQLite
     df = df.where(pd.notnull(df), None)
 
-    # Save SQLite
+    # Save
     save_to_sqlite(df)
+    
     logging.info("Pipeline completed successfully.")
     print("Pipeline completed successfully.")
-
+    
 if __name__ == "__main__":
     main()
