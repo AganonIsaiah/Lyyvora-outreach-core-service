@@ -27,7 +27,7 @@ Enter the command `make` in the terminal to view the run options
 3. `pip3 install -r requirements.txt`
 
 ### 2) Run FastAPI Server
-- `uvicorn backend.main:app --reload`
+- `uvicorn fastapi_service.main:app --reload`
 
 Once the server is running, visit http://127.0.0.1:8000/docs to see available API endpoints
 
@@ -44,7 +44,7 @@ Once the server is running, visit http://127.0.0.1:8000/docs to see available AP
 Jupyter Notebook is used here for interactive testing, data exploration, and clear documentation of the pipeline
 
 ### 1) Compliant Lead Data Pipeline
-- Click here to open [`data_pipeline.ipynb`](lead_data_pipeline/data_pipeline.ipynb) in GitHub 
+- Click here to open [`data_pipeline.ipynb`](core/lead_data_pipeline/data_pipeline.ipynb) in GitHub 
 
 # Libraries
 - FastAPI
@@ -61,16 +61,16 @@ Click here to view the database diagram:
 https://dbdiagram.io/d/Riipen-Lyyvora-DB-Schema-69214ff8228c5bbc1affa94e
 
 ### Pipeline Architecture
-- The applications follows this logical flow: **1)** Perform data cleaning and validation with the compliant lead data pipeline, and then store the cleaned data in our database, **2)** Perform lead scoring with cleaned data, **3)** Perform "bank-ready" audit checks, **4)** Generate personalized outreach (i.e., emails, SMS, LinkedIn DM) 
+- The applications follows this logical flow: **1)** Perform data cleaning and validation with the compliant lead data pipeline, and then store the cleaned data in our database, **2)** Perform lead scoring with cleaned data,  **3)** Generate personalized outreach (i.e., emails, SMS, LinkedIn DM)
 
-1. **data_pipeline.py**: 
+1. **lead_data_pipeline.py**: 
     - Performs data cleaning and validation on an uncleaned data set. It then stores the cleaned data in a `leads` table containing columns: `id`, `clinic_name`, `specialty`, `city`, `province`, `phone`, `website`, `email`, `notes`
 
-2. **lead_scoring.py**: 
+2. **lead_scoring_model.py**: 
     - From the cleaned data in the `leads` table, performs lead scoring with priority ranking (0-100).
     - priority ranking is done using interpretable features such as `specialty`, `region`, `availability of contact info`, `presence of financing keywords on site`, `inferred clinic size signals`, `recent posts`
     - Data is then stored in a `lead_scores` table containing columns: `id`, `leads_id`, `score`, `top_features`, `explanation`, `created_at`
-
+<!-- 
 3. **bank_ready_rules_engine.py**:
     - Performs bank ready audit checks on lead clinics.
     - Rules include: 
@@ -79,9 +79,9 @@ https://dbdiagram.io/d/Riipen-Lyyvora-DB-Schema-69214ff8228c5bbc1affa94e
     - Performs basic doc checks:
         - 6 months bank statements
         - Last year P&L
-        - Owner id
+        - Owner id -->
 
-4. **outreach_generator.py**:
+3. **outreach_generator.py**:
     - This service is a personalized outreach generator. It uses the data stored in our database + generative AI to create customized messages to clients.
     - It creates a subject line + 80-120 word email, a 150-char SMS, and a LinkedIn DM.
     - It uses a prompt template with slots (specialty, city, bank-ready offer, risk-reversal) and contains content guardrails (i.e., no promises of approval)
