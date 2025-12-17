@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import Base, engine
-from app.models.leads import Lead
+from backend.database import Base, engine
+from backend.models.leads import Lead
 
 app=FastAPI(title="Lyyvora Lead Pipeline API")
 

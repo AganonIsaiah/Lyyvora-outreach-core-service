@@ -1,5 +1,5 @@
 # Lyyvora-outreach-core-service
-- Backend service for Lyyvora built with Python
+- Lightweight MVP service for Lyyvora built with Python 3.13.7
 - This service helps Lyyvora prioritize and engage healthcare clinics by cleaning public lead data, scoring prospects with ML, generating safe personalized outreach messages, and evaluating financing readiness with a rules engine
 
 ## Table of Contents
@@ -14,23 +14,26 @@
     - [Pipeline Architecture](#pipeline-architecture)
 
 # Setup and Run
+## Before you Run, you must set the Environment Variables in the `.env` file
+- To set `OLLAMA_API` get the key here: https://ollama.com/settings/keys
+
 ## Quick Setup and Run
-Run the command `make` in the terminal to view the run options
+Enter the command `make` in the terminal to view the run options
 
 ## Setup and Run FastAPI or the Pipeline Locally
-### First, activate the virtual env using the terminal
-1. python3 -m venv env
-2. source env/bin/activate
-3. pip3 install -r requirements.txt
+### 1) Activate the virtual env using the terminal, then enter the following commands:
+1. `python3 -m venv env`
+2. `source env/bin/activate`
+3. `pip3 install -r requirements.txt`
 
-### To Run FastAPI Server
-- uvicorn app.main:app --reload
+### 2) Run FastAPI Server
+- `uvicorn backend.main:app --reload`
 
 Once the server is running, visit http://127.0.0.1:8000/docs to see available API endpoints
 
 ### To Run Tests
-- pytest
-- pytest -vv (Runs tests and shows more details)
+- `pytest`
+- `pytest -vv` (Runs tests and shows more details)
 
 # To Open Notebook
 Jupyter Notebook is used here for interactive testing, data exploration, and clear documentation of the pipeline
@@ -45,13 +48,14 @@ Jupyter Notebook is used here for interactive testing, data exploration, and cle
 - scikit-learn
 - pandas
 
+
 # Architecture Layout
 
-## Database Schema Diagram
+### Database Schema Diagram
 Click here to view the database diagram:
 https://dbdiagram.io/d/Riipen-Lyyvora-DB-Schema-69214ff8228c5bbc1affa94e
 
-## Pipeline Architecture
+### Pipeline Architecture
 - The applications follows this logical flow: **1)** Perform data cleaning and validation with the compliant lead data pipeline, and then store the cleaned data in our database, **2)** Perform lead scoring with cleaned data, **3)** Perform "bank-ready" audit checks, **4)** Generate personalized outreach (i.e., emails, SMS, LinkedIn DM) 
 
 1. **data_pipeline.py**: 

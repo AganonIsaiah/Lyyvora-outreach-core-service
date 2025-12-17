@@ -151,6 +151,7 @@ def save_to_sqlite(df: pd.DataFrame):
 # --------------------------------
 def main():
     logging.info("Pipeline started.")
+    print("Pipeline started.")
     
     df = pd.read_csv(INPUT_FILE)
     logging.info(f"Loaded {len(df)} rows from {INPUT_FILE}")
@@ -168,21 +169,25 @@ def main():
     before = len(df)
     df = df.drop_duplicates(subset=["clinic_name", "city"], keep='first')
     logging.info(f"Dropped {before - len(df)} duplicates by clinic_name+city")
+    print(f"Dropped {before - len(df)} duplicates by clinic_name+city")
 
     # Deduplicate by phone 
     before = len(df)
     df = df[df['phone'].isna() | ~df.duplicated(subset=['phone'], keep='first')]
     logging.info(f"Dropped {before - len(df)} duplicates by phone")
+    print(f"Dropped {before - len(df)} duplicates by phone")
 
     # Deduplicate by email  
     before = len(df)
     df = df[df['email'].isna() | ~df.duplicated(subset=['email'], keep='first')]
     logging.info(f"Dropped {before - len(df)} duplicates by email")
+    print(f"Dropped {before - len(df)} duplicates by email")
 
     # Remove missing essential fields
     before = len(df)
     df = df.dropna(subset=["clinic_name", "email"], how="any")
     logging.info(f"Dropped {before - len(df)} rows missing clinic_name or email")
+    print(f"Dropped {before - len(df)} rows missing clinic_name or email")
     
     # Reorder
     df = df[["clinic_name", "specialty", "city", "province", "phone", "website", "email", "notes"]]
@@ -193,6 +198,7 @@ def main():
     # Save SQLite
     save_to_sqlite(df)
     logging.info("Pipeline completed successfully.")
+    print("Pipeline completed successfully.")
 
 if __name__ == "__main__":
     main()
