@@ -14,17 +14,20 @@
     - [Pipeline Architecture](#pipeline-architecture)
 
 # Setup and Run
+## Before you Run, you must set the Environment Variables in the `.env` file
+- To set `OLLAMA_API` get the key here: https://ollama.com/settings/keys
+
 ## Quick Setup and Run
 Enter the command `make` in the terminal to view the run options
 
 ## Setup and Run FastAPI or the Pipeline Locally
-### First, activate the virtual env using the terminal, then enter the following commands:
+### 1) Activate the virtual env using the terminal, then enter the following commands:
 1. `python3 -m venv env`
 2. `source env/bin/activate`
 3. `pip3 install -r requirements.txt`
 
-### To Run FastAPI Server
-- `uvicorn app.main:app --reload`
+### 2) Run FastAPI Server
+- `uvicorn backend.main:app --reload`
 
 Once the server is running, visit http://127.0.0.1:8000/docs to see available API endpoints
 

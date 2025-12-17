@@ -13,7 +13,7 @@ client = Client(
 messages = [
   {
     'role': 'user',
-    'content': 'Why is the sky blue?',
+    'content': 'Generate a random response, 120 words max, format it like an email.',
   },
 ]
 

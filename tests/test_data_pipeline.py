@@ -1,5 +1,5 @@
 import pytest
-from lead_data_pipeline.data_pipeline import clean_text, clean_phone, clean_email, clean_website, normalize_province
+from core.lead_data_pipeline.data_pipeline import clean_text, clean_phone, clean_email, clean_website, normalize_province
 
 # -------------------------------
 # clean_text tests
