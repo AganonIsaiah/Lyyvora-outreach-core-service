@@ -1,6 +1,6 @@
 FROM python:3.13-slim
 
-WORKDIR /fastapi_service
+WORKDIR /app
 
 # System dependencies (optional)
 RUN apt-get update && apt-get install -y build-essential \
@@ -17,5 +17,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Copy the rest of the code
 COPY . .
 
+EXPOSE 8000
+
 # Start FastAPI
-CMD ["uvicorn", "fastapi_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

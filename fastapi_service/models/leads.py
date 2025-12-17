@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime 
-from backend.database import Base 
+from fastapi_service.database import Base 
 
 class Lead(Base):
     __tablename__ = "leads"

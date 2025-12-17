@@ -1,0 +1,26 @@
+services:
+  fastapi:
+    build:
+      context: ./fastapi_service
+    container_name: fastapi_service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./fastapi_service:/app 
+    env_file:
+      - ./fastapi_service/.env
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./dashboard_ui
+    container_name: dashboard_ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - fastapi
+    volumes:
+      - ./dashboard_ui:/app 
+    env_file:
+      - ./dashboard_ui/.env
+    restart: unless-stopped

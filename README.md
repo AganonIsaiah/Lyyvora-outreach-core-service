@@ -20,7 +20,7 @@
 ## Quick Setup and Run
 Enter the command `make` in the terminal to view the run options
 
-## Setup and Run FastAPI or the Pipeline Locally
+## Setup and Run FastAPI and React Frontend
 ### 1) Activate the virtual env using the terminal, then enter the following commands:
 1. `python3 -m venv env`
 2. `source env/bin/activate`
@@ -30,6 +30,11 @@ Enter the command `make` in the terminal to view the run options
 - `uvicorn backend.main:app --reload`
 
 Once the server is running, visit http://127.0.0.1:8000/docs to see available API endpoints
+
+### 3) Run React Frontend
+1. `cd dashboard_ui`
+2. `npm install`
+3. `npm run dev`
 
 ### To Run Tests
 - `pytest`
