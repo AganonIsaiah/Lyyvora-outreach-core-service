@@ -15,10 +15,8 @@ env/
 # SQLite database
 datasets/*.db
 datasets/*.csv
-
-# CSV / Excel files
-data/raw/*
-data/clean/*
+*.db
+*.csv
 
 # IDE / Editor files
 .vscode/
