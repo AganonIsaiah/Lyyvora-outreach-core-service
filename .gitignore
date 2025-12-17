@@ -13,7 +13,8 @@ env/
 .env
 
 # SQLite database
-data/*.db
+datasets/*.db
+datasets/*.csv
 
 # CSV / Excel files
 data/raw/*
