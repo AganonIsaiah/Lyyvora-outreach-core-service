@@ -5,30 +5,19 @@ import re
 import os
 from urllib.parse import urlparse
 
-# --------------------------------
-# Paths
-# --------------------------------
-PROJECT_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../")
-)
-
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 INPUT_FILE = os.path.join(PROJECT_ROOT, "datasets", "real_set_v1", "records.csv")
 DB_FILE = os.path.join(PROJECT_ROOT, "datasets", "real_set_v1", "records.db")
 LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
 
-# --------------------------------
-# Logging Setup
-# --------------------------------
 os.makedirs(LOG_DIR, exist_ok=True)
-
 logging.basicConfig(
-    filename=os.path.join(LOG_DIR, "data_pipeline.log"),
+    filename=os.path.join(LOG_DIR, "lead_data_pipeline.log"),
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
-
 LEADS_TABLE_SCHEMA = """
                    CREATE TABLE IF NOT EXISTS leads (
                        id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,23 +35,25 @@ LEADS_TABLE_SCHEMA = """
                    );
                    """
 
-# --------------------------------
-# Cleaning functions
-# --------------------------------
 def get_primary_email(email1: str, email2: str):
     for email in [email1, email2]:
         if not isinstance(email, str):
             continue
+        
         email_clean = email.strip().lower()
+        
         if re.match(EMAIL_REGEX, email_clean):
             return email_clean
+        
         else:
             logging.warning(f"Dropping invalid email: {email_clean}")
+            
     return None
 
 def clean_text(text: str):
     if not isinstance(text, str):
         return None
+    
     return text.strip()
 
 def clean_phone(phone: str):
@@ -118,24 +109,17 @@ def normalize_province(p: str):
     
     return lookup.get(p, p)
 
-# --------------------------------
-# Save to SQLite
-# --------------------------------
 def save_to_sqlite(df: pd.DataFrame):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
     cursor.execute(LEADS_TABLE_SCHEMA)
+    df.to_sql("leads", conn, if_exists="append", index=False)
     
-    df.to_sql("leads", conn, if_exists="replace", index=False)
     conn.commit()
     conn.close()
-    
-    logging.info(f"Saved cleaned dataset to SQLite: {DB_FILE}")
 
-# --------------------------------
-# Pipeline
-# --------------------------------
+
 def main():
     logging.info("Pipeline started.")
     print("Pipeline started.")

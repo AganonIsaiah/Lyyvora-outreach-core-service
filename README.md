@@ -44,7 +44,7 @@ Once the server is running, visit http://127.0.0.1:8000/docs to see available AP
 Jupyter Notebook is used here for interactive testing, data exploration, and clear documentation of the pipeline
 
 ### 1) Compliant Lead Data Pipeline
-- Click here to open [`data_pipeline.ipynb`](core/lead_data_pipeline/data_pipeline.ipynb) in GitHub 
+- Click here to open [`data_pipeline.ipynb`](core/lead_data_pipeline/lead_data_pipeline.ipynb) in GitHub 
 
 # Libraries
 - FastAPI
