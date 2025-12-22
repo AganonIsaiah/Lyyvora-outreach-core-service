@@ -51,10 +51,15 @@ def get_primary_email(email1: str, email2: str):
     return None
 
 def clean_text(text: str):
-    if not isinstance(text, str):
-        return None
+    if not isinstance(text, str): return None
     
     return text.strip()
+
+def clean_clinic_name(text: str):
+    if not isinstance(text, str): return None 
+    
+    regex_chars = r'[@#|-]'
+    return re.split(regex_chars, text)[0].strip()
 
 def clean_phone(phone: str):
     if not isinstance(phone, str): return None
@@ -142,9 +147,13 @@ def main():
 
     # Clean & map
     logging.info("Cleaning text fields and normalizing data.")
-    for col in ["clinic_name", "clinic_main_type", "clinic_sub_type", "city"]:
+    for col in ["clinic_main_type", "clinic_sub_type", "city"]:
         df[col] = df[col].apply(clean_text)
         logging.info(f"Cleaned column '{col}'")
+        
+    df["clinic_name"] = df["clinic_name"].apply(clean_clinic_name)
+    logging.info("Cleaned 'clinic_name' column.")
+
 
     df["province"] = df["province"].apply(normalize_province)
     logging.info("Normalized 'province' column.")

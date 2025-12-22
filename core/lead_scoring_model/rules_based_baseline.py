@@ -88,11 +88,11 @@ def ensure_tables(conn):
         cursor.execute(LEAD_SCORES_TABLE_SCHEMA)
         conn.commit()
         logging.info("lead_scores table verified/created successfully.")
+        
     except sqlite3.Error as e:
         logging.error(f"Error creating lead_scores table: {e}")
         raise
-
-
+    
 def fetch_leads(conn):
     try:
         conn.row_factory = sqlite3.Row
@@ -103,6 +103,7 @@ def fetch_leads(conn):
         if rows:
             logging.debug(f"Lead columns: {rows[0].keys()}")
         return [dict(row) for row in rows]
+    
     except sqlite3.Error as e:
         logging.error(f"Failed to fetch leads: {e}")
         return []
@@ -139,8 +140,10 @@ def insert_score(conn, leads_id: int, score_data: Dict[str, Any]):
         ))
         conn.commit()
         logging.info(f"Score inserted successfully for lead ID {leads_id}")
+        
     except sqlite3.IntegrityError as e:
         logging.warning(f"Failed to insert score for lead ID {leads_id}: {e}")
+        
     except sqlite3.Error as e:
         logging.error(f"Database error on lead ID {leads_id}: {e}")
         raise

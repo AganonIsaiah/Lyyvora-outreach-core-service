@@ -11,7 +11,7 @@
 - [Libraries](#libraries)
 - [Architecture Layout](#architecture-layout)
     - [Database Schema Diagram](#database-schema-diagram)
-    - [Pipeline Architecture](#pipeline-architecture)
+    - [Core Business Logic Architecture](#core-business-logic-architecture)
 
 # Setup and Run
 ## Before you Run, you must set the Environment Variables in the `.env` file
@@ -56,11 +56,14 @@ Jupyter Notebook is used here for interactive testing, data exploration, and cle
 
 # Architecture Layout
 
+### Dashboard UI Mockups
+Click here to view the dashboard UI mockup: 
+
 ### Database Schema Diagram
 Click here to view the database diagram:
 https://dbdiagram.io/d/Riipen-Lyyvora-DB-Schema-69214ff8228c5bbc1affa94e
 
-### Pipeline Architecture
+### Core Business Logic Architecture
 - The applications follows this logical flow: **1)** Perform data cleaning and validation with the compliant lead data pipeline, and then store the cleaned data in our database, **2)** Perform lead scoring with cleaned data,  **3)** Generate personalized outreach (i.e., emails, SMS, LinkedIn DM)
 
 1. **lead_data_pipeline.py**: 
