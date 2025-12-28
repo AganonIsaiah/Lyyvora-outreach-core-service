@@ -30,3 +30,18 @@ class Queries:
         average_rating REAL
       );
     """
+    
+  @staticmethod
+  def get_lead_scores() -> str:
+    return f"""
+      CREATE TABLE IF NOT EXISTS lead_scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        leads_id INTEGER NOT NULL,
+        score REAL,
+        top_features TEXT,
+        explanation TEXT,
+        created_at DATETIME,
+        model_version TEXT,
+        FOREIGN KEY (leads_id) REFERENCES leads(id)
+      );
+    """

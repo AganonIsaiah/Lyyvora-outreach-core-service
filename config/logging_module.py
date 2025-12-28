@@ -45,3 +45,6 @@ class Logger:
     
   def warning(self, message: str):
     self.logger.warning(message)
+    
+  def debug(self, message: str):
+    self.logger.debug(message)

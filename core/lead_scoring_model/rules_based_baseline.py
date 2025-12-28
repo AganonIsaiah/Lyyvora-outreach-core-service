@@ -1,35 +1,15 @@
 import sqlite3
 import json
-import logging
-import os
 from datetime import datetime, timezone
 from typing import Dict, Any
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-DB_FILE = os.path.join(PROJECT_ROOT, "datasets", "real_set_v1", "records.db")
-LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
-os.makedirs(LOG_DIR, exist_ok=True)
-
-logging.basicConfig(
-    filename=os.path.join(LOG_DIR, "rules_based_baseline.log"),
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+from config.logging_module import Logger
+from config.configs import DB_FILE
+from config.queries import Queries
 
 MODEL_VERSION = "rules_v1"
 
-LEAD_SCORES_TABLE_SCHEMA = """
-CREATE TABLE IF NOT EXISTS lead_scores (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    leads_id INTEGER NOT NULL,
-    score REAL,
-    top_features TEXT,
-    explanation TEXT,
-    created_at DATETIME,
-    model_version TEXT,
-    FOREIGN KEY (leads_id) REFERENCES leads(id)
-);
-"""
+logger = Logger(log_file="rules_based_baseline.log")
 
 def rules_based_score(lead: Dict[str, Any]) -> Dict[str, Any]:
     score = 0
@@ -75,7 +55,7 @@ def rules_based_score(lead: Dict[str, Any]) -> Dict[str, Any]:
     score = min(score, 100)
     explanation = f"Rules applied: {', '.join(top_features)}"
 
-    logging.debug(f"Lead ID {lead.get('id', 'N/A')}: score={score}, features={top_features}")
+    logger.debug(f"Lead ID {lead.get('id', 'N/A')}: score={score}, features={top_features}")
     return {"score": score, "top_features": top_features, "explanation": explanation}
 
 def get_connection():
@@ -84,13 +64,13 @@ def get_connection():
 def ensure_tables(conn):
     try:
         cursor = conn.cursor()
-        logging.info("Ensuring lead_scores table exists.")
-        cursor.execute(LEAD_SCORES_TABLE_SCHEMA)
+        logger.info("Ensuring lead_scores table exists.")
+        cursor.execute(Queries.get_lead_scores())
         conn.commit()
-        logging.info("lead_scores table verified/created successfully.")
+        logger.info("lead_scores table verified/created successfully.")
         
     except sqlite3.Error as e:
-        logging.error(f"Error creating lead_scores table: {e}")
+        logger.error(f"Error creating lead_scores table: {e}")
         raise
     
 def fetch_leads(conn):
@@ -99,13 +79,13 @@ def fetch_leads(conn):
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM leads")
         rows = cursor.fetchall()
-        logging.info(f"Fetched {len(rows)} leads from the database.")
+        logger.info(f"Fetched {len(rows)} leads from the database.")
         if rows:
-            logging.debug(f"Lead columns: {rows[0].keys()}")
+            logger.debug(f"Lead columns: {rows[0].keys()}")
         return [dict(row) for row in rows]
     
     except sqlite3.Error as e:
-        logging.error(f"Failed to fetch leads: {e}")
+        logger.error(f"Failed to fetch leads: {e}")
         return []
 
 def already_scored(conn, leads_id: int) -> bool:
@@ -120,7 +100,7 @@ def already_scored(conn, leads_id: int) -> bool:
 def insert_score(conn, leads_id: int, score_data: Dict[str, Any]):
     try:
         cursor = conn.cursor()
-        logging.info(f"Inserting score for lead ID {leads_id}: {score_data['score']}")
+        logger.info(f"Inserting score for lead ID {leads_id}: {score_data['score']}")
         cursor.execute("""
             INSERT INTO lead_scores (
                 leads_id,
@@ -139,35 +119,35 @@ def insert_score(conn, leads_id: int, score_data: Dict[str, Any]):
             MODEL_VERSION
         ))
         conn.commit()
-        logging.info(f"Score inserted successfully for lead ID {leads_id}")
+        logger.info(f"Score inserted successfully for lead ID {leads_id}")
         
     except sqlite3.IntegrityError as e:
-        logging.warning(f"Failed to insert score for lead ID {leads_id}: {e}")
+        logger.warning(f"Failed to insert score for lead ID {leads_id}: {e}")
         
     except sqlite3.Error as e:
-        logging.error(f"Database error on lead ID {leads_id}: {e}")
+        logger.error(f"Database error on lead ID {leads_id}: {e}")
         raise
 
 def run_rules_baseline():
-    logging.info("Starting rules-based baseline scoring")
+    logger.info("Starting rules-based baseline scoring")
 
     conn = get_connection()
     ensure_tables(conn)
 
     leads = fetch_leads(conn)
-    logging.info(f"Fetched {len(leads)} leads")
+    logger.info(f"Fetched {len(leads)} leads")
 
     scored = 0
     skipped = 0
 
-    logging.info("Starting rules-based scoring loop.")
+    logger.info("Starting rules-based scoring loop.")
     for lead in leads:
         lead_id = lead.get("id")
-        logging.debug(f"Processing lead ID: {lead_id}")
+        logger.debug(f"Processing lead ID: {lead_id}")
 
         if already_scored(conn, lead_id):
             skipped += 1
-            logging.debug(f"Lead ID {lead_id} already scored, skipping.")
+            logger.debug(f"Lead ID {lead_id} already scored, skipping.")
             continue
 
         score_data = rules_based_score(lead)
@@ -176,7 +156,7 @@ def run_rules_baseline():
 
     conn.close()
 
-    logging.info(
+    logger.info(
         f"Rules baseline complete | scored={scored}, skipped={skipped}, model={MODEL_VERSION}"
     )
     print(
