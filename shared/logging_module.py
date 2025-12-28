@@ -1,7 +1,7 @@
 import logging
 import os 
 
-from config.configs import PROJECT_ROOT
+from shared.configs import PROJECT_ROOT
 
 class Logger:
   def __init__(self, log_file: str, level=logging.INFO):

@@ -1,7 +1,7 @@
 MAX_WORDS = 120
 
 
-def prompt_v1(clinic_info) -> str:
+def prompt_v1(clinic_info: dict) -> str:
     return f"""
         ROLE
         You are Sharmeen Aqeel, Founder and CEO of Lyyvora.

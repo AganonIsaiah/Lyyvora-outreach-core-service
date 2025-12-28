@@ -4,9 +4,9 @@ import os
 from dotenv import load_dotenv
 import time
 
-from config.queries import Queries
-from config.logging_module import Logger
-from config.configs import DB_FILE
+from shared.queries import Queries
+from shared.logging_module import Logger
+from shared.configs import DB_FILE
 
 from .prompt_templates import prompt_v1
 
@@ -14,14 +14,14 @@ OLLAMA_MODEL = "gpt-oss:120b"
 EMAIL_BATCH_SIZE = 1
 
 load_dotenv()
-logger = Logger(log_file="outreach_generator.log")
 
+logger = Logger(log_file="outreach_generator.log")
 client = Client(
     host="https://ollama.com",
     headers={"Authorization": f"Bearer {os.environ.get('OLLAMA_API')}"}
 )
 
-def generate_email(clinic_info) -> str:
+def generate_email(clinic_info: dict) -> str:
     clinic_name = clinic_info.get("clinic_name", "N/A")
     start_time = time.perf_counter()
     logger.start_item(clinic_name)

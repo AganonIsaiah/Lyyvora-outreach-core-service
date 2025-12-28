@@ -3,9 +3,9 @@ import json
 from datetime import datetime, timezone
 from typing import Dict, Any
 
-from config.logging_module import Logger
-from config.configs import DB_FILE
-from config.queries import Queries
+from shared.logging_module import Logger
+from shared.configs import DB_FILE
+from shared.queries import Queries
 
 MODEL_VERSION = "rules_v1"
 

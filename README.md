@@ -78,7 +78,7 @@ https://dbdiagram.io/d/Riipen-Lyyvora-DB-Schema-69214ff8228c5bbc1affa94e
 
 3. **outreach_generator.py**:
     - This service is a personalized outreach generator. It uses the data stored in our database + generative AI to create customized messages to clients.
-    - It creates a subject line + 80-120 word email, a 150-char SMS, and a LinkedIn DM.
+    - It creates a subject line + 80-120 word email.
     - It uses a prompt template with slots (specialty, city, bank-ready offer, risk-reversal) and contains content guardrails (i.e., no promises of approval)
     - It provides A/B variants and a toxicity/safety check (i.e., keyword block list + length checks)
     - Data is then stored in a `outreach_messages` table containing columns: `id`, `leads_id`, `channel`, `variant`, `subject_line`, `message_body`, `created_at`

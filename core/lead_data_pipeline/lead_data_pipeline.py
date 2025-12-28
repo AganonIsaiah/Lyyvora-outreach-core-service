@@ -3,9 +3,9 @@ import sqlite3
 import re
 from urllib.parse import urlparse
 
-from config.queries import Queries
-from config.logging_module import Logger
-from config.configs import CSV_INPUT_FILE, DB_FILE
+from shared.queries import Queries
+from shared.logging_module import Logger
+from shared.configs import CSV_INPUT_FILE, DB_FILE
 
 logger = Logger(log_file="lead_data_pipeline.log")
 
