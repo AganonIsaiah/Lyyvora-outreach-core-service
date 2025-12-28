@@ -56,7 +56,6 @@ Jupyter Notebook is used here for interactive testing, data exploration, and cle
 - scikit-learn
 - pandas
 
-
 # Architecture Layout
 
 ### Dashboard UI Mockups
@@ -76,16 +75,6 @@ https://dbdiagram.io/d/Riipen-Lyyvora-DB-Schema-69214ff8228c5bbc1affa94e
     - From the cleaned data in the `leads` table, performs lead scoring with priority ranking (0-100).
     - priority ranking is done using interpretable features such as `specialty`, `region`, `availability of contact info`, `presence of financing keywords on site`, `inferred clinic size signals`, `recent posts`
     - Data is then stored in a `lead_scores` table containing columns: `id`, `leads_id`, `score`, `top_features`, `explanation`, `created_at`
-<!-- 
-3. **bank_ready_rules_engine.py**:
-    - Performs bank ready audit checks on lead clinics.
-    - Rules include: 
-        - At least 6 months in business
-        - At least $10k monthly revenue
-    - Performs basic doc checks:
-        - 6 months bank statements
-        - Last year P&L
-        - Owner id -->
 
 3. **outreach_generator.py**:
     - This service is a personalized outreach generator. It uses the data stored in our database + generative AI to create customized messages to clients.
@@ -93,5 +82,3 @@ https://dbdiagram.io/d/Riipen-Lyyvora-DB-Schema-69214ff8228c5bbc1affa94e
     - It uses a prompt template with slots (specialty, city, bank-ready offer, risk-reversal) and contains content guardrails (i.e., no promises of approval)
     - It provides A/B variants and a toxicity/safety check (i.e., keyword block list + length checks)
     - Data is then stored in a `outreach_messages` table containing columns: `id`, `leads_id`, `channel`, `variant`, `subject_line`, `message_body`, `created_at`
-
-

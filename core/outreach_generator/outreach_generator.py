@@ -56,10 +56,10 @@ def generate_email(clinic_info):
 
         PERSONALIZATION INPUT
         Incorporate this information where appropriate:
-        - Recipient / Clinic: {clinic_info.get('clinic_name', 'N/A')}
-        - Specialty or focus: {clinic_info.get('clinic_sub_type', 'N/A')}
-        - Location: {clinic_info.get('city', 'N/A')}
-        - Background context: {clinic_info.get('website_desc', 'N/A')}
+        - Clinic: {clinic_info.get('clinic_name', 'N/A')}
+        - Clinic's specialties: {clinic_info.get('clinic_sub_type', 'N/A')}
+        - Clinic's location: {clinic_info.get('city', 'N/A')}
+        - Clinic background context: {clinic_info.get('website_desc', 'N/A')}
 
         STRUCTURE
         1. Open with a thoughtful, specific acknowledgment of the clinic’s work or specialty
@@ -72,7 +72,7 @@ def generate_email(clinic_info):
         - Reflective, credible, and calm
         - No sales language, no buzzwords
         - 2–4 short paragraphs
-        - For the subject lines, use title case for the capitalization
+        - For the subject lines, use title case
 
         CALL-TO-ACTION
         - Do NOT include links or URLs
