@@ -1,41 +1,17 @@
 import pandas as pd
 import sqlite3
-import logging
 import re
-import os
 from urllib.parse import urlparse
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-INPUT_FILE = os.path.join(PROJECT_ROOT, "datasets", "real_set_v1", "records.csv")
-DB_FILE = os.path.join(PROJECT_ROOT, "datasets", "real_set_v1", "records.db")
-LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
+from config.queries import Queries
+from config.logging_module import Logger
+from config.configs import CSV_INPUT_FILE, DB_FILE
 
-os.makedirs(LOG_DIR, exist_ok=True)
-logging.basicConfig(
-    filename=os.path.join(LOG_DIR, "lead_data_pipeline.log"),
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
-LEADS_TABLE_SCHEMA = """
-                   CREATE TABLE IF NOT EXISTS leads (
-                       id INTEGER PRIMARY KEY AUTOINCREMENT,
-                       clinic_name TEXT NOT NULL,
-                       clinic_main_type TEXT,
-                       clinic_sub_type TEXT,
-                       city TEXT,
-                       province TEXT,
-                       phone TEXT UNIQUE,
-                       email TEXT UNIQUE NOT NULL,
-                       website_url TEXT,
-                       website_desc TEXT,
-                       total_reviews INTEGER,
-                       average_rating REAL
-                   );
-                   """
+logger = Logger(log_file="lead_data_pipeline.log")
 
 def get_primary_email(email1: str, email2: str):
+    EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    
     for email in [email1, email2]:
         if not isinstance(email, str):
             continue
@@ -46,7 +22,7 @@ def get_primary_email(email1: str, email2: str):
             return email_clean
         
         else:
-            logging.warning(f"Dropping invalid email: {email_clean}")
+            logger.warning(f"Dropping invalid email: {email_clean}")
             
     return None
 
@@ -70,7 +46,7 @@ def clean_phone(phone: str):
         digits = digits[1:]
         
     if len(digits) != 10:
-        logging.warning(f"Dropping invalid phone: {phone}")
+        logger.warning(f"Dropping invalid phone: {phone}")
         return None
         
     return digits
@@ -88,7 +64,7 @@ def clean_website(site: str):
     if "." in site and " " not in site: 
         return site
     
-    logging.warning(f"Invalid website URL: {site}")
+    logger.warning(f"Invalid website URL: {site}")
     return None
 
 def normalize_province(p: str):
@@ -118,7 +94,7 @@ def save_to_sqlite(df: pd.DataFrame):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
-    cursor.execute(LEADS_TABLE_SCHEMA)
+    cursor.execute(Queries.get_leads())
     df.to_sql("leads", conn, if_exists="append", index=False)
     
     conn.commit()
@@ -126,16 +102,16 @@ def save_to_sqlite(df: pd.DataFrame):
 
 
 def main():
-    logging.info("Pipeline started.")
+    logger.info("Pipeline started.")
     print("Pipeline started.")
     
     # Load CSV
-    df = pd.read_csv(INPUT_FILE)
-    logging.info(f"Loaded {len(df)} rows from {INPUT_FILE}")
-    print(f"Loaded {len(df)} rows from {INPUT_FILE}")
+    df = pd.read_csv(CSV_INPUT_FILE)
+    logger.info(f"Loaded {len(df)} rows from {CSV_INPUT_FILE}")
+    print(f"Loaded {len(df)} rows from {CSV_INPUT_FILE}")
 
     # Map raw CSV columns to DB columns
-    logging.info("Renaming columns to match DB schema.")
+    logger.info("Renaming columns to match DB schema.")
     df = df.rename(columns={
         "business_name": "clinic_name",
         "type": "clinic_main_type",
@@ -146,52 +122,52 @@ def main():
     })
 
     # Clean & map
-    logging.info("Cleaning text fields and normalizing data.")
+    logger.info("Cleaning text fields and normalizing data.")
     for col in ["clinic_main_type", "clinic_sub_type", "city"]:
         df[col] = df[col].apply(clean_text)
-        logging.info(f"Cleaned column '{col}'")
+        logger.info(f"Cleaned column '{col}'")
         
     df["clinic_name"] = df["clinic_name"].apply(clean_clinic_name)
-    logging.info("Cleaned 'clinic_name' column.")
+    logger.info("Cleaned 'clinic_name' column.")
 
 
     df["province"] = df["province"].apply(normalize_province)
-    logging.info("Normalized 'province' column.")
+    logger.info("Normalized 'province' column.")
 
     df["phone"] = df["phone"].apply(clean_phone)
-    logging.info("Cleaned 'phone' column.")
+    logger.info("Cleaned 'phone' column.")
 
     df["website_url"] = df["website_url"].apply(clean_website)
-    logging.info("Cleaned 'website_url' column.")
+    logger.info("Cleaned 'website_url' column.")
 
     df["email"] = df.apply(lambda row: get_primary_email(row.get("email_1"), row.get("email_2")), axis=1)
-    logging.info("Mapped primary email for each row.")
+    logger.info("Mapped primary email for each row.")
 
     df["total_reviews"] = pd.to_numeric(df["total_reviews"], errors="coerce")
     df["average_rating"] = pd.to_numeric(df["average_rating"], errors="coerce")
-    logging.info("Converted 'total_reviews' and 'average_rating' to numeric.")
+    logger.info("Converted 'total_reviews' and 'average_rating' to numeric.")
 
     # Deduplicate
     before = len(df)
     df = df.drop_duplicates(subset=["clinic_name", "city"], keep='first')
-    logging.info(f"Dropped {before - len(df)} duplicate rows based on ['clinic_name', 'city'].")
+    logger.info(f"Dropped {before - len(df)} duplicate rows based on ['clinic_name', 'city'].")
 
     before = len(df)
     df = df[df['phone'].isna() | ~df.duplicated(subset=['phone'], keep='first')]
-    logging.info(f"Dropped {before - len(df)} duplicate rows based on 'phone'.")
+    logger.info(f"Dropped {before - len(df)} duplicate rows based on 'phone'.")
 
     before = len(df)
     df = df[df['email'].isna() | ~df.duplicated(subset=['email'], keep='first')]
-    logging.info(f"Dropped {before - len(df)} duplicate rows based on 'email'.")
+    logger.info(f"Dropped {before - len(df)} duplicate rows based on 'email'.")
 
     # Drop missing essential fields
     before = len(df)
     df = df.dropna(subset=["clinic_name"])
-    logging.info(f"Dropped {before - len(df)} rows missing 'clinic_name'.")
+    logger.info(f"Dropped {before - len(df)} rows missing 'clinic_name'.")
 
     before = len(df)
     df = df.dropna(subset=["email"])
-    logging.info(f"Dropped {before - len(df)} rows missing 'email'.")
+    logger.info(f"Dropped {before - len(df)} rows missing 'email'.")
 
     # Reorder for SQLite
     df = df[[
@@ -199,17 +175,17 @@ def main():
         "city", "province", "phone", "email",
         "website_url", "website_desc", "total_reviews", "average_rating"
     ]]
-    logging.info("Reordered columns for SQLite.")
+    logger.info("Reordered columns for SQLite.")
 
     # Convert NaN to None for SQLite
     df = df.where(pd.notnull(df), None)
-    logging.info("Converted NaN values to None for SQLite.")
+    logger.info("Converted NaN values to None for SQLite.")
 
     # Save
     save_to_sqlite(df)
-    logging.info(f"Saved {len(df)} rows to SQLite.")
+    logger.info(f"Saved {len(df)} rows to SQLite.")
 
-    logging.info("Pipeline completed successfully.")
+    logger.info("Pipeline completed successfully.")
     print("Pipeline completed successfully.")
 
 if __name__ == "__main__":

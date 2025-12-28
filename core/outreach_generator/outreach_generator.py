@@ -2,10 +2,7 @@ import sqlite3
 from ollama import Client
 import os
 from dotenv import load_dotenv
-import sys
 import time
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
 from config.queries import Queries
 from config.logging_module import Logger
 from config.configs import DB_FILE
@@ -15,10 +12,12 @@ OLLAMA_MODEL = "gpt-oss:120b"
 EMAIL_BATCH_SIZE = 1
 
 load_dotenv()
+
 logger = Logger(log_file="outreach_generator.log")
+
 conn = sqlite3.connect(DB_FILE)
 cursor = conn.cursor()
-query = Queries.get_top_clinics(limit=EMAIL_BATCH_SIZE, offset=0)
+query = Queries.get_top_clinics_for_outreach(limit=EMAIL_BATCH_SIZE, offset=0)
 cursor.execute(query)
 rows = cursor.fetchall()
 columns = [desc[0] for desc in cursor.description] 
@@ -107,7 +106,6 @@ def generate_email(clinic_info):
     logger.log_response(clinic_name, email_text)
     
     return email_text.strip()
-
 
 if __name__=="__main__":
     batch_start = time.perf_counter()

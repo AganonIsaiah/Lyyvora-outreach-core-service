@@ -40,6 +40,9 @@ Once the server is running, visit http://127.0.0.1:8000/docs to see available AP
 - `pytest`
 - `pytest -vv` (Runs tests and shows more details)
 
+### To run a certain file
+- `python3 -m core.<package_name>.<file_name>`
+
 # To Open Notebook
 Jupyter Notebook is used here for interactive testing, data exploration, and clear documentation of the pipeline
 
