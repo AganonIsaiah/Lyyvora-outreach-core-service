@@ -2,41 +2,26 @@ import sqlite3
 from ollama import Client
 import os
 from dotenv import load_dotenv
-import logging
+import sys
 import time
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from config.queries import Queries
+from config.logging_module import Logger
+from config.configs import DB_FILE
+
+MAX_WORDS = 120
+OLLAMA_MODEL = "gpt-oss:120b"
+EMAIL_BATCH_SIZE = 1
 
 load_dotenv()
-
-# Connect to your database
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-DB_FILE = os.path.join(PROJECT_ROOT, "datasets", "real_set_v1", "records.db")
-LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
-
-os.makedirs(LOG_DIR, exist_ok=True)
-logging.basicConfig(
-    filename=os.path.join(LOG_DIR, "outreach_generator.log"),
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-conn = sqlite3.connect(DB_FILE)  # replace with your DB path
+logger = Logger(log_file="outreach_generator.log")
+conn = sqlite3.connect(DB_FILE)
 cursor = conn.cursor()
-
-# Your query
-query = """
-SELECT l.clinic_name, l.clinic_sub_type, l.city, l.website_desc 
-FROM leads l
-LEFT JOIN lead_scores s 
-ON l.id = s.leads_id 
-ORDER BY s.score DESC
-LIMIT 5;
-"""
-
+query = Queries.get_top_clinics(limit=EMAIL_BATCH_SIZE, offset=0)
 cursor.execute(query)
 rows = cursor.fetchall()
-
-# Convert rows into a list of dictionaries
-columns = [desc[0] for desc in cursor.description]  # get column names
+columns = [desc[0] for desc in cursor.description] 
 clinic_infos = [dict(zip(columns, row)) for row in rows]
 
 client = Client(
@@ -44,70 +29,94 @@ client = Client(
     headers={"Authorization": f"Bearer {os.environ.get('OLLAMA_API')}"}
 )
 
-MAX_WORDS = 120
-OLLAMA_MODEL = "gpt-oss:120b"
-
 def generate_email(clinic_info):
-    
     clinic_name = clinic_info.get("clinic_name", "N/A")
-
     start_time = time.perf_counter()
-    logging.info(f"START email generation for clinic: {clinic_name}")
-
+    logger.start_item(clinic_name)
     
     prompt = f"""
-    You are Sharmeen Aqeel, Founder and CEO of Lyyvora, a Lending-as-a-Service platform for healthcare clinics.
-    
-    Write a concise, human-like email (max {MAX_WORDS} words) to the clinic below.
-    Personalize it using these details:
+        ROLE
+        You are Sharmeen Aqeel, Founder and CEO of Lyyvora.
 
-    - Clinic Name: {clinic_info.get('clinic_name', 'N/A')}
-    - Specialties: {clinic_info.get('clinic_sub_type', 'N/A')}
-    - City: {clinic_info.get('city', 'N/A')}
-    - Brief Description: {clinic_info.get('website_desc', 'N/A')}
+        FACTUAL CONTEXT (USE AS GIVEN — DO NOT MODIFY)
+        Lyyvora facts you may reference:
+        - Lending-as-a-Service platform for healthcare clinics and pharmacies
+        - Works with multiple lending partners across Canada and the U.S.
+        - Actively supports financing deals ranging from $20,000 to $2,000,000
+        - Focused on data-driven capital based on real clinic performance
+        - Built to help clinics manage reinvestment, equipment upgrades, and expansion
+        - Founder background includes leading global product design teams in France and Canada
 
-    Include:
-    - A friendly introduction referencing the clinic or its specialty
-    - Lyyvora branding and Sharmeen Aqeel as the CEO
-    - How Lyyvora can help clinics scale with fast, transparent financing
-    - A polite call-to-action to schedule a call or learn more
+        IMPORTANT:
+        - Use these facts naturally if relevant
+        - Do NOT invent new metrics, numbers, partnerships, or claims
+        - Do NOT exaggerate outcomes or imply guaranteed funding
 
-    Guardrails:
-    - Do NOT promise loan approval
-    - Avoid aggressive sales language
-    - Keep it professional, friendly, and human
+        TASK
+        Write 3 personalized outreach emails (maximum {MAX_WORDS} words).
 
-    **Output format:**  
-    Subject: <subject line here>  
-    Body: <email body here>
-    
+        PERSONALIZATION INPUT
+        Incorporate this information where appropriate:
+        - Recipient / Clinic: {clinic_info.get('clinic_name', 'N/A')}
+        - Specialty or focus: {clinic_info.get('clinic_sub_type', 'N/A')}
+        - Location: {clinic_info.get('city', 'N/A')}
+        - Background context: {clinic_info.get('website_desc', 'N/A')}
+
+        STRUCTURE
+        1. Open with a thoughtful, specific acknowledgment of the clinic’s work or specialty
+        2. Introduce yourself and why you built Lyyvora
+        3. Reference Lyyvora’s real operating context (partners, deal ranges, markets) to establish credibility
+        4. Close with a respectful, low-pressure invitation to continue the conversation
+
+        STYLE GUIDELINES
+        - First-person, founder-to-founder voice
+        - Reflective, credible, and calm
+        - No sales language, no buzzwords
+        - 2–4 short paragraphs
+        - For the subject lines, use title case for the capitalization
+
+        CALL-TO-ACTION
+        - Do NOT include links or URLs
+        - Use exactly one CTA
+        - CTA must invite replying directly to the email
+
+        STRICT GUARDRAILS
+        - Do NOT promise funding, approval, or outcomes
+        - Do NOT add statistics beyond those listed
+        - Do NOT include placeholders or bracketed text
+        - Stay within the word limit
+
+        OUTPUT
+        subject_1: <one concise subject line>
+        body_1: <email body>
+
+        subject_2: <one concise subject line follow-up>
+        body_2: <email body>
+
+        subject_3: <one concise subject line follow-up>
+        body_3: <email body>
     """
+
     messages = [{"role": "user", "content": prompt}]
     email_text = ""
     for part in client.chat(OLLAMA_MODEL, messages=messages, stream=True):
         email_text += part.message.content
         
     elapsed = time.perf_counter() - start_time
-
-    logging.info(
-        f"END email generation for clinic: {clinic_name} | "
-        f"duration={elapsed:.2f}s"
-    )
-    
-    logging.info(f"RESPONSE for {clinic_name}:\n\n{email_text.strip()}")
+    logger.end_item(clinic_name, duration=elapsed)
+    logger.log_response(clinic_name, email_text)
     
     return email_text.strip()
 
 
 if __name__=="__main__":
     batch_start = time.perf_counter()
-    logging.info("START outreach email generation batch")
+    logger.start_batch("outreach_email_generation")
+    print(f"START outreach generation for {EMAIL_BATCH_SIZE} emails...")
 
     for clinic_info in clinic_infos:
         generate_email(clinic_info)
 
     batch_elapsed = time.perf_counter() - batch_start
-    logging.info(
-        f"END outreach email generation batch | "
-        f"total_duration={batch_elapsed:.2f}s"
-    )
+    logger.end_batch("outreach_email_generation", duration=batch_elapsed, avg_per_item=batch_elapsed/EMAIL_BATCH_SIZE)
+    print(f"END outreach generation | total_duration={batch_elapsed:.2f}s | average_time_per_email={batch_elapsed/EMAIL_BATCH_SIZE:.2f}")
