@@ -65,7 +65,7 @@ def ensure_tables(conn):
     try:
         cursor = conn.cursor()
         logger.info("Ensuring lead_scores table exists.")
-        cursor.execute(Queries.get_lead_scores())
+        cursor.execute(Queries.create_table_lead_scores())
         conn.commit()
         logger.info("lead_scores table verified/created successfully.")
         

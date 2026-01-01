@@ -1,3 +1,8 @@
+"""
+IMPORTANT NOTES
+- These prompt templates are used in outreach_generator/outreach_generator.py
+- Prompt output should include "subject_line" and "email_body", because the outreach_generator expects those two fields
+"""
 MAX_WORDS = 120
 
 
@@ -21,7 +26,7 @@ def prompt_v1(clinic_info: dict) -> str:
         - Do NOT exaggerate outcomes or imply guaranteed funding
 
         TASK
-        Write 3 personalized outreach emails (maximum {MAX_WORDS} words). For the 2 follow up emails, make sure to use context from the first email to prevent redundancy.
+        Write a personalized outreach emails (maximum {MAX_WORDS} words). 
 
         PERSONALIZATION INPUT
         Incorporate this information where appropriate:
@@ -55,12 +60,6 @@ def prompt_v1(clinic_info: dict) -> str:
         - Stay within the word limit
 
         OUTPUT
-        subject_1: <one concise subject line>
-        body_1: <email body>
-
-        subject_2: <one concise subject line follow-up>
-        body_2: <email body>
-
-        subject_3: <one concise subject line follow-up>
-        body_3: <email body>
+        subject_line <one concise subject line>
+        email_body: <email body>
     """

@@ -20,7 +20,6 @@ def get_primary_email(email1: str, email2: str):
         
         if re.match(EMAIL_REGEX, email_clean):
             return email_clean
-        
         else:
             logger.warning(f"Dropping invalid email: {email_clean}")
             
@@ -94,14 +93,13 @@ def save_to_sqlite(df: pd.DataFrame):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
-    cursor.execute(Queries.get_leads())
+    cursor.execute(Queries.create_table_leads())
     df.to_sql("leads", conn, if_exists="append", index=False)
     
     conn.commit()
     conn.close()
 
-
-def main():
+def run_pipeline():
     logger.info("Pipeline started.")
     print("Pipeline started.")
     
@@ -189,4 +187,4 @@ def main():
     print("Pipeline completed successfully.")
 
 if __name__ == "__main__":
-    main()
+    run_pipeline()
