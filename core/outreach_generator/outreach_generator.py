@@ -37,17 +37,19 @@ def generate_email(clinic_info: dict) -> str:
     
     return email_text.strip()
 
-
 def parse_email(email_text: str) -> tuple[str, str]:
-    subject_line, email_body = "", ""
     SPLIT = "email_body:"
     
-    if SPLIT in email_text: 
-        subject_line = email_text.split(SPLIT)[0].replace("subject_line:", "").strip()
-        email_body = email_text.split(SPLIT)[1].strip()
-
+    if SPLIT not in email_text: 
+        return None
+        
+    subject_line = email_text.split(SPLIT)[0].replace("subject_line:", "").strip()
+    email_body = email_text.split(SPLIT)[1].strip()
+    
+    if not subject_line or not email_body:
+        return None
+  
     return subject_line, email_body 
-
 
 def save_to_sql(conn, clinic_info: dict, subject: str, body: str, campaign_batch: str):
     cursor = conn.cursor()
@@ -79,7 +81,7 @@ def export_to_csv(conn, campaign_batch: str):
     headers = [desc[0] for desc in cursor.description]
     
     os.makedirs(SMARTLEAD_CSV_OUTPUT_FILE, exist_ok=True)
-    file = f"outreach_{campaign_batch}.csv"
+    file = f"{campaign_batch}.csv"
     filename = os.path.join(SMARTLEAD_CSV_OUTPUT_FILE, file)
     
     with open(filename, "w", newline="", encoding="utf-8") as f:
@@ -89,7 +91,10 @@ def export_to_csv(conn, campaign_batch: str):
         
     logger.info(f"Export {len(rows)} rows to {file}")
 
-def run_email_generation(EMAIL_BATCH_SIZE: int = 1, OFFSET: int = 0):
+def run_email_generation(EMAIL_BATCH_SIZE: int = 10, OFFSET: int = 0):
+    if EMAIL_BATCH_SIZE < 1: EMAIL_BATCH_SIZE = 1
+    if OFFSET < 0: OFFSET = 0
+    
     conn = sqlite3.connect(DB_FILE)
     
     cursor = conn.cursor()
@@ -107,11 +112,16 @@ def run_email_generation(EMAIL_BATCH_SIZE: int = 1, OFFSET: int = 0):
 
     for clinic_info in clinic_infos:
         email_text = generate_email(clinic_info)
-        subject, body = parse_email(email_text=email_text)
+        parsed_email = parse_email(email_text=email_text)
+        
+        if parsed_email is None:
+            logger.error(f"Failed to parse email for {clinic_info['clinic_name']}. Skipping.")
+            continue 
+        
+        subject, body = parsed_email
         save_to_sql(conn, clinic_info=clinic_info, subject=subject, body=body, campaign_batch=campaign_batch)
     
     export_to_csv(conn=conn, campaign_batch=campaign_batch)
-
     
     batch_elapsed = time.perf_counter() - batch_start
     logger.end_batch(
