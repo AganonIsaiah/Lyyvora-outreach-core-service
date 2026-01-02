@@ -31,11 +31,23 @@ class Queries:
       FROM smartlead
       WHERE campaign_batch = ?
     """
+    
     values = (campaign_batch,)
+    
     return sql, values
 
   @staticmethod
-  def insert_into_smartlead(clinic_name: str, email: str, subject_line: str, email_body: str, clinic_type: str, city: str, province: str, campaign_batch: str) -> tuple[str, tuple]:
+  def insert_into_smartlead(
+      clinic_name: str, 
+      email: str, 
+      subject_line: str, 
+      email_body: str, 
+      clinic_type: str, 
+      city: str, 
+      province: str, 
+      campaign_batch: str
+    ) -> tuple[str, tuple]:
+    
     sql = """
       INSERT OR IGNORE INTO smartlead (
         clinic_name,
@@ -49,6 +61,7 @@ class Queries:
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """
+    
     values = (
       clinic_name,
       email,
@@ -59,6 +72,7 @@ class Queries:
       province,
       campaign_batch
     )
+    
     return sql, values
     
   @staticmethod

@@ -60,6 +60,6 @@ def prompt_v1(clinic_info: dict) -> str:
         - Stay within the word limit
 
         OUTPUT
-        subject_line <one concise subject line>
+        subject_line: <one concise subject line>
         email_body: <email body>
     """

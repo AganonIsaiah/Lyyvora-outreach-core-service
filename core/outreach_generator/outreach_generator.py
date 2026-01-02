@@ -24,7 +24,7 @@ client = Client(
 def generate_email(clinic_info: dict) -> str:
     clinic_name = clinic_info.get("clinic_name", "N/A")
     start_time = time.perf_counter()
-    logger.start_item(clinic_name)
+    # logger.start_item(clinic_name)
     
     messages = [{"role": "user", "content": prompt_v1(clinic_info=clinic_info)}]
     email_text = ""
@@ -68,6 +68,7 @@ def save_to_sql(conn, clinic_info: dict, subject: str, body: str, campaign_batch
         )
         cursor.execute(sql, values)
         conn.commit()
+        
     except Exception as e:
         logger.error(f"SQL insert failed for {clinic_info["clinic_name"]}: {e}")
     
@@ -91,14 +92,14 @@ def export_to_csv(conn, campaign_batch: str):
         
     logger.info(f"Export {len(rows)} rows to {file}")
 
-def run_email_generation(EMAIL_BATCH_SIZE: int = 10, OFFSET: int = 0):
+def run_email_generation(EMAIL_BATCH_SIZE: int = 5, EMAIL_DB_OFFSET: int = 0):
     if EMAIL_BATCH_SIZE < 1: EMAIL_BATCH_SIZE = 1
-    if OFFSET < 0: OFFSET = 0
+    if EMAIL_DB_OFFSET < 0: EMAIL_DB_OFFSET = 0
     
     conn = sqlite3.connect(DB_FILE)
     
     cursor = conn.cursor()
-    cursor.execute(Queries.get_top_clinics_for_outreach(limit=EMAIL_BATCH_SIZE, offset=OFFSET))
+    cursor.execute(Queries.get_top_clinics_for_outreach(limit=EMAIL_BATCH_SIZE, offset=EMAIL_DB_OFFSET))
     rows = cursor.fetchall()
     
     columns = [desc[0] for desc in cursor.description] 
@@ -107,7 +108,7 @@ def run_email_generation(EMAIL_BATCH_SIZE: int = 10, OFFSET: int = 0):
     campaign_batch = f"outreach_{time.strftime('%Y%m%d_%H%M%S')}"
     batch_start = time.perf_counter()
     
-    logger.start_batch(f"outreach_{campaign_batch}")
+    logger.start_batch(f"{campaign_batch}")
     print(f"START outreach generation for {EMAIL_BATCH_SIZE} emails | batch={campaign_batch}")
 
     for clinic_info in clinic_infos:
@@ -125,7 +126,7 @@ def run_email_generation(EMAIL_BATCH_SIZE: int = 10, OFFSET: int = 0):
     
     batch_elapsed = time.perf_counter() - batch_start
     logger.end_batch(
-        f"outreach_{campaign_batch}",
+        f"{campaign_batch}",
         duration=batch_elapsed,
         avg_per_item=batch_elapsed / max(EMAIL_BATCH_SIZE, 1)
     )
