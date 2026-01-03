@@ -1,9 +1,14 @@
-import { ClinicStatus } from "./types";
+import { ClinicStatus, SidebarRoute, Routes } from "./types";
 
-export const CLINIC_STATUS_COLOR = {
+export const CLINIC_STATUS_COLOR: Record<ClinicStatus, string> = {
   [ClinicStatus.NOT_CONTACTED]: "bg-slate-100 text-slate-700",
   [ClinicStatus.EMAIL_1_SENT]: "bg-blue-100 text-blue-700",
   [ClinicStatus.FOLLOW_UP_1]: "bg-amber-100 text-amber-700",
   [ClinicStatus.FOLLOW_UP_2]: "bg-orange-100 text-orange-700",
   [ClinicStatus.REPLIED]: "bg-green-100 text-green-700",
 }
+
+export const SIDEBAR_ROUTES: SidebarRoute[] = [
+  { label: "Dashboard", href: Routes.DASHBOARD },
+  { label: "Analytics", href: Routes.ANALYTICS }
+]

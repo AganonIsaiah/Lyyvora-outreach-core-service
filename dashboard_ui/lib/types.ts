@@ -6,6 +6,16 @@ export enum ClinicStatus {
   REPLIED = "Replied",
 }
 
+export enum Routes {
+  DASHBOARD = "/dashboard",
+  ANALYTICS = "/analytics"
+}
+
+export interface SidebarRoute {
+  label: string;
+  href: Routes;
+}
+
 export interface Clinic {
   id: string
   name: string 

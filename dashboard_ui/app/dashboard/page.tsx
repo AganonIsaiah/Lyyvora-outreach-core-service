@@ -1,10 +1,16 @@
 import ClinicsTable from "./components/ClinicsTable";
-import { mockClinicTable } from "@/mock/mock-chart";
+import ClinicsFilters from "./components/filters/ClinicsFilters";
+
+import { mockClinicTable } from "@/mock/dashboard-data";
 
 export default function Dashboard() {
   return (
-    <div className="!p-4 !text-sm flex min-h-screen items-center justify-center">
-      <ClinicsTable clinicsInfo={mockClinicTable} />
+    <div className="text-sm w-full flex flex-col min-h-screen">
+      <h1></h1>      
+      <div className="p-4">
+        <ClinicsFilters clinics={mockClinicTable} />
+        <ClinicsTable clinicsInfo={mockClinicTable} />
+      </div>
     </div>
   );
 }
