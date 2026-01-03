@@ -6,8 +6,6 @@
 - [Setup and Run](#setup-and-run)
     - [Quick Setup and Run](#quick-setup-and-run)
     - [Setup and Run FastAPI or the Pipeline Locally](#setup-and-run-fastapi-or-the-pipeline-locally)
-- [To Open Notebook](#to-open-notebook)
-    1. [Compliant Lead Data Pipeline](#1-compliant-lead-data-pipeline)
 - [Libraries](#libraries)
 - [Architecture Layout](#architecture-layout)
     - [Database Schema Diagram](#database-schema-diagram)
@@ -45,9 +43,6 @@ Once the server is running, visit http://127.0.0.1:8000/docs to see available AP
 
 # To Open Notebook
 Jupyter Notebook is used here for interactive testing, data exploration, and clear documentation of the pipeline
-
-### 1) Compliant Lead Data Pipeline
-- Click here to open [`data_pipeline.ipynb`](core/lead_data_pipeline/lead_data_pipeline.ipynb) in GitHub 
 
 # Libraries
 - FastAPI

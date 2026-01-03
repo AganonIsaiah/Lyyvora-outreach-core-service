@@ -12,15 +12,16 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+td {
+  @apply px-4 py-2 text-sm text-gray-800;
+}
+
+th {
+  @apply h-10 px-4 !py-2 text-left text-sm font-semibold text-gray-700 !whitespace-nowrap ;
 }
