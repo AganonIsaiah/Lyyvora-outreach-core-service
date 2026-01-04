@@ -27,13 +27,13 @@ th {
 }
 
 h1 {
-  @apply text-lg font-semibold!;
+  @apply text-xl font-semibold!;
 }
 
 h2 {
-  @apply text-base py-2! font-semibold! text-center!;
+  @apply text-base font-semibold! text-gray-600!;
 }
 
 .separator {
-  @apply border-b border-gray-200 py-2.5! px-1! h-15! w-full!;
+  @apply border-b border-gray-200 py-2.5! px-1! h-15! w-full! shadow-sm!;
 }

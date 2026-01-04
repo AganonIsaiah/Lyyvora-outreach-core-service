@@ -10,8 +10,20 @@ export enum ClinicStatus {
 
 export enum Routes {
   DASHBOARD = "/dashboard",
-  ANALYTICS = "/analytics"
+  ANALYTICS = "/analytics",
+  GUIDE = "/guide"
 };
+
+export type FilterType = "select" | "sort";
+
+export type FilterState = Record<string, string[]>;
+
+export interface FilterConfig {
+  key: string;
+  label: string;
+  values: string[];
+  type: FilterType;
+}
 
 export interface SidebarRoute {
   label: string;
@@ -28,7 +40,7 @@ export interface Clinic {
   totalReviews: number 
   averageRating: number 
   leadScore: number
-  lastContactDate: string 
-  nextContactDate: string 
+  lastContactDate?: string 
+  nextContactDate?: string 
   notes: string
 };

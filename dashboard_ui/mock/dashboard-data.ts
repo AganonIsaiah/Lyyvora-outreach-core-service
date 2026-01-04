@@ -1,6 +1,18 @@
-import { Clinic, ClinicStatus } from "@/lib/types";
+import { Clinic, ClinicStatus, FilterConfig } from "@/lib/types";
 
 export const mockClinicTable: Clinic[] = [
+  {
+    id: "0",
+    name: "Clinic 0",
+    type: ["Spa", "Med-spa"],
+    city: "Toronto",
+    province: "Ontario",
+    status: ClinicStatus.NOT_QUEUED,
+    totalReviews: 35,
+    averageRating: 4.6,
+    leadScore: 30,
+    notes: "No contact made yet."
+  },
   {
     id: "1",
     name: "Clinic Alpha",
@@ -11,7 +23,6 @@ export const mockClinicTable: Clinic[] = [
     totalReviews: 45,
     averageRating: 4.5,
     leadScore: 80,
-    lastContactDate: "Dec 21, 2025",
     nextContactDate: "Dec 26, 2025",
     notes: "New lead, no contact made yet."
   },
@@ -68,7 +79,6 @@ export const mockClinicTable: Clinic[] = [
     averageRating: 4.8,
     leadScore: 90,
     lastContactDate: "Dec 10, 2025",
-    nextContactDate: "Dec 27, 2025",
     notes: "Client replied. Proposal in progress."
   },
   {
@@ -81,7 +91,6 @@ export const mockClinicTable: Clinic[] = [
     totalReviews: 25,
     averageRating: 4.0,
     leadScore: 65,
-    lastContactDate: "Dec 12, 2025",
     nextContactDate: "Dec 28, 2025",
     notes: "New lead. Waiting for outreach."
   },
@@ -351,4 +360,63 @@ export const mockClinicTable: Clinic[] = [
     nextContactDate: "Dec 17, 2025",
     notes: "Client responded, proposal in progress."
   }
+];
+
+export const mockFilters: FilterConfig[] = [
+  {
+    key: "name",
+    label: "Name",
+    values: ["Clinic A", "Clinic B", "c", "d", "e","f","g","h","i","j","k"],
+    type: "select",
+  },
+  {
+    key: "type",
+    label: "Type",
+    values: ["Spa", "Med-spa", "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Rerum quisquam repellendus sit. Esse ab quia iusto voluptatem, fuga at vitae quae quisquam possimus voluptas vero doloribus, ipsa explicabo. Nemo, magnam"],
+    type: "select",
+  },
+  {
+    key: "city",
+    label: "City",
+    values: ["Toronto", "Ottawa", "Vancouver", "Calgary", "Montreal"],
+    type: "select",
+  },
+  {
+    key: "province",
+    label: "Province",
+    values: ["Ontario", "Alberta"],
+    type: "select",
+  },
+  {
+    key: "status",
+    label: "Status",
+    values: ["Not Contacted", "Email 1 Sent", "Follow-up 1"],
+    type: "select",
+  },
+
+  // sorting filters
+  {
+    key: "leadScore",
+    label: "Lead Score",
+    values: ["Asc", "Desc", "None"],
+    type: "sort",
+  },
+  {
+    key: "averageRating",
+    label: "Average Rating",
+    values: ["Asc", "Desc", "None"],
+    type: "sort",
+  },
+   {
+    key: "lastContactDate",
+    label: "Last Contact Date",
+    values: ["Asc", "Desc", "None"],
+    type: "sort",
+  },
+   {
+    key: "nextContactDate",
+    label: "Next Contact Date",
+    values: ["Asc", "Desc", "None"],
+    type: "sort",
+  },
 ];

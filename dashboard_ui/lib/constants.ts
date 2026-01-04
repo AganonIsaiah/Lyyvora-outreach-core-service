@@ -1,7 +1,7 @@
 import { ClinicStatus, SidebarRoute, Routes } from "./types";
 
 export const CLINIC_STATUS_COLOR: Record<ClinicStatus, string> = {
-  [ClinicStatus.NOT_QUEUED]: "bg-slate-100 text-slate-500",
+  [ClinicStatus.NOT_QUEUED]: "bg-slate-100 text-slate-400",
   [ClinicStatus.NOT_CONTACTED]: "bg-slate-100 text-slate-700",
   [ClinicStatus.EMAIL_1_SENT]: "bg-orange-100 text-orange-700",  
   [ClinicStatus.FOLLOW_UP_1]: "bg-orange-200 text-orange-800", 
@@ -11,5 +11,6 @@ export const CLINIC_STATUS_COLOR: Record<ClinicStatus, string> = {
 
 export const SIDEBAR_ROUTES: SidebarRoute[] = [
   { label: "Dashboard", href: Routes.DASHBOARD },
-  { label: "Analytics", href: Routes.ANALYTICS }
+  { label: "Analytics", href: Routes.ANALYTICS },
+  { label: "Guide", href: Routes.GUIDE }
 ];
