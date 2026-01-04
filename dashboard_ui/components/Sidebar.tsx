@@ -8,13 +8,12 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="min-h-screen min-w-45!  border-r border-gray-200 shadow-sm">
-      <h1></h1>
+    <aside className="min-h-screen min-w-45! border-r border-gray-200 shadow-sm">
+      <div className="separator"></div>
 
-      <nav className="flex flex-col !mt-4">
+      <nav className="flex flex-col mt-4!">
         {SIDEBAR_ROUTES.map((route) => {
           const isActive = pathname === route.href;
-
           return (
             <Link
               key={route.href}

@@ -23,13 +23,17 @@ td {
 }
 
 th {
-  @apply h-10 px-4 py-2 text-center text-sm font-semibold text-gray-700 whitespace-nowrap ;
+  @apply h-10 px-4 py-2 text-center text-sm font-semibold text-gray-700;
 }
 
 h1 {
-  @apply h-10 border-b border-gray-200 text-base font-semibold py-2! px-1!;
+  @apply text-lg font-semibold!;
 }
 
 h2 {
   @apply text-base py-2! font-semibold! text-center!;
+}
+
+.separator {
+  @apply border-b border-gray-200 py-2.5! px-1! h-15! w-full!;
 }

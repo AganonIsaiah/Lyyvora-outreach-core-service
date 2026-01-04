@@ -106,7 +106,16 @@ class Queries:
         website_url TEXT,
         website_desc TEXT,
         total_reviews INTEGER,
-        average_rating REAL
+        average_rating REAL,
+        status TEXT NOT NULL DEFAULT 'Not Queued'
+          CHECK (status IN (
+            'Not Queued',
+            'Not Contacted',
+            'Email 1 Sent',
+            'Follow-up 1',
+            'Follow-up 2',
+            'Replied'
+          ))
       );
     """
     

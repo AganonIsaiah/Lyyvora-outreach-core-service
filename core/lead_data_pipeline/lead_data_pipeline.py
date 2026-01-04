@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from shared.queries import Queries
 from shared.logging_module import Logger
 from shared.configs import CSV_INPUT_FILE, DB_FILE
+from shared.types import ClinicStatus
 
 logger = Logger(log_file="lead_data_pipeline.log")
 
@@ -178,6 +179,9 @@ def run_pipeline():
     # Convert NaN to None for SQLite
     df = df.where(pd.notnull(df), None)
     logger.info("Converted NaN values to None for SQLite.")
+
+    # Set status to Not Queued
+    df['status'] = ClinicStatus.NOT_QUEUED.value
 
     # Save
     save_to_sqlite(df)
