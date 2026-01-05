@@ -27,6 +27,7 @@ export default function FilterUI({
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filteredValues, setFilteredValues] = useState(values);
+  const [tempSelected, setTempSelected] = useState<string[]>(selected);
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -34,13 +35,20 @@ export default function FilterUI({
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setTempSelected(selected);
         setSearch("");
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [selected]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTempSelected(selected);
+    }
+  }, [isOpen, selected]);
 
   useEffect(() => {
     setFilteredValues(
@@ -48,20 +56,29 @@ export default function FilterUI({
     );
   }, [search, values]);
 
-  const sortValue = selected[0];
-
-  const handleSortClick = (value: string) => {
-    if (value === "None") {
-      onChange("None");
-      return;
-    }
-
-    if (sortValue === value) {
-      onChange("None");
-    } else {
-      onChange(value);
-    }
+  const toggleTempSelect = (value: string) => {
+    setTempSelected((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
   };
+
+  const handleTempSort = (value: string) => {
+    setTempSelected(value === "None" ? [] : [value]);
+  };
+
+  const applyFilters = () => {
+    tempSelected.forEach(onChange);
+    setIsOpen(false);
+    setSearch("");
+  };
+
+  const closeUI = () => {
+    setTempSelected(selected);
+    setIsOpen(false);
+    setSearch("");
+  };
+
+  const sortValue = selected[0];
 
   const buttonLabel =
     type === "sort"
@@ -72,13 +89,13 @@ export default function FilterUI({
 
   return (
     <div ref={ref} className="relative">
-      <p className="text-sm">{label}</p>
+      <p className="text-xs font-semibold mb-1">{label}</p>
 
       <button
-        className="cursor-pointer text-sm w-50 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1"
+        className="cursor-pointer text-sm w-33 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
         onClick={() => setIsOpen((v) => !v)}
       >
-        <span className="text-gray-500 truncate">{buttonLabel}</span>
+        <span className="text-gray-400 truncate text-xs font-semibold">{buttonLabel}</span>
         {isOpen ? (
           <ExpandLessIcon fontSize="small" />
         ) : (
@@ -87,10 +104,25 @@ export default function FilterUI({
       </button>
 
       {isOpen && (
-        <div className="absolute z-20 mt-3 w-50 bg-white border border-gray-300 rounded shadow">
+        <div className="absolute z-20 mt-2 w-33 bg-white border border-gray-300 rounded-lg shadow">
+          <div className="rounded-t-lg text-xs! font-semibold text-white flex items-center justify-between py-1.5 px-1 border-b border-gray-500">
+            <button
+              onClick={applyFilters}
+              className="w-9 bg-blue-500 p-0.5! rounded-full cursor-pointer hover:bg-blue-600 transition-all duration-200"
+            >
+              OK
+            </button>
+            <button
+              onClick={closeUI}
+              className="w-12 bg-blue-500 p-0.5! rounded-full cursor-pointer hover:bg-blue-600 transition-all duration-200"
+            >
+              Close
+            </button>
+          </div>
+
           {type === "select" && (
             <input
-              className="w-full px-2 py-1 border-b focus:outline-none"
+              className="w-full px-2 py-1 border-b border-gray-500 focus:outline-none text-sm"
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -100,19 +132,24 @@ export default function FilterUI({
           <ul className="max-h-40 overflow-auto">
             {filteredValues.length > 0 ? (
               filteredValues.map((v) => {
-                const isSelected =
-                  type === "sort" ? sortValue === v : selected.includes(v);
+                const isSelected = tempSelected.includes(v);
 
                 return (
                   <li
                     key={v}
                     onClick={() =>
-                      type === "sort" ? handleSortClick(v) : onChange(v)
+                      type === "sort" ? handleTempSort(v) : toggleTempSelect(v)
                     }
-                    className={`px-3 py-1 cursor-pointer flex items-center justify-between
-                              hover:bg-gray-100
-                              ${isSelected ? "bg-blue-100 text-blue-700 font-medium" : ""}
-                            `}
+                    className={`
+                      border-b border-gray-300
+                      px-3 py-1 cursor-pointer flex items-center justify-between
+                      hover:bg-gray-100
+                      ${
+                        isSelected
+                          ? "bg-blue-100 text-blue-700 font-medium"
+                          : ""
+                      }
+                    `}
                   >
                     <span className="flex items-center gap-2">
                       {type === "select" && (
@@ -143,7 +180,6 @@ export default function FilterUI({
               </li>
             )}
           </ul>
-
         </div>
       )}
     </div>

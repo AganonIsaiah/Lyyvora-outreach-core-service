@@ -34,6 +34,31 @@ h2 {
   @apply text-base font-semibold! text-gray-600!;
 }
 
+h3 {
+  @apply text-sm font-semibold;
+}
+
 .separator {
   @apply border-b border-gray-200 py-2.5! px-1! h-15! w-full! shadow-sm!;
+}
+
+.blink {
+  animation: blink 1.8s infinite;
+}
+
+.label-outreach {
+  @apply mb-1! text-gray-700;
+}
+
+.input-outreach {
+  @apply w-30 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }

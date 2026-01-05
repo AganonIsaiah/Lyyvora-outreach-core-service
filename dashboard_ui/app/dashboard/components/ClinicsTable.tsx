@@ -16,12 +16,9 @@ export default function ClinicsTable({
   const router = useRouter();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <h2 className="h-13 flex justify-center items-center">
-        Recent Clinic Activity
-      </h2>
-
-      <div className="overflow-y-auto h-[calc(100vh-45vh)]!">
+    <div className="bg-white rounded-b-lg shadow-sm border border-gray-200">
+ 
+      <div className="overflow-y-auto h-[calc(100vh-43vh)]!">
         <table className="min-w-full divide-y divide-gray-200 w-full">
           <thead className="bg-gray-100 sticky top-0 z-10">
             <tr>
@@ -78,7 +75,7 @@ export default function ClinicsTable({
                 <td className="truncate max-w-40">{c.notes}</td>
                 <td>
                   <button
-                    onClick={() => router.push(`/dashboard/clinics/${c.id}`)}
+                    onClick={() => router.push(`/clinics/${c.id}`)}
                     className="cursor-pointer"
                   >
                     <ZoomOutMapIcon

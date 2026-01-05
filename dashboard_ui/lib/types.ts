@@ -6,6 +6,7 @@ export enum ClinicStatus {
   FOLLOW_UP_1 = "Follow-up 1",
   FOLLOW_UP_2 = "Follow-up 2",
   REPLIED = "Replied",
+  CLOSED = "Closed"
 };
 
 export enum Routes {
@@ -15,6 +16,8 @@ export enum Routes {
 };
 
 export type FilterType = "select" | "sort";
+
+export type EmailType = "Email 1" | "Follow-up 1" | "Follow-up 2";
 
 export type FilterState = Record<string, string[]>;
 
@@ -30,17 +33,27 @@ export interface SidebarRoute {
   href: Routes;
 };
 
+export interface ClinicEmails {
+  subjectLine: string;
+  emailBody: string;
+  type: EmailType;
+}
+
 export interface Clinic {
-  id: string
-  name: string 
-  type: string[]
-  city: string 
-  province: string 
-  status: ClinicStatus
-  totalReviews: number 
-  averageRating: number 
-  leadScore: number
-  lastContactDate?: string 
-  nextContactDate?: string 
-  notes: string
+  id: string;
+  name: string;
+  email: string;
+  websiteUrl: string; 
+  type: string[];
+  city: string; 
+  province: string; 
+  status: ClinicStatus;
+  totalReviews: number; 
+  averageRating: number;
+  leadScore: number;
+  lastContactDate?: string; 
+  nextContactDate?: string; 
+  notes: string; // Maps to website_dsc
+  topFeatures: string;
+  emailsForOutreach: ClinicEmails[];  
 };
