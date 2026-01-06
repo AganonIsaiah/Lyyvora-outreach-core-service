@@ -12,7 +12,8 @@ export enum ClinicStatus {
 export enum Routes {
   DASHBOARD = "/dashboard",
   ANALYTICS = "/analytics",
-  GUIDE = "/guide"
+  GUIDE = "/guide",
+  CLINICS = "/clinics"
 };
 
 export type FilterType = "select" | "sort";
@@ -57,3 +58,10 @@ export interface Clinic {
   topFeatures: string;
   emailsForOutreach: ClinicEmails[];  
 };
+
+export interface Metric {
+  label: string;
+  value: number;
+  desc: string;
+  descValue?: number;
+}

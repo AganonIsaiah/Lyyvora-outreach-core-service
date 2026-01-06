@@ -63,7 +63,7 @@ export default function ClinicsFilters({ clinics }: ClinicsFiltersProps) {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-center gap-2 h-21 w-full bg-gray-50 p-2! shadow-sm border border-gray-200">
+      <div className="flex items-center justify-evenly gap-2 h-21 w-full bg-gray-50 p-2! shadow-sm border border-gray-200">
         {mockFilters.map((filter) => (
           <FilterUI
             key={filter.key}

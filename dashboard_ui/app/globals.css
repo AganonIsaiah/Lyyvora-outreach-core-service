@@ -54,6 +54,10 @@ h3 {
   @apply w-30 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200;
 }
 
+.card-section {
+  @apply p-4 rounded-lg border border-gray-200 shadow-sm;
+}
+
 @keyframes blink {
   0%, 100% {
     opacity: 1;

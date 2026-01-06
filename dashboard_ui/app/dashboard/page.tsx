@@ -1,6 +1,7 @@
 import ClinicsTable from "./components/ClinicsTable";
 import ClinicsFilters from "./components/filters/ClinicsFilters";
 import CampaignOutreach from "./components/CampaignOutreach";
+import PipelineMetrics from "./components/metrics/PipelineMetrics";
 
 import { mockClinicsData } from "@/mock/dashboard-data";
 
@@ -12,11 +13,9 @@ export default function Dashboard() {
       </span>
 
       <div className="m-1! p-4 flex flex-col gap-8">
-        {/* Pipeline metrics */}
-
-        {/* Campaign outreach +  Recent Activity*/}
-        <div className="flex">
+        <div className="flex gap-6 justify-between">
           <CampaignOutreach />
+          <PipelineMetrics />
         </div>
 
         <div className="flex flex-col">

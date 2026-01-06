@@ -1,26 +1,31 @@
-import { Clinic, ClinicStatus, FilterConfig, ClinicEmails } from "@/lib/types";
-
+import {
+  Clinic,
+  ClinicStatus,
+  FilterConfig,
+  ClinicEmails,
+  Metric,
+} from "@/lib/types";
 
 const defaultEmails = (clinicName: string): ClinicEmails[] => [
   {
     type: "Email 1",
     subjectLine: `Quick question about ${clinicName}`,
-    emailBody: `Hi there,\n\nI came across ${clinicName} and thought it would be great to connect. Would you be open to a quick chat?\n\nBest regards,`
+    emailBody: `Hi there,\n\nI came across ${clinicName} and thought it would be great to connect. Would you be open to a quick chat?\n\nBest regards,`,
   },
   {
     type: "Follow-up 1",
     subjectLine: `Following up — ${clinicName}`,
-    emailBody: `Hi again,\n\nJust following up on my previous email in case it got buried. Looking forward to hearing your thoughts.\n\nBest,`
+    emailBody: `Hi again,\n\nJust following up on my previous email in case it got buried. Looking forward to hearing your thoughts.\n\nBest,`,
   },
   {
     type: "Follow-up 2",
     subjectLine: `Last follow-up — ${clinicName}`,
-    emailBody: `Hi,\n\nThis will be my last follow-up. Happy to reconnect whenever the timing is right.\n\nThanks!`
-  }
+    emailBody: `Hi,\n\nThis will be my last follow-up. Happy to reconnect whenever the timing is right.\n\nThanks!`,
+  },
 ];
 
 export const mockClinicsData: Clinic[] = [
-   {
+  {
     id: "0",
     name: "Aganon's Clinic",
     email: "info@mock.com",
@@ -76,7 +81,7 @@ export const mockClinicsData: Clinic[] = [
     name: "Downtown Wellness Center",
     email: "contact@downtownwellness.com",
     websiteUrl: "https://downtownwellness.com",
-   topFeatures: "Central location, Flexible hours",
+    topFeatures: "Central location, Flexible hours",
     type: ["Chiropractic", "Massage"],
     city: "Vancouver",
     province: "British Columbia",
@@ -94,7 +99,7 @@ export const mockClinicsData: Clinic[] = [
     name: "Pure Med Spa",
     email: "info@puremedspa.com",
     websiteUrl: "https://puremedspa.com",
-     topFeatures: "Luxury experience, Skilled aestheticians",
+    topFeatures: "Luxury experience, Skilled aestheticians",
     type: ["Med-spa"],
     city: "Calgary",
     province: "Alberta",
@@ -233,18 +238,33 @@ export const mockClinicsData: Clinic[] = [
   },
 ];
 
-
 export const mockFilters: FilterConfig[] = [
   {
     key: "name",
     label: "Name",
-    values: ["Clinic A", "Clinic B", "c", "d", "e","f","g","h","i","j","k"],
+    values: [
+      "Clinic A",
+      "Clinic B",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+    ],
     type: "select",
   },
   {
     key: "type",
     label: "Type",
-    values: ["Spa", "Med-spa", "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Rerum quisquam repellendus sit. Esse ab quia iusto voluptatem, fuga at vitae quae quisquam possimus voluptas vero doloribus, ipsa explicabo. Nemo, magnam"],
+    values: [
+      "Spa",
+      "Med-spa",
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Rerum quisquam repellendus sit. Esse ab quia iusto voluptatem, fuga at vitae quae quisquam possimus voluptas vero doloribus, ipsa explicabo. Nemo, magnam",
+    ],
     type: "select",
   },
   {
@@ -279,16 +299,42 @@ export const mockFilters: FilterConfig[] = [
     values: ["Asc", "Desc", "None"],
     type: "sort",
   },
-   {
+  {
     key: "lastContactDate",
     label: "Last Contact Date",
     values: ["Asc", "Desc", "None"],
     type: "sort",
   },
-   {
+  {
     key: "nextContactDate",
     label: "Next Contact Date",
     values: ["Asc", "Desc", "None"],
     type: "sort",
+  },
+];
+
+export const mockMetrics: Metric[] = [
+  {
+    label: "Total Clinics",
+    value: 591,
+    desc: "this week",
+    descValue: 52,
+  },
+  {
+    label: "Emails Sent Today",
+    value: 10,
+    desc: "Daily limit reached"
+  },
+  {
+    label: "Active Campaigns",
+    value: 127,
+    desc: "reply rate",
+    descValue: 0.23,
+  },
+  {
+    label: "Replied Received",
+    value: 29,
+    desc: "this week",
+    descValue: -12,
   },
 ];

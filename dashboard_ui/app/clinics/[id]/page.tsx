@@ -1,21 +1,18 @@
-import { mockClinicsData} from "@/mock/dashboard-data";
+import ClinicDetailUI from "./components/ClinicDetailUI";
+import { mockClinicsData } from "@/mock/dashboard-data";
+import { Clinic } from "@/lib/types";
 
-/**
- * Needs: Interface to show all three emails from Email 1 to Follow-up 2 (maybe on left side)
- * 
- */
-export default async function Clinic({ params }: { params: { id: string } }) {
+interface Props {
+  params: { id: string };
+}
+
+export default async function ClinicDetailPage({ params }: Props) {
   const { id } = await params;
+  const clinic: Clinic = mockClinicsData[Number(id)];
 
+  if (!clinic) {
+    return <div>Clinic not found</div>;
+  }
 
-  const clinic = mockClinicsData[Number(id)];
-  
-
-  return (
-    <div className="overflow-auto text-sm w-full flex flex-col min-h-screen">
-      <span className="separator flex justify-between items-center px-4!">
-        <h1>{clinic.name} </h1>
-      </span>
-    </div>
-  );
+  return <ClinicDetailUI clinic={clinic} />;
 }

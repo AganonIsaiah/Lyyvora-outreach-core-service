@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import EmergencyIcon from '@mui/icons-material/Emergency';
+
 export default function CampaignOutreach() {
   const hours = 10;
 
@@ -12,13 +14,25 @@ export default function CampaignOutreach() {
   const [follow1, setFollow1] = useState<number>(3);
   const [follow2, setFollow2] = useState<number>(1);
 
+  const [prompt, setPrompt] = useState<string>(
+    `    This is the sample prompt for generating an email. 
+
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur deserunt mollitia facilis tenetur. Praesentium placeat nesciunt accusantium adipisci autem! Maiores eligendi laudantium quas eveniet ea eum voluptatibus mollitia reiciendis officiis.
+    
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur deserunt mollitia facilis tenetur. Praesentium placeat nesciunt accusantium adipisci autem! Maiores eligendi laudantium quas eveniet ea eum voluptatibus mollitia reiciendis officiis.`
+  );
+
   const percentage = Math.min((current / total) * 100, 100);
 
   return (
-    <div className="flex flex-col gap-4 w-120 p-4 rounded-lg border border-gray-200 shadow-sm">
-      <span className="flex justify-between">
-        <h2>Campaign Status</h2>
-        <button className="bg-indigo-500! text-white font-semibold rounded px-2 py-1">
+    <div className="flex flex-col justify-center gap-4 w-120 h-120! card-section">
+      <span className="flex justify-between items-center">
+        <span className="flex flex-col gap-0.25">
+          <h2>Campaign Status</h2>
+          <p className="text-slate-400 text-xs flex gap-1 items-center"><EmergencyIcon className="text-[10px]!"/>Adjust settings before starting campaign</p>
+           
+        </span>
+        <button className="bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8!">
           Start Campaign
         </button>
       </span>
@@ -70,6 +84,18 @@ export default function CampaignOutreach() {
             value={follow2}
           />
         </span>
+      </div>
+
+      <div className="flex flex-col">
+        <label htmlFor="prompt" className="label-outreach">
+          Prompt Template
+        </label>
+        <textarea
+          id="prompt"
+          className=" resize-none! input-outreach border w-full! min-h-35! border-gray-300 rounded px-2 py-1"
+          onChange={(e) => setPrompt(e.target.value)}
+          value={prompt}
+        />
       </div>
 
       <div className="flex flex-col gap-1">
