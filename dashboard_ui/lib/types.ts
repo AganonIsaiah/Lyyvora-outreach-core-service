@@ -67,7 +67,6 @@ export interface CampaignStatus {
   follow_up_2: number;
   prompt: string;
   contacted_clinics: number;
-  send_batch_hours: number;
   total_clinics: number;
   clinic_percentage: number;
 }

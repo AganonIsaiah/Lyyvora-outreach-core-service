@@ -9,13 +9,17 @@ import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 
 export default function ClinicsTable() {
   const router = useRouter();
-  const { filteredClinics } = useDashboardContext();
+  const { clinics, filteredClinics } = useDashboardContext();
+
+  const isDashboardEmpty = clinics.length === 0;
 
   return (
-    <div className="bg-white rounded-b-lg shadow-sm border border-gray-200 overflow-y-auto h-[calc(100vh-43vh)]! min-h-40!">
-      {filteredClinics.length <= 0 ? (
-        <div className="p-4 font-semibold text-gray-500 text-sm">
-          Dashboard is empty, click the import CSV button to populate the table.
+    <div className="bg-white rounded-b-lg shadow-sm border border-gray-200 overflow-y-auto h-[calc(100vh-43vh)] min-h-40">
+      {filteredClinics.length === 0 ? (
+        <div className="p-4 font-semibold text-gray-500 text-sm flex flex-col gap-2">
+          {isDashboardEmpty
+            ? "Dashboard is empty, click the import CSV button to populate the table."
+            : "No clinics match the selected filters. Try changing your filter options."}
         </div>
       ) : (
         <table className="min-w-full divide-y divide-gray-200 w-full">
@@ -29,8 +33,8 @@ export default function ClinicsTable() {
               <th>Province</th>
               <th>Status</th>
               <th>Average Rating</th>
-              <th className="min-w-35!">Last Contact Date</th>
-              <th className="min-w-35!">Next Contact Date</th>
+              <th className="min-w-35">Last Contact Date</th>
+              <th className="min-w-35">Next Contact Date</th>
               <th>Notes</th>
               <th>Expand</th>
             </tr>
@@ -46,8 +50,7 @@ export default function ClinicsTable() {
                 <td>{c.province}</td>
                 <td>
                   <span
-                    className={`whitespace-nowrap font-semibold px-2 py-1 rounded-xl text-xs
-                      ${CLINIC_STATUS_COLOR[c.status]}`}
+                    className={`whitespace-nowrap font-semibold px-2 py-1 rounded-xl text-xs ${CLINIC_STATUS_COLOR[c.status]}`}
                   >
                     {c.status}
                   </span>
@@ -57,14 +60,14 @@ export default function ClinicsTable() {
                   {c.last_contact_date ? (
                     <p>{c.last_contact_date}</p>
                   ) : (
-                    <HorizontalRuleIcon className="text-gray-500 text-sm!" />
+                    <HorizontalRuleIcon className="text-gray-500 text-sm" />
                   )}
                 </td>
                 <td>
                   {c.next_contact_date ? (
                     <p>{c.next_contact_date}</p>
                   ) : (
-                    <HorizontalRuleIcon className="text-gray-500 text-sm!" />
+                    <HorizontalRuleIcon className="text-gray-500 text-sm" />
                   )}
                 </td>
                 <td className="truncate max-w-40">{c.notes}</td>
@@ -75,7 +78,7 @@ export default function ClinicsTable() {
                   >
                     <ZoomOutMapIcon
                       fontSize="small"
-                      className="text-gray-500 hover:text-black!"
+                      className="text-gray-500 hover:text-black"
                     />
                   </button>
                 </td>

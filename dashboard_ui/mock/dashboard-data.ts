@@ -402,7 +402,6 @@ export const mockCampaignStatus: CampaignStatus = {
   follow_up_2: 5,
   prompt: defaultPrompt,
   contacted_clinics: 51,
-  send_batch_hours: 9,
   total_clinics: 592,
   clinic_percentage: 0.08
 }

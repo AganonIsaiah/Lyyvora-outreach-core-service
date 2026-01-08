@@ -4,11 +4,11 @@ import { useDashboardContext } from "@/context/DashboardContext";
 import EmergencyIcon from '@mui/icons-material/Emergency';
 
 export default function CampaignOutreach() {
-  const { campaignStatus, setCampaignStatus, filteredClinics } = useDashboardContext();
+  const { campaignStatus, setCampaignStatus, clinics } = useDashboardContext();
 
-  if (!campaignStatus || !filteredClinics || filteredClinics.length <= 0) return null;
+  if (!campaignStatus || !clinics || clinics.length <= 0) return null;
 
-  const { daily_email_limit, follow_up_1, follow_up_2, prompt, contacted_clinics, total_clinics, send_batch_hours } = campaignStatus;
+  const { daily_email_limit, follow_up_1, follow_up_2, prompt, contacted_clinics, total_clinics } = campaignStatus;
 
   const percentage = Math.min((contacted_clinics / total_clinics) * 100, 100);
 
@@ -20,7 +20,7 @@ export default function CampaignOutreach() {
   };
 
   return (
-    <div className="flex flex-col justify-center gap-4 w-120! h-121! card-section">
+    <div className="flex flex-col justify-center gap-4 h-full! w-full! card-section">
       <span className="flex justify-between items-center">
         <span className="flex flex-col gap-0.25">
           <h2>Campaign Status</h2>
@@ -28,22 +28,12 @@ export default function CampaignOutreach() {
             <EmergencyIcon className="text-[10px]!"/>Adjust settings before starting campaign
           </p>
         </span>
-        <button className="bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8!">
-          Start Campaign
+        <button className="bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8! cursor-pointer hover:bg-indigo-600! transition-all duration-200">
+          Export CSV
         </button>
       </span>
 
-      <span className="flex items-center gap-4 bg-slate-100 rounded-md p-3 border border-gray-200 shadow-sm">
-        <span className="h-3 w-3 bg-green-500 rounded-full blink"></span>
-        <span>
-          <h3>Automation Active</h3>
-          <span className="flex gap-1">
-            Next batch sends in <p className="font-semibold">{send_batch_hours}</p> hours
-          </span>
-        </span>
-      </span>
-
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-evenly">
         <span className="flex flex-col">
           <label htmlFor="daily-email-limit" className="label-outreach">Daily Email Limit</label>
           <input
@@ -82,7 +72,7 @@ export default function CampaignOutreach() {
         <label htmlFor="prompt" className="label-outreach">Prompt Template</label>
         <textarea
           id="prompt"
-          className="resize-none! input-outreach border w-full! min-h-35! border-gray-300 rounded px-2 py-1"
+          className="resize-none! input-outreach border w-full! min-h-50! border-gray-300 rounded px-2 py-1"
           value={prompt ?? " "}
           onChange={(e) => updateStatus("prompt", e.target.value)}
         />
