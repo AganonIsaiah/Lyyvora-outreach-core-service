@@ -1,17 +1,19 @@
 "use client";
 
-import { FilterConfig } from "@/lib/types";
+import { Filter } from "@/lib/types";
 
 interface SelectedFiltersProps {
   filters: Record<string, string[]>;
-  filterConfigs: FilterConfig[];
+  filterConfigs: Filter[];
   onRemove: (key: string, value: string) => void;
+  onClearAll: () => void;
 }
 
 export default function SelectedFilters({
   filters,
   filterConfigs,
   onRemove,
+  onClearAll
 }: SelectedFiltersProps) {
   const activeFilters = Object.entries(filters).flatMap(([key, values]) =>
     values.map((value) => ({ key, value }))
@@ -46,7 +48,9 @@ export default function SelectedFilters({
           No filters selected...
         </div>
       )}
-      <button className="h-7 w-22 whitespace-nowrap cursor-pointer bg-gray-400 px-2 py-1 rounded-md font-semibold text-white hover:bg-gray-500 transition-all duration-200">
+      <button 
+      onClick={onClearAll}
+      className="h-7 w-22 whitespace-nowrap cursor-pointer bg-gray-400 px-2 py-1 rounded-md font-semibold text-white hover:bg-gray-500 transition-all duration-200">
         Clear All
       </button>
     </div>

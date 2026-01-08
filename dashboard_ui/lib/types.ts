@@ -1,4 +1,3 @@
-// Sort by Replied to Not queued
 export enum ClinicStatus {
   NOT_QUEUED = "Not Queued",
   NOT_CONTACTED = "Not Contacted",
@@ -11,18 +10,14 @@ export enum ClinicStatus {
 
 export enum Routes {
   DASHBOARD = "/dashboard",
-  ANALYTICS = "/analytics",
-  GUIDE = "/guide",
   CLINICS = "/clinics"
 };
 
 export type FilterType = "select" | "sort";
-
 export type EmailType = "Email 1" | "Follow-up 1" | "Follow-up 2";
-
 export type FilterState = Record<string, string[]>;
 
-export interface FilterConfig {
+export interface Filter {
   key: string;
   label: string;
   values: string[];
@@ -44,19 +39,19 @@ export interface Clinic {
   id: string;
   name: string;
   email: string;
-  websiteUrl: string; 
+  website_url: string; 
   type: string[];
   city: string; 
   province: string; 
   status: ClinicStatus;
-  totalReviews: number; 
-  averageRating: number;
-  leadScore: number;
-  lastContactDate?: string; 
-  nextContactDate?: string; 
+  total_reviews: number; 
+  average_rating: number;
+  lead_score: number;
+  last_contact_date?: string; 
+  next_contact_date?: string; 
   notes: string; // Maps to website_dsc
-  topFeatures: string;
-  emailsForOutreach: ClinicEmails[];  
+  top_features: string;
+  emails_for_outreach: ClinicEmails[];  
 };
 
 export interface Metric {
@@ -64,4 +59,22 @@ export interface Metric {
   value: number;
   desc: string;
   descValue?: number;
+}
+
+export interface CampaignStatus {
+  daily_email_limit: number;
+  follow_up_1: number;
+  follow_up_2: number;
+  prompt: string;
+  contacted_clinics: number;
+  send_batch_hours: number;
+  total_clinics: number;
+  clinic_percentage: number;
+}
+
+export interface DashboardResponse {
+  clinics_data: Clinic[];
+  metrics: Metric[];
+  filters: Filter[];
+  campaign_status: CampaignStatus;
 }
