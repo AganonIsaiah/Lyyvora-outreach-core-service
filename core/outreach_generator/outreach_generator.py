@@ -92,7 +92,7 @@ def export_to_csv(conn, campaign_batch: str):
         
     logger.info(f"Export {len(rows)} rows to {file}")
 
-def run_email_generation(EMAIL_BATCH_SIZE: int = 5, EMAIL_DB_OFFSET: int = 0):
+def run_email_generation(EMAIL_BATCH_SIZE: int = 1, EMAIL_DB_OFFSET: int = 0):
     if EMAIL_BATCH_SIZE < 1: EMAIL_BATCH_SIZE = 1
     if EMAIL_DB_OFFSET < 0: EMAIL_DB_OFFSET = 0
     

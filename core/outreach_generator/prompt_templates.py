@@ -14,11 +14,6 @@ def prompt_v1(clinic_info: dict) -> str:
         FACTUAL CONTEXT (USE AS GIVEN — DO NOT MODIFY)
         Lyyvora facts you may reference:
         - Lending-as-a-Service platform for healthcare clinics and pharmacies
-        - Works with multiple lending partners across Canada and the U.S.
-        - Actively supports financing deals ranging from $20,000 to $2 million (write the numbers like this to prevent format errors)
-        - Focused on data-driven capital based on real clinic performance
-        - Built to help clinics manage reinvestment, equipment upgrades, and expansion
-        - Founder background includes leading global product design teams in France and Canada
 
         IMPORTANT:
         - Use these facts naturally if relevant
@@ -35,12 +30,23 @@ def prompt_v1(clinic_info: dict) -> str:
         - Clinic's location: {clinic_info.get('city', 'N/A')}
         - Clinic background context: {clinic_info.get('website_desc', 'N/A')}
 
-        FIRST EMAIL STRUCTURE
-        1. Open with a thoughtful, specific acknowledgment of the clinic’s work or specialty
-        2. Introduce yourself and why you built Lyyvora
-        3. Reference Lyyvora’s real operating context (partners, deal ranges, markets) to establish credibility
-        4. Close with a respectful, low-pressure invitation to continue the conversation
+        EMAIL STRUCTURE
+        1. Personal opening:
+        - Reference the clinic’s specialty, services, or mission
+        - Show genuine awareness (not generic praise)
 
+        2. Founder introduction:
+        - Introduce yourself as Founder & CEO of Lyyvora
+        - Briefly explain what motivated you to build Lyyvora
+
+        3. Relevance to them:
+        - Connect what you’re building to the realities of running a clinic
+        - Keep this grounded and non-promotional
+
+        4. Soft close:
+        - End with one calm, low-pressure question
+        - Invite them to reply directly if open to a conversation
+   
         STYLE GUIDELINES
         - First-person, founder-to-founder voice
         - Reflective, credible, and calm
