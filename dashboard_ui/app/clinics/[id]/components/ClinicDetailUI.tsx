@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function ClinicDetailUI({ clinic }: Props) {
-  const [emails, setEmails] = useState<ClinicEmails[]>(clinic.emailsForOutreach);
+  const [emails, setEmails] = useState<ClinicEmails[]>(clinic.emails_for_outreach);
 
   const getStageIndex = () => {
     switch (clinic.status) {
@@ -65,8 +65,8 @@ export default function ClinicDetailUI({ clinic }: Props) {
           </p>
           <p>
             <span className="font-semibold">Website:</span>{" "}
-            <a href={clinic.websiteUrl} target="_blank" className="text-indigo-600 underline">
-              {clinic.websiteUrl}
+            <a href={clinic.website_url} target="_blank" className="text-indigo-600 underline">
+              {clinic.website_url}
             </a>
           </p>
           <p>
@@ -76,12 +76,12 @@ export default function ClinicDetailUI({ clinic }: Props) {
             <span className="font-semibold">Location:</span> {clinic.city}, {clinic.province}
           </p>
           <p>
-            <span className="font-semibold">Top Features:</span> {clinic.topFeatures}
+            <span className="font-semibold">Top Features:</span> {clinic.top_features}
           </p>
           <p>
-            <span className="font-semibold">Total Reviews:</span> {clinic.totalReviews} |{" "}
-            <span className="font-semibold">Avg Rating:</span> {clinic.averageRating} |{" "}
-            <span className="font-semibold">Lead Score:</span> {clinic.leadScore}
+            <span className="font-semibold">Total Reviews:</span> {clinic.total_reviews} |{" "}
+            <span className="font-semibold">Avg Rating:</span> {clinic.average_rating} |{" "}
+            <span className="font-semibold">Lead Score:</span> {clinic.lead_score}
           </p>
           <p>
             <span className="font-semibold">Notes:</span> {clinic.notes}

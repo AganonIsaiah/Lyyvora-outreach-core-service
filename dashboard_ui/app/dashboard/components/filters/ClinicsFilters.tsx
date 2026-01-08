@@ -1,70 +1,45 @@
 "use client";
 
-import { useState } from "react";
-import { ClinicStatus, Clinic, FilterState } from "@/lib/types";
-import { mockFilters } from "@/mock/dashboard-data";
-
+import { useDashboardContext } from "@/context/DashboardContext";
 import FilterUI from "./FilterUI";
 import SelectedFilters from "./SelectedFilters";
+import { FilterState } from "@/lib/types";
 
-interface ClinicsFiltersProps {
-  clinics: Clinic[];
-  // onFilter: (filteredClinics: Clinic[]) => void;
-}
+export default function ClinicsFilters() {
+  const { filters, setFilters, filtersConfig } = useDashboardContext();
 
-/**
- * Filter multi-select
- * - Name
- * - Type
- * - City
- * - Province
- * - Status
- *
- * Filter sorting asc/desc
- * - Lead Score
- * - Average Rating
- * - Last Contact Date
- * - Next Contact Date
- */
-export default function ClinicsFilters({ clinics }: ClinicsFiltersProps) {
-  const [filters, setFilters] = useState<FilterState>(
-    mockFilters.reduce((acc, f) => {
-      acc[f.key] = [];
-      return acc;
-    }, {} as FilterState)
-  );
-
-  const handleChange = (
-    key: string,
-    value: string,
-    type: "select" | "sort"
-  ) => {
-    setFilters((prev) => {
-      if (type === "sort") {
-        return { ...prev, [key]: [value] };
-      }
+  const handleChange = (key: string, value: string, type: "select" | "sort") => {
+    setFilters((prev: FilterState) => {
+      if (type === "sort") return { ...prev, [key]: [value] };
 
       const exists = prev[key].includes(value);
       return {
         ...prev,
-        [key]: exists
-          ? prev[key].filter((v) => v !== value)
-          : [...prev[key], value],
+        [key]: exists ? prev[key].filter((v) => v !== value) : [...prev[key], value],
       };
     });
   };
 
   const removeFilter = (key: string, value: string) => {
-    setFilters((prev) => ({
+    setFilters((prev: FilterState) => ({
       ...prev,
       [key]: prev[key].filter((v) => v !== value),
     }));
   };
 
+  const clearAllFilters = () => {
+    setFilters(
+      filtersConfig.reduce<FilterState>((acc, f) => {
+        acc[f.key] = [];
+        return acc;
+      }, {})
+    );
+  };
+
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-evenly gap-2 h-21 w-full bg-gray-50 p-2! shadow-sm border border-gray-200">
-        {mockFilters.map((filter) => (
+        {filtersConfig.map((filter) => (
           <FilterUI
             key={filter.key}
             label={filter.label}
@@ -74,13 +49,13 @@ export default function ClinicsFilters({ clinics }: ClinicsFiltersProps) {
             onChange={(value) => handleChange(filter.key, value, filter.type)}
           />
         ))}
-
       </div>
 
       <SelectedFilters
         filters={filters}
-        filterConfigs={mockFilters}
+        filterConfigs={filtersConfig}
         onRemove={removeFilter}
+        onClearAll={clearAllFilters}
       />
     </div>
   );
