@@ -57,6 +57,7 @@ def save_to_sql(conn, clinic_info: dict, subject: str, body: str, campaign_batch
     
     try: 
         sql, values = Queries.insert_into_smartlead(
+            leads_id=clinic_info["id"],
             clinic_name=clinic_info["clinic_name"],
             email=clinic_info["email"],
             subject_line=subject,
@@ -97,8 +98,11 @@ def run_email_generation(EMAIL_BATCH_SIZE: int = 1, EMAIL_DB_OFFSET: int = 0):
     if EMAIL_DB_OFFSET < 0: EMAIL_DB_OFFSET = 0
     
     conn = sqlite3.connect(DB_FILE)
-    
     cursor = conn.cursor()
+    
+    cursor.execute(Queries.create_smartlead_table())
+    conn.commit()
+    
     cursor.execute(Queries.get_top_clinics_for_outreach(limit=EMAIL_BATCH_SIZE, offset=EMAIL_DB_OFFSET))
     rows = cursor.fetchall()
     
@@ -106,7 +110,6 @@ def run_email_generation(EMAIL_BATCH_SIZE: int = 1, EMAIL_DB_OFFSET: int = 0):
     clinic_infos = [dict(zip(columns, row)) for row in rows]
 
     campaign_batch = f"outreach_{time.strftime('%Y%m%d_%H%M%S')}"
-    batch_start = time.perf_counter()
     
     logger.start_batch(f"{campaign_batch}")
     print(f"START outreach generation for {EMAIL_BATCH_SIZE} emails | batch={campaign_batch}")
@@ -124,7 +127,7 @@ def run_email_generation(EMAIL_BATCH_SIZE: int = 1, EMAIL_DB_OFFSET: int = 0):
     
     export_to_csv(conn=conn, campaign_batch=campaign_batch)
     
-    batch_elapsed = time.perf_counter() - batch_start
+    batch_elapsed = time.perf_counter() - time.perf_counter()
     logger.end_batch(
         f"{campaign_batch}",
         duration=batch_elapsed,
@@ -133,6 +136,7 @@ def run_email_generation(EMAIL_BATCH_SIZE: int = 1, EMAIL_DB_OFFSET: int = 0):
     
     print(f"END outreach generation | total_duration={batch_elapsed:.2f}s | average_time_per_email={batch_elapsed/EMAIL_BATCH_SIZE:.2f}")
     conn.close()
+
     
 if __name__=="__main__":
     run_email_generation()

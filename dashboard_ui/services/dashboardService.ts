@@ -1,7 +1,7 @@
 import { DashboardResponse, Clinic } from "@/lib/types";
 import { mockDashboardResponse } from "@/mock/dashboard-data";
 
-const MOCK_DATA = true;
+const MOCK_DATA = false;
 const BASE_URL = "http://localhost:8000";
 
 export const dashboardService = {

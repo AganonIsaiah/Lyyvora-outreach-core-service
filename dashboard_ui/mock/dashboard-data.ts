@@ -73,18 +73,18 @@ const defaultPrompt = `ROLE
 const defaultEmails = (clinicName: string): ClinicEmails[] => [
   {
     type: "Email 1",
-    subjectLine: `Quick question about ${clinicName}`,
-    emailBody: `Hi there,\n\nI came across ${clinicName} and thought it would be great to connect. Would you be open to a quick chat?\n\nBest regards,`,
+    subject_line: `Quick question about ${clinicName}`,
+    email_body: `Hi there,\n\nI came across ${clinicName} and thought it would be great to connect. Would you be open to a quick chat?\n\nBest regards,`,
   },
   {
     type: "Follow-up 1",
-    subjectLine: `Following up — ${clinicName}`,
-    emailBody: `Hi again,\n\nJust following up on my previous email in case it got buried. Looking forward to hearing your thoughts.\n\nBest,`,
+    subject_line: `Following up — ${clinicName}`,
+    email_body: `Hi again,\n\nJust following up on my previous email in case it got buried. Looking forward to hearing your thoughts.\n\nBest,`,
   },
   {
     type: "Follow-up 2",
-    subjectLine: `Last follow-up — ${clinicName}`,
-    emailBody: `Hi,\n\nThis will be my last follow-up. Happy to reconnect whenever the timing is right.\n\nThanks!`,
+    subject_line: `Last follow-up — ${clinicName}`,
+    email_body: `Hi,\n\nThis will be my last follow-up. Happy to reconnect whenever the timing is right.\n\nThanks!`,
   },
 ];
 
@@ -100,7 +100,7 @@ const getStatusValues = () => Object.values(ClinicStatus);
 
 export const mockClinicsData: Clinic[] = [
   {
-    id: "0",
+    id: 0,
     name: "Aganon's Clinic",
     email: "info@mock.com",
     website_url: "https://clinicalpha.com",
@@ -116,7 +116,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("Clinic Alpha"),
   },
   {
-    id: "1",
+    id: 1,
     name: "Clinic Alpha",
     email: "info@clinicalpha.com",
     website_url: "https://clinicalpha.com",
@@ -133,7 +133,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("Clinic Alpha"),
   },
   {
-    id: "2",
+    id: 2,
     name: "Health First Clinic",
     email: "hello@healthfirst.com",
     website_url: "https://healthfirst.com",
@@ -151,7 +151,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("Health First Clinic"),
   },
   {
-    id: "3",
+    id: 3,
     name: "Downtown Wellness Center",
     email: "contact@downtownwellness.com",
     website_url: "https://downtownwellness.com",
@@ -169,7 +169,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("Downtown Wellness Center"),
   },
   {
-    id: "4",
+    id: 4,
     name: "Pure Med Spa",
     email: "info@puremedspa.com",
     website_url: "https://puremedspa.com",
@@ -187,7 +187,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("Pure Med Spa"),
   },
   {
-    id: "5",
+    id: 5,
     name: "Maple Leaf Clinic",
     email: "contact@mapleleafclinic.com",
     website_url: "https://mapleleafclinic.com",
@@ -204,7 +204,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("Maple Leaf Clinic"),
   },
   {
-    id: "6",
+    id: 6,
     name: "Serenity Spa & Wellness",
     email: "hello@serenityspa.com",
     website_url: "https://serenityspa.com",
@@ -221,7 +221,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("Serenity Spa & Wellness"),
   },
   {
-    id: "7",
+    id: 7,
     name: "City Health Center",
     email: "info@cityhealth.com",
     website_url: "https://cityhealth.com",
@@ -239,7 +239,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("City Health Center"),
   },
   {
-    id: "8",
+    id: 8,
     name: "Harmony Med Spa",
     email: "contact@harmonymedspa.com",
     website_url: "https://harmonymedspa.com",
@@ -258,7 +258,7 @@ export const mockClinicsData: Clinic[] = [
   },
 
   {
-    id: "9",
+    id: 9,
     name: "Greenfield Clinic",
     email: "hello@greenfieldclinic.com",
     website_url: "https://greenfieldclinic.com",
@@ -276,7 +276,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("Greenfield Clinic"),
   },
   {
-    id: "10",
+    id: 10,
     name: "Zen Wellness",
     email: "info@zenwellness.com",
     website_url: "https://zenwellness.com",
@@ -293,7 +293,7 @@ export const mockClinicsData: Clinic[] = [
     emails_for_outreach: defaultEmails("Zen Wellness"),
   },
   {
-    id: "11",
+    id: 11,
     name: "Tranquility Health Center",
     email: "info@tranquilityhealth.com",
     website_url: "https://tranquilityhealth.com",

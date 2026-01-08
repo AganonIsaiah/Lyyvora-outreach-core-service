@@ -14,7 +14,7 @@ export default function ClinicsTable() {
   const isDashboardEmpty = clinics.length === 0;
 
   return (
-    <div className="bg-white rounded-b-lg shadow-sm border border-gray-200 overflow-y-auto h-[calc(100vh-43vh)] min-h-40">
+    <div className="bg-white rounded-b-lg shadow-sm border border-gray-200 overflow-y-auto overflow-x-hidden h-[calc(100vh-43vh)] min-h-40">
       {filteredClinics.length === 0 ? (
         <div className="p-4 font-semibold text-gray-500 text-sm flex flex-col gap-2">
           {isDashboardEmpty
@@ -50,7 +50,9 @@ export default function ClinicsTable() {
                 <td>{c.province}</td>
                 <td>
                   <span
-                    className={`whitespace-nowrap font-semibold px-2 py-1 rounded-xl text-xs ${CLINIC_STATUS_COLOR[c.status]}`}
+                    className={`whitespace-nowrap font-semibold px-2 py-1 rounded-xl text-xs ${
+                      CLINIC_STATUS_COLOR[c.status]
+                    }`}
                   >
                     {c.status}
                   </span>
@@ -70,7 +72,13 @@ export default function ClinicsTable() {
                     <HorizontalRuleIcon className="text-gray-500 text-sm" />
                   )}
                 </td>
-                <td className="truncate max-w-40">{c.notes}</td>
+                <td>
+                  {c.notes ? (
+                    <p className="truncate max-w-30">{c.notes}</p>
+                  ) : (
+                    <HorizontalRuleIcon className="text-gray-500 text-sm" />
+                  )}
+                </td>
                 <td>
                   <button
                     onClick={() => router.push(`/clinics/${c.id}`)}

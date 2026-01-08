@@ -30,13 +30,13 @@ export interface SidebarRoute {
 };
 
 export interface ClinicEmails {
-  subjectLine: string;
-  emailBody: string;
+  subject_line: string;
+  email_body: string;
   type: EmailType;
 }
 
 export interface Clinic {
-  id: string;
+  id: number;
   name: string;
   email: string;
   website_url: string; 

@@ -3,6 +3,7 @@ class Queries:
   def get_top_clinics_for_outreach(limit: int = 10, offset: int = 0) -> str:  
     return f"""
       SELECT 
+        l.id,
         l.clinic_name, 
         l.email, 
         l.clinic_sub_type, 
@@ -38,6 +39,7 @@ class Queries:
 
   @staticmethod
   def insert_into_smartlead(
+      leads_id: int,
       clinic_name: str, 
       email: str, 
       subject_line: str, 
@@ -50,6 +52,7 @@ class Queries:
     
     sql = """
       INSERT OR IGNORE INTO smartlead (
+        leads_id,
         clinic_name,
         email,
         subject_line,
@@ -59,10 +62,11 @@ class Queries:
         province,
         campaign_batch
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
     
     values = (
+      leads_id,
       clinic_name,
       email,
       subject_line,
@@ -80,6 +84,7 @@ class Queries:
     return f"""
       CREATE TABLE IF NOT EXISTS smartlead (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        leads_id INTEGER NOT NULL,
         clinic_name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
         subject_line TEXT,
@@ -87,7 +92,8 @@ class Queries:
         clinic_type TEXT,
         city TEXT,
         province TEXT,
-        campaign_batch TEXT NOT NULL
+        campaign_batch TEXT NOT NULL,
+        FOREIGN KEY (leads_id) REFERENCES leads(id)
       );
     """
 
@@ -114,7 +120,8 @@ class Queries:
             'Email 1 Sent',
             'Follow-up 1',
             'Follow-up 2',
-            'Replied'
+            'Replied',
+            'Closed'
           ))
       );
     """
