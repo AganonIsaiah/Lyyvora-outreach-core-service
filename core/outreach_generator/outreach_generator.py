@@ -22,9 +22,6 @@ client = Client(
     headers={"Authorization": f"Bearer {os.environ.get('OLLAMA_API')}"}
 )
 
-# ----------------------------
-# GENERATE EMAIL
-# ----------------------------
 def generate_email(clinic_info: dict, user_prompt: str | None = None, max_words: int = 120) -> str:
     clinic_name = clinic_info.get("clinic_name", "N/A")
     start_time = time.perf_counter()
@@ -40,10 +37,6 @@ def generate_email(clinic_info: dict, user_prompt: str | None = None, max_words:
 
     return email_text.strip()
 
-
-# ----------------------------
-# PARSE EMAIL
-# ----------------------------
 def parse_email(email_text: str):
     """
     Returns tuple: (subject_line_1, subject_line_2, subject_line_3, email_body_1, email_body_2, email_body_3)
@@ -53,7 +46,6 @@ def parse_email(email_text: str):
         bodies = []
 
         for i in range(1, 4):
-            # Match subject_line_i
             subj_match = re.search(f"subject_line_{i}\\s*:\\s*(.+)", email_text, re.IGNORECASE)
             body_match = re.search(f"email_body_{i}\\s*:\\s*(.+?)(?=(subject_line_|$))", email_text, re.IGNORECASE | re.DOTALL)
             
@@ -61,7 +53,7 @@ def parse_email(email_text: str):
                 subjects.append(subj_match.group(1).strip())
                 bodies.append(body_match.group(1).strip())
             else:
-                return None  # Failed to find one of the emails
+                return None 
 
         return (*subjects, *bodies)
 
@@ -69,10 +61,6 @@ def parse_email(email_text: str):
         logger.error(f"Error parsing email: {e}")
         return None
 
-
-# ----------------------------
-# SAVE TO SQL
-# ----------------------------
 def save_to_sql(
     conn,
     clinic_info: dict,
