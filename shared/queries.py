@@ -40,8 +40,7 @@ class Queries:
     values = (campaign_batch,)
     
     return sql, values
-
-
+  
   @staticmethod
   def insert_into_smartlead(
       leads_id: int,
@@ -134,16 +133,7 @@ class Queries:
         website_desc TEXT,
         total_reviews INTEGER,
         average_rating REAL,
-        status TEXT NOT NULL DEFAULT 'Not Queued'
-          CHECK (status IN (
-            'Not Queued',
-            'Not Contacted',
-            'Email 1 Sent',
-            'Follow-up 1',
-            'Follow-up 2',
-            'Replied',
-            'Closed'
-          ))
+        email_status TEXT NOT NULL DEFAULT 'Not Generated'
       );
     """
     

@@ -9,8 +9,8 @@ import re
 from shared.queries import Queries
 from shared.logging_module import Logger
 from shared.configs import DB_FILE, SMARTLEAD_CSV_OUTPUT_FILE
-
-from .prompt_templates import prompt
+from shared.types import ClinicStatus
+from shared.prompt_templates import prompt
 
 OLLAMA_MODEL = "deepseek-v3.1:671b-cloud"
 
@@ -121,9 +121,19 @@ def export_to_csv(conn, campaign_batch: str):
 
     logger.info(f"Exported {len(rows)} rows to {filename}")
 
+def set_clinic_status_queued(conn, clinic_id: int):
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE leads SET email_status = ? WHERE id = ?",
+            (ClinicStatus.GENERATED.value, clinic_id)
+        )
+        conn.commit()
+    except Exception as e:
+        logger.error(f"Failed to update email_status to QUEUED for clinic_id={clinic_id}: {e}")
 
 def run_email_generation(
-    EMAIL_BATCH_SIZE: int = 10,
+    EMAIL_BATCH_SIZE: int = 1,
     EMAIL_DB_OFFSET: int = 0,
     PROMPT: str | None = None,
     EMAIL_WORD_LIMIT: int = 120
@@ -165,6 +175,7 @@ def run_email_generation(
             email_body_3=parsed[5],
             campaign_batch=campaign_batch
         )
+        set_clinic_status_queued(conn, clinic_info["id"])
 
     export_to_csv(conn=conn, campaign_batch=campaign_batch)
 

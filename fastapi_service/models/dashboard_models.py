@@ -2,15 +2,7 @@ from enum import Enum
 from typing import List, Optional, Dict
 from datetime import date
 from pydantic import BaseModel
-
-class ClinicStatus(str, Enum):
-  NOT_QUEUED = "Not Queued"
-  NOT_CONTACTED = "Not Contacted"
-  EMAIL_1_SENT = "Email 1 Sent"
-  FOLLOW_UP_1 = "Follow-up 1"
-  FOLLOW_UP_2 = "Follow-up 2"
-  REPLIED = "Replied"
-  CLOSED = "Closed"
+from shared.types import ClinicStatus
 
 FilterType = str 
 EmailType = str  
@@ -39,7 +31,7 @@ class Clinic(BaseModel):
   type: List[str]
   city: str
   province: str
-  status: ClinicStatus
+  email_status: ClinicStatus
   total_reviews: int
   average_rating: float
   lead_score: float
@@ -56,9 +48,8 @@ class Metric(BaseModel):
   desc_value: Optional[float] = None
 
 class CampaignStatus(BaseModel):
-  daily_email_limit: int
-  follow_up_1: int
-  follow_up_2: int
+  max_word_limit: int 
+  number_of_clinics: int
   prompt: str
   contacted_clinics: int
   total_clinics: int
@@ -77,6 +68,6 @@ class DashboardRequest(BaseModel):
   sub_type: Optional[List[str]] = None
   city: Optional[List[str]] = None
   province: Optional[List[str]] = None
-  status: Optional[List[str]] = None
+  email_status: Optional[List[str]] = None
   sort_by: Optional[str] = None
   sort_order: str = "desc"

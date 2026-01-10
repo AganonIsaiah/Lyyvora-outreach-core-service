@@ -3,7 +3,7 @@ IMPORTANT NOTES
 - These prompt templates are used in outreach_generator/outreach_generator.py
 - Prompt output should include "subject_line" and "email_body", because the outreach_generator expects those two fields
 """
-def prompt(clinic_info: dict, user_prompt: str, max_words: int = 120) -> str:
+def prompt(clinic_info: dict = {}, user_prompt: str = "", max_words: int = 120) -> str:
     OUTPUT = f"""
         OUTPUT
         subject_line_1: <one concise subject line>

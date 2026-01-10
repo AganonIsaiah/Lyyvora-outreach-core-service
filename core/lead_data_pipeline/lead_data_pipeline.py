@@ -181,7 +181,7 @@ def run_pipeline():
     logger.info("Converted NaN values to None for SQLite.")
 
     # Set status to Not Queued
-    df['status'] = ClinicStatus.NOT_QUEUED.value
+    df['email_status'] = ClinicStatus.NOT_GENERATED.value
 
     # Save
     save_to_sqlite(df)

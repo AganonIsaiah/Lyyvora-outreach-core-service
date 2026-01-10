@@ -2,19 +2,16 @@ import sqlite3
 from typing import List, Optional
 
 from ..models.dashboard_models import (
-  Clinic, ClinicStatus, ClinicEmails, Metric, Filter,
+  Clinic, ClinicEmails, Metric, Filter,
   CampaignStatus, DashboardResponse
 )
 from shared.configs import DB_FILE
+from shared.prompt_templates import prompt
+from shared.types import ClinicStatus
 
 STATUS_PRIORITY = {
-  ClinicStatus.CLOSED: 7,
-  ClinicStatus.REPLIED: 6,
-  ClinicStatus.FOLLOW_UP_2: 5,
-  ClinicStatus.FOLLOW_UP_1: 4,
-  ClinicStatus.EMAIL_1_SENT: 3,
-  ClinicStatus.NOT_CONTACTED: 2,
-  ClinicStatus.NOT_QUEUED: 1,
+  ClinicStatus.GENERATED: 2,
+  ClinicStatus.NOT_GENERATED: 1,
 }
 
 def parse_comma_separated(values: Optional[List[str]]) -> Optional[List[str]]:
@@ -43,7 +40,7 @@ def get_total_filtered_clinics_count(
   sub_type: Optional[List[str]] = None,
   city: Optional[List[str]] = None,
   province: Optional[List[str]] = None,
-  status: Optional[List[ClinicStatus]] = None,
+  email_status: Optional[List[ClinicStatus]] = None,
 ) -> int:
   conn = sqlite3.connect(DB_FILE)
   cursor = conn.cursor()
@@ -58,10 +55,10 @@ def get_total_filtered_clinics_count(
     filters.append(build_multi_like("province", province, params))
   if sub_type:
     filters.append(build_multi_like("clinic_sub_type", sub_type, params, csv=True))
-  if status:
-    placeholders = ",".join("?" for _ in status)
+  if email_status:
+    placeholders = ",".join("?" for _ in email_status)
     filters.append(f"status IN ({placeholders})")
-    params.extend([s.value for s in status])
+    params.extend([s.value for s in email_status])
 
   where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
   cursor.execute(f"SELECT COUNT(*) FROM leads {where_clause}", params)
@@ -107,7 +104,7 @@ def get_all_clinics_from_db(
   sub_type: Optional[List[str]] = None,
   city: Optional[List[str]] = None,
   province: Optional[List[str]] = None,
-  status: Optional[List[ClinicStatus]] = None,
+  email_status: Optional[List[ClinicStatus]] = None,
   sort_by: Optional[str] = None,
   sort_order: str = "desc"
 ) -> List[Clinic]:
@@ -125,17 +122,17 @@ def get_all_clinics_from_db(
     filters.append(build_multi_like("l.province", province, params))
   if sub_type:
     filters.append(build_multi_like("l.clinic_sub_type", sub_type, params, csv=True))
-  if status:
-    placeholders = ",".join("?" for _ in status)
-    filters.append(f"l.status IN ({placeholders})")
-    params.extend([s.value for s in status])
+  if email_status:
+    placeholders = ",".join("?" for _ in email_status)
+    filters.append(f"l.email_status IN ({placeholders})")
+    params.extend([s.value for s in email_status])
 
   where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
   order_clause = "ORDER BY l.id ASC"
   
-  if sort_by == "status":
+  if sort_by == "email_status":
     order_clause = f"""
-        ORDER BY CASE l.status
+        ORDER BY CASE l.email_status
         {" ".join(f"WHEN '{s.value}' THEN {p}" for s, p in STATUS_PRIORITY.items())}
         END {"ASC" if sort_order == "asc" else "DESC"}
     """
@@ -148,7 +145,7 @@ def get_all_clinics_from_db(
         SELECT 
             l.id, l.clinic_name, l.clinic_main_type, l.clinic_sub_type,
             l.city, l.province, l.phone, l.email, l.website_url, l.website_desc,
-            l.total_reviews, l.average_rating, l.status,
+            l.total_reviews, l.average_rating, l.email_status,
             s.score, s.top_features,
             m.subject_line_1, m.email_body_1,
             m.subject_line_2, m.email_body_2,
@@ -191,7 +188,7 @@ def get_all_clinics_from_db(
           type=types_list if types_list else ["Unknown"],
           city=row["city"] or "",
           province=row["province"] or "",
-          status=ClinicStatus(row["status"]) if row["status"] else ClinicStatus.NOT_QUEUED,
+          email_status=ClinicStatus(row["email_status"]) if row["email_status"] else ClinicStatus.NOT_QUEUED,
           total_reviews=row["total_reviews"] or 0,
           average_rating=row["average_rating"] or 0.0,
           lead_score=row["score"] or 0,
@@ -212,8 +209,8 @@ def generate_dashboard(req: DashboardRequest):
   sub_type = parse_comma_separated(req.sub_type)
   city = parse_comma_separated(req.city)
   province = parse_comma_separated(req.province)
-  status = parse_comma_separated(req.status)
-  status = [ClinicStatus(s) for s in status] if status else None
+  email_status = parse_comma_separated(req.email_status)
+  email_status = [ClinicStatus(s) for s in email_status] if email_status else None
 
   clinics = get_all_clinics_from_db(
         limit=req.limit,
@@ -222,7 +219,7 @@ def generate_dashboard(req: DashboardRequest):
         sub_type=sub_type,
         city=city,
         province=province,
-        status=status,
+        email_status=email_status,
         sort_by=req.sort_by,
         sort_order=req.sort_order
   )
@@ -232,7 +229,7 @@ def generate_dashboard(req: DashboardRequest):
         sub_type=sub_type,
         city=city,
         province=province,
-        status=status
+        email_status=email_status
   )
 
   filter_values = get_all_filter_values()
@@ -249,7 +246,7 @@ def generate_dashboard(req: DashboardRequest):
         Filter(key="type", label="Type", values=sorted(filter_values["type"]), type="select"),
         Filter(key="city", label="City", values=sorted(filter_values["city"]), type="select"),
         Filter(key="province", label="Province", values=sorted(filter_values["province"]), type="select"),
-        Filter(key="status", label="Status", values=[s.value for s in ClinicStatus], type="select"),
+        Filter(key="email_status", label="Email Status", values=[s.value for s in ClinicStatus], type="select"),
         Filter(key="lead_score", label="Lead Score", values=["Asc", "Desc"], type="sort"),
         Filter(key="average_rating", label="Average Rating", values=["Asc", "Desc"], type="sort"),
         Filter(key="last_contact_date", label="Last Contact Date", values=["Asc", "Desc"], type="sort"),
@@ -257,10 +254,9 @@ def generate_dashboard(req: DashboardRequest):
   ]
 
   campaign_status = CampaignStatus(
-        daily_email_limit=10,
-        follow_up_1=4,
-        follow_up_2=5,
-        prompt="Test prompt",
+        max_word_limit=120,
+        number_of_clinics=10,
+        prompt=prompt(),
         contacted_clinics=0,
         total_clinics=total_clinics,
         clinic_percentage=0.0

@@ -16,7 +16,7 @@ def rules_based_score(lead: Dict[str, Any]) -> Dict[str, Any]:
     top_features = []
 
     if lead.get("phone"):
-        score += 20
+        score += 10
         top_features.append("Has valid phone number.")
         
     if lead.get("email"):
@@ -26,6 +26,10 @@ def rules_based_score(lead: Dict[str, Any]) -> Dict[str, Any]:
     if lead.get("website_url"):
         score += 10
         top_features.append("Has valid website url.")
+        
+    if lead.get("website_desc"):
+        score += 20
+        top_features.append(f"Has notes: {lead.get("website_desc")}")
     
     if lead.get("total_reviews") is not None and lead.get("total_reviews", 0) >= 30.0:
         score += 10
@@ -46,7 +50,7 @@ def rules_based_score(lead: Dict[str, Any]) -> Dict[str, Any]:
             for subtype in subtypes_list:
                 if keyword in subtype: 
                     matched_keywords.append(keyword.capitalize())
-                    score += 20  
+                    score += 10  
                     break  
 
         if matched_keywords:
