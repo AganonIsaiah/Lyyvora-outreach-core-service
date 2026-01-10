@@ -134,19 +134,20 @@ def set_clinic_status_queued(conn, clinic_id: int):
 
 def run_email_generation(
     EMAIL_BATCH_SIZE: int = 1,
-    EMAIL_DB_OFFSET: int = 0,
     PROMPT: str | None = None,
-    EMAIL_WORD_LIMIT: int = 120
+    EMAIL_WORD_LIMIT: int = 120, 
+    progress_callback=None
 ):
     if EMAIL_BATCH_SIZE < 1: EMAIL_BATCH_SIZE = 1
-    if EMAIL_DB_OFFSET < 0: EMAIL_DB_OFFSET = 0
 
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute(Queries.create_smartlead_table())
     conn.commit()
 
-    cursor.execute(Queries.get_top_clinics_for_outreach(limit=EMAIL_BATCH_SIZE, offset=EMAIL_DB_OFFSET))
+    sql, params = Queries.get_top_clinics_for_outreach(batch_size=EMAIL_BATCH_SIZE)
+    cursor.execute(sql, params)
+
     rows = cursor.fetchall()
     columns = [desc[0] for desc in cursor.description]
     clinic_infos = [dict(zip(columns, row)) for row in rows]
@@ -176,6 +177,9 @@ def run_email_generation(
             campaign_batch=campaign_batch
         )
         set_clinic_status_queued(conn, clinic_info["id"])
+        
+        if progress_callback:
+            progress_callback()
 
     export_to_csv(conn=conn, campaign_batch=campaign_batch)
 

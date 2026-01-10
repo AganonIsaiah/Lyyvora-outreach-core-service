@@ -6,7 +6,6 @@ from fastapi import UploadFile, HTTPException
 from shared.configs import CSV_INPUT_FILE, DB_FILE
 from core.lead_data_pipeline.lead_data_pipeline import run_pipeline
 from core.lead_scoring_model.rules_based_baseline import run_rules_baseline
-from shared.queries import Queries
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -25,7 +24,6 @@ def drop_all_tables():
         raise
     finally:
         conn.close()
-
 
 def process_uploaded_csv(file: UploadFile) -> dict:
     if not file.filename.endswith(".csv"):

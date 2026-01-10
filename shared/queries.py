@@ -1,22 +1,26 @@
+from shared.types import ClinicStatus
+
 class Queries:
   @staticmethod
-  def get_top_clinics_for_outreach(limit: int = 10, offset: int = 0) -> str:  
-    return f"""
-      SELECT 
-        l.id,
-        l.clinic_name, 
-        l.email, 
-        l.clinic_sub_type, 
-        l.city, 
-        l.province, 
-        l.website_desc 
-      FROM leads l
-      LEFT JOIN lead_scores s 
-      ON l.id = s.leads_id 
-      ORDER BY s.score DESC
-      LIMIT {limit}
-      OFFSET {offset};
+  def get_top_clinics_for_outreach(batch_size: int = 10) -> tuple[str, tuple]:
+    sql = """
+        SELECT 
+            l.id,
+            l.clinic_name,
+            l.email,
+            l.clinic_sub_type,
+            l.city,
+            l.province,
+            l.website_desc,
+            COALESCE(s.score, 0) as score
+        FROM leads l
+        LEFT JOIN lead_scores s ON l.id = s.leads_id
+        WHERE l.email_status = ?
+        ORDER BY score DESC
+        LIMIT ?
     """
+    params = (ClinicStatus.NOT_GENERATED.value, batch_size)
+    return sql, params
 
   @staticmethod
   def select_smartlead_batch(campaign_batch: str) -> tuple[str, tuple]:
