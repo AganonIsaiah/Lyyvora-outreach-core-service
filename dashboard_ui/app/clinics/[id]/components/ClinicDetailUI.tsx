@@ -98,7 +98,7 @@ export default function ClinicDetailUI({ clinic }: Props) {
               <input
                 type="text"
                 className="w-full border-b border-gray-300 py-1 px-2 text-sm font-semibold focus:outline-none focus:border-indigo-500"
-                value={email.subjectLine}
+                value={email.subject_line}
                 onChange={(e) =>
                   setEmails((prev) =>
                     prev.map((em, i) => (i === idx ? { ...em, subjectLine: e.target.value } : em))
@@ -107,7 +107,7 @@ export default function ClinicDetailUI({ clinic }: Props) {
               />
               <textarea
                 className="w-full mt-2 p-2 border border-gray-300 rounded resize-none h-40 focus:outline-none focus:border-indigo-500 text-sm"
-                value={email.emailBody}
+                value={email.email_body}
                 onChange={(e) =>
                   setEmails((prev) =>
                     prev.map((em, i) => (i === idx ? { ...em, emailBody: e.target.value } : em))

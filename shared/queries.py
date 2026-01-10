@@ -24,8 +24,12 @@ class Queries:
       SELECT
         clinic_name,
         email,
-        subject_line,
-        email_body,
+        subject_line_1,
+        email_body_1,
+        subject_line_2,
+        email_body_2,
+        subject_line_3,
+        email_body_3,
         clinic_type,
         city,
         province
@@ -37,13 +41,18 @@ class Queries:
     
     return sql, values
 
+
   @staticmethod
   def insert_into_smartlead(
       leads_id: int,
       clinic_name: str, 
       email: str, 
-      subject_line: str, 
-      email_body: str, 
+      subject_line_1: str, 
+      email_body_1: str, 
+      subject_line_2: str, 
+      email_body_2: str, 
+      subject_line_3: str, 
+      email_body_3: str, 
       clinic_type: str, 
       city: str, 
       province: str, 
@@ -51,26 +60,34 @@ class Queries:
     ) -> tuple[str, tuple]:
     
     sql = """
-      INSERT OR IGNORE INTO smartlead (
+      INSERT OR REPLACE INTO smartlead (
         leads_id,
         clinic_name,
         email,
-        subject_line,
-        email_body,
+        subject_line_1,
+        email_body_1,
+        subject_line_2,
+        email_body_2,
+        subject_line_3,
+        email_body_3,
         clinic_type,
         city,
         province,
         campaign_batch
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
     
     values = (
       leads_id,
       clinic_name,
       email,
-      subject_line,
-      email_body,
+      subject_line_1,
+      email_body_1,
+      subject_line_2,
+      email_body_2,
+      subject_line_3,
+      email_body_3,
       clinic_type,
       city,
       province,
@@ -87,8 +104,12 @@ class Queries:
         leads_id INTEGER NOT NULL,
         clinic_name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
-        subject_line TEXT,
-        email_body TEXT,
+        subject_line_1 TEXT,
+        email_body_1 TEXT,
+        subject_line_2 TEXT,
+        email_body_2 TEXT,
+        subject_line_3 TEXT,
+        email_body_3 TEXT,
         clinic_type TEXT,
         city TEXT,
         province TEXT,

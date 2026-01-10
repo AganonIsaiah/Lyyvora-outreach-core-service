@@ -12,9 +12,9 @@ class ClinicStatus(str, Enum):
   REPLIED = "Replied"
   CLOSED = "Closed"
 
-FilterType = str  # "select" | "sort"
-EmailType = str  # "Email 1" | "Follow-up 1" | "Follow-up 2"
-FilterState = Dict[str, List[str]]  # Record<string, string[]> in TS
+FilterType = str 
+EmailType = str  
+FilterState = Dict[str, List[str]]  
 
 class Filter(BaseModel):
   key: str

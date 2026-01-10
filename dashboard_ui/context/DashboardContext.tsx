@@ -19,7 +19,6 @@ import { dashboardService } from "@/services/dashboardService";
 
 interface DashboardContextProps {
   clinics: Clinic[];
-  filteredClinics: Clinic[];
   filters: FilterState;
   setFilters: (
     updater: ((prev: FilterState) => FilterState) | FilterState
@@ -32,6 +31,13 @@ interface DashboardContextProps {
     updater: ((prev: CampaignStatus) => CampaignStatus) | CampaignStatus
   ) => void;
   metrics: Metric[];
+
+  // pagination
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  setPage: (p: number) => void;
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(
@@ -40,7 +46,6 @@ const DashboardContext = createContext<DashboardContextProps | undefined>(
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [clinics, setClinics] = useState<Clinic[]>([]);
-  const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
   const [filters, setFilters] = useState<FilterState>({});
   const [filtersConfig, setFiltersConfig] = useState<Filter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,84 +53,43 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [campaignStatus, setCampaignStatus] = useState<CampaignStatus>(
     {} as CampaignStatus
   );
-  const [metrics, setMetrics] = useState<Metric[]>([]); 
+  const [metrics, setMetrics] = useState<Metric[]>([]);
 
+  // pagination
+  const [page, setPage] = useState(1);
+  const [limit] = useState(25);
+  const [total, setTotal] = useState(0);
+
+  // fetch dashboard data
   useEffect(() => {
+    setLoading(true);
+
     dashboardService
-      .fetchDashboardData()
+      .fetchDashboardData(page, limit, filters)
       .then((data: DashboardResponse) => {
         setClinics(data.clinics_data);
-        setFilteredClinics(data.clinics_data);
         setFiltersConfig(data.filters);
         setCampaignStatus(data.campaign_status);
-        setMetrics(data.metrics); 
+        setMetrics(data.metrics);
 
-        const initialFilters: FilterState = {};
-        data.filters.forEach((f) => {
-          initialFilters[f.key] = [];
-        });
-        setFilters(initialFilters);
+        const totalClinicsMetric = data.metrics.find(
+          (m) => m.label === "Total Clinics"
+        );
+        setTotal(totalClinicsMetric?.value || 0);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [page, filters]);
 
+  // reset to page 1 when filters change
   useEffect(() => {
-    if (clinics.length === 0) return;
-
-    let result = [...clinics];
-
-    Object.entries(filters).forEach(([key, values]) => {
-      if (values.length > 0) {
-        const filterValues = values.filter(
-          (v) => v !== "Asc" && v !== "Desc" && v !== "None"
-        );
-        if (filterValues.length > 0) {
-          result = result.filter((clinic) => {
-            const clinicValue = (clinic as any)[key];
-            if (Array.isArray(clinicValue)) {
-              return filterValues.some((v) => clinicValue.includes(v));
-            }
-            return filterValues.includes(clinicValue);
-          });
-        }
-      }
-    });
-
-    const sortKeys: (keyof FilterState)[] = [
-      "lead_score",
-      "average_rating",
-      "last_contact_date",
-      "next_contact_date",
-    ];
-
-    sortKeys.forEach((key) => {
-      const sortValue = filters[key]?.[0];
-      if (sortValue && sortValue !== "None") {
-        result.sort((a: any, b: any) => {
-          let aVal = a[key];
-          let bVal = b[key];
-
-          if (key.includes("date")) {
-            aVal = aVal ? new Date(aVal).getTime() : 0;
-            bVal = bVal ? new Date(bVal).getTime() : 0;
-          }
-
-          if (aVal < bVal) return sortValue === "Asc" ? -1 : 1;
-          if (aVal > bVal) return sortValue === "Asc" ? 1 : -1;
-          return 0;
-        });
-      }
-    });
-
-    setFilteredClinics(result);
-  }, [filters, clinics]);
+    setPage(1);
+  }, [filters]);
 
   return (
     <DashboardContext.Provider
       value={{
         clinics,
-        filteredClinics,
         filters,
         setFilters,
         filtersConfig,
@@ -133,7 +97,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         error,
         campaignStatus,
         setCampaignStatus,
-        metrics
+        metrics,
+
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        setPage,
       }}
     >
       {children}

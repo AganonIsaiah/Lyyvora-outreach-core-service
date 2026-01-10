@@ -1,17 +1,24 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
-from typing import List
-from datetime import date
+from typing import List, Optional
+from fastapi.responses import FileResponse
 
 from shared.types import (
     Clinic, ClinicStatus, ClinicEmails, Metric, Filter,
     CampaignStatus, DashboardResponse
 )
 from shared.configs import DB_FILE
+from pydantic import BaseModel
+
+from core.outreach_generator.outreach_generator import run_email_generation
+
 
 app = FastAPI(title="Lyyvora Outreach API")
 
+# ------------------------
+# CORS
+# ------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,14 +41,152 @@ STATUS_PRIORITY = {
 }
 
 # ------------------------
-# DB Access (existing get_all_clinics_from_db) 
+# Helpers
 # ------------------------
-def get_all_clinics_from_db(limit: int = 10, offset: int = 0) -> List[Clinic]:
+def parse_comma_separated(values: Optional[List[str]]) -> Optional[List[str]]:
+    if not values:
+        return None
+    result = []
+    for v in values:
+        result.extend([x.strip() for x in v.split(",")])
+    return result
+
+def build_multi_like(column: str, values: List[str], params: List[str], csv: bool = False):
+    """
+    Build SQL WHERE clause for multi-value filters.
+    If csv=True, treats the column as comma-separated and searches for each value inside.
+    """
+    parts = []
+    for v in values:
+        if csv:
+            parts.append(f"{column} LIKE ?")
+            params.append(f"%{v}%")  # matches part of comma-separated string
+        else:
+            parts.append(f"{column} LIKE ?")
+            params.append(f"%{v}%")
+    return "(" + " OR ".join(parts) + ")"
+
+# ------------------------
+# Filtered clinic count
+# ------------------------
+def get_total_filtered_clinics_count(
+    name: Optional[List[str]] = None,
+    sub_type: Optional[List[str]] = None,
+    city: Optional[List[str]] = None,
+    province: Optional[List[str]] = None,
+    status: Optional[List[ClinicStatus]] = None,
+) -> int:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    filters = []
+    params = []
+
+    if name:
+        filters.append(build_multi_like("clinic_name", name, params))
+    if city:
+        filters.append(build_multi_like("city", city, params))
+    if province:
+        filters.append(build_multi_like("province", province, params))
+    if sub_type:
+        filters.append(build_multi_like("clinic_sub_type", sub_type, params, csv=True))
+    if status:
+        placeholders = ",".join("?" for _ in status)
+        filters.append(f"status IN ({placeholders})")
+        params.extend([s.value for s in status])
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+    cursor.execute(f"SELECT COUNT(*) FROM leads {where_clause}", params)
+    total = cursor.fetchone()[0]
+    conn.close()
+    return total
+
+# ------------------------
+# Global filter values
+# ------------------------
+# ------------------------
+# Global filter values
+# ------------------------
+def get_all_filter_values():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+
+    # Helper to split and deduplicate comma-separated values
+    def split_and_deduplicate(rows):
+        types_set = set()
+        for r in rows:
+            if r[0]:
+                for t in r[0].split(","):
+                    types_set.add(t.strip())
+        return sorted(types_set)
+
+    data = {
+        "name": [r[0] for r in cursor.execute(
+            "SELECT DISTINCT clinic_name FROM leads WHERE clinic_name IS NOT NULL;"
+        ).fetchall()],
+        "city": [r[0] for r in cursor.execute(
+            "SELECT DISTINCT city FROM leads WHERE city IS NOT NULL;"
+        ).fetchall()],
+        "province": [r[0] for r in cursor.execute(
+            "SELECT DISTINCT province FROM leads WHERE province IS NOT NULL;"
+        ).fetchall()],
+        "type": split_and_deduplicate(cursor.execute(
+            "SELECT DISTINCT clinic_sub_type FROM leads WHERE clinic_sub_type IS NOT NULL;"
+        ).fetchall()),
+    }
+    conn.close()
+    return data
+
+
+# ------------------------
+# Get paginated clinics
+# ------------------------
+def get_all_clinics_from_db(
+    limit: int = 10,
+    offset: int = 0,
+    name: Optional[List[str]] = None,
+    sub_type: Optional[List[str]] = None,
+    city: Optional[List[str]] = None,
+    province: Optional[List[str]] = None,
+    status: Optional[List[ClinicStatus]] = None,
+    sort_by: Optional[str] = None,
+    sort_order: str = "desc"
+) -> List[Clinic]:
+
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
+    filters = []
+    params = []
 
-    cursor.execute("""
+    if name:
+        filters.append(build_multi_like("l.clinic_name", name, params))
+    if city:
+        filters.append(build_multi_like("l.city", city, params))
+    if province:
+        filters.append(build_multi_like("l.province", province, params))
+    if sub_type:
+        filters.append(build_multi_like("l.clinic_sub_type", sub_type, params, csv=True))
+    if status:
+        placeholders = ",".join("?" for _ in status)
+        filters.append(f"l.status IN ({placeholders})")
+        params.extend([s.value for s in status])
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+
+    # Sorting
+    order_clause = "ORDER BY l.id ASC"
+    if sort_by == "status":
+        order_clause = f"""
+        ORDER BY CASE l.status
+        {" ".join(f"WHEN '{s.value}' THEN {p}" for s, p in STATUS_PRIORITY.items())}
+        END {"ASC" if sort_order == "asc" else "DESC"}
+        """
+    elif sort_by == "lead_score":
+        order_clause = f"ORDER BY s.score {'ASC' if sort_order=='asc' else 'DESC'}"
+    elif sort_by == "average_rating":
+        order_clause = f"ORDER BY l.average_rating {'ASC' if sort_order=='asc' else 'DESC'}"
+
+    query = f"""
         SELECT 
             l.id, l.clinic_name, l.clinic_main_type, l.clinic_sub_type,
             l.city, l.province, l.phone, l.email, l.website_url, l.website_desc,
@@ -50,29 +195,32 @@ def get_all_clinics_from_db(limit: int = 10, offset: int = 0) -> List[Clinic]:
             m.subject_line, m.email_body
         FROM leads l
         LEFT JOIN lead_scores s ON s.leads_id = l.id
-        LEFT JOIN smartlead m ON m.leads_id = l.id;
-    """)
-
+        LEFT JOIN smartlead m ON m.leads_id = l.id
+        {where_clause}
+        {order_clause}
+        LIMIT ? OFFSET ?;
+    """
+    params.extend([limit, offset])
+    cursor.execute(query, params)
     rows = cursor.fetchall()
-    clinics = []
 
+    clinics = []
     for row in rows:
         emails = []
         if row["subject_line"]:
-            emails.append(
-                ClinicEmails(
-                    subject_line=row["subject_line"] or "",
-                    email_body=row["email_body"] or "",
-                    type="Email 1"
-                )
-            )
-
-        clinic = Clinic(
+            emails.append(ClinicEmails(
+                subject_line=row["subject_line"] or "",
+                email_body=row["email_body"] or "",
+                type="Email 1"
+            ))
+        # split sub_type by comma for the API response
+        types_list = [t.strip() for t in (row["clinic_sub_type"] or "").split(",") if t.strip()]
+        clinics.append(Clinic(
             id=row["id"],
             name=row["clinic_name"],
             email=row["email"],
             website_url=row["website_url"] or "",
-            type=[row["clinic_main_type"] or "Unknown"],
+            type=types_list if types_list else ["Unknown"],
             city=row["city"] or "",
             province=row["province"] or "",
             status=ClinicStatus(row["status"]) if row["status"] else ClinicStatus.NOT_QUEUED,
@@ -84,45 +232,68 @@ def get_all_clinics_from_db(limit: int = 10, offset: int = 0) -> List[Clinic]:
             notes=row["website_desc"] or "",
             top_features=row["top_features"] or "",
             emails_for_outreach=emails
-        )
-        clinics.append(clinic)
+        ))
 
     conn.close()
-    clinics.sort(key=lambda c: STATUS_PRIORITY.get(c.status, 0), reverse=True)
     return clinics
-
-# ------------------------
-# Helper to get unique values for a filter
-# ------------------------
-def get_unique_values(clinics: List[Clinic], attr: str) -> List[str]:
-    values = set()
-    for c in clinics:
-        val = getattr(c, attr, None)
-        if val:
-            if isinstance(val, list):
-                values.update(val)
-            else:
-                values.add(val)
-    return sorted(values)
 
 # ------------------------
 # Dashboard endpoint
 # ------------------------
 @app.get("/dashboard", response_model=DashboardResponse)
-def get_dashboard():
-    clinics = get_all_clinics_from_db()
+def get_dashboard(
+    limit: int = Query(10, ge=1, le=100),
+    page: int = Query(1, ge=1),
+    name: Optional[List[str]] = Query(None),
+    sub_type: Optional[List[str]] = Query(None),
+    city: Optional[List[str]] = Query(None),
+    province: Optional[List[str]] = Query(None),
+    status: Optional[List[str]] = Query(None),
+    sort_by: Optional[str] = Query(None, regex="^(status|lead_score|average_rating)$"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$")
+):
+    offset = (page - 1) * limit
+    name = parse_comma_separated(name)
+    sub_type = parse_comma_separated(sub_type)
+    city = parse_comma_separated(city)
+    province = parse_comma_separated(province)
+    status = parse_comma_separated(status)
+    status = [ClinicStatus(s) for s in status] if status else None
+
+    clinics = get_all_clinics_from_db(
+        limit=limit,
+        offset=offset,
+        name=name,
+        sub_type=sub_type,
+        city=city,
+        province=province,
+        status=status,
+        sort_by=sort_by,
+        sort_order=sort_order
+    )
+
+    total_clinics = get_total_filtered_clinics_count(
+        name=name,
+        sub_type=sub_type,
+        city=city,
+        province=province,
+        status=status
+    )
+
+    filter_values = get_all_filter_values()
 
     metrics = [
-        Metric(label="Total Clinics", value=len(clinics), desc="Number of clinics"),
-        Metric(label="Contacted Clinics", value=0, desc="Clinics contacted")
+        Metric(label="Total Clinics", value=total_clinics, desc="Number of clinics", desc_value=0.0),
+        Metric(label="Contacted Clinics", value=0, desc="Clinics contacted"),
+        Metric(label="Emails Sent Today", value=0, desc="Emails sent today"),
+        Metric(label="Replies Received", value=0, desc="Change")
     ]
 
-    # Create all 9 filters
-    filters: List[Filter] = [
-        Filter(key="name", label="Name", values=get_unique_values(clinics, "name"), type="select"),
-        Filter(key="type", label="Type", values=get_unique_values(clinics, "type"), type="select"),
-        Filter(key="city", label="City", values=get_unique_values(clinics, "city"), type="select"),
-        Filter(key="province", label="Province", values=get_unique_values(clinics, "province"), type="select"),
+    filters: list[Filter] = [
+        Filter(key="name", label="Name", values=sorted(filter_values["name"]), type="select"),
+        Filter(key="type", label="Type", values=sorted(filter_values["type"]), type="select"),
+        Filter(key="city", label="City", values=sorted(filter_values["city"]), type="select"),
+        Filter(key="province", label="Province", values=sorted(filter_values["province"]), type="select"),
         Filter(key="status", label="Status", values=[s.value for s in ClinicStatus], type="select"),
         Filter(key="lead_score", label="Lead Score", values=["Asc", "Desc"], type="sort"),
         Filter(key="average_rating", label="Average Rating", values=["Asc", "Desc"], type="sort"),
@@ -131,12 +302,12 @@ def get_dashboard():
     ]
 
     campaign_status = CampaignStatus(
-        daily_email_limit=100,
-        follow_up_1=1,
-        follow_up_2=1,
+        daily_email_limit=10,
+        follow_up_1=4,
+        follow_up_2=5,
         prompt="Test prompt",
         contacted_clinics=0,
-        total_clinics=len(clinics),
+        total_clinics=total_clinics,
         clinic_percentage=0.0
     )
 
@@ -146,3 +317,49 @@ def get_dashboard():
         filters=filters,
         campaign_status=campaign_status
     )
+
+
+class OutreachRequest(BaseModel):
+    email_batch_size: int = 1
+    user_prompt: str
+    email_word_limit: int = 120
+
+@app.post("/outreach")
+def create_outreach(req: OutreachRequest):
+    try:
+        # Call your core outreach generator function
+        run_email_generation(
+            EMAIL_BATCH_SIZE=req.email_batch_size,
+            PROMPT=req.user_prompt,
+            EMAIL_WORD_LIMIT=req.email_word_limit
+        )
+        return {
+            "status": "success",
+            "message": f"Generated {req.email_batch_size} emails"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/outreach/background")
+def create_outreach_background(req: OutreachRequest, background_tasks: BackgroundTasks):
+    background_tasks.add_task(
+        run_email_generation,
+        EMAIL_BATCH_SIZE=req.email_batch_size,
+        PROMPT=req.user_prompt,
+        EMAIL_WORD_LIMIT=req.email_word_limit
+    )
+    return {
+        "status": "started",
+        "message": f"Email generation started in background for {req.email_batch_size} emails"
+    }
+
+
+# @app.post("/upload-csv")
+# async def upload_csv():
+#     pass 
+
+
+# @app.post("/append-csv")
+# async def append_csv():
+#     pass

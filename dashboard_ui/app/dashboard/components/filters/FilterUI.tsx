@@ -57,9 +57,13 @@ export default function FilterUI({
   }, [search, values]);
 
   const toggleTempSelect = (value: string) => {
-    setTempSelected((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
+    setTempSelected((prev = []) => {
+      if (prev.includes(value)) {
+        return prev.filter((v) => v !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
   };
 
   const handleTempSort = (value: string) => {
@@ -78,12 +82,12 @@ export default function FilterUI({
     setSearch("");
   };
 
-  const sortValue = selected[0];
+  const sortValue = selected?.[0] ?? null;
 
   const buttonLabel =
     type === "sort"
       ? sortValue ?? "Sort by..."
-      : selected.length
+      : selected && selected.length
       ? `${selected.length} selected`
       : `Select ${label.toLowerCase()}...`;
 
@@ -95,7 +99,9 @@ export default function FilterUI({
         className="cursor-pointer text-sm w-33 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
         onClick={() => setIsOpen((v) => !v)}
       >
-        <span className="text-gray-400 truncate text-xs font-semibold">{buttonLabel}</span>
+        <span className="text-gray-400 truncate text-xs font-semibold">
+          {buttonLabel}
+        </span>
         {isOpen ? (
           <ExpandLessIcon fontSize="small" />
         ) : (
@@ -104,7 +110,7 @@ export default function FilterUI({
       </button>
 
       {isOpen && (
-        <div className="absolute z-20 mt-2 w-33 bg-white border border-gray-300 rounded-lg shadow">
+        <div className="absolute z-20 mt-2 w-33 bg-white border border-gray-300 rounded-lg shadow overflow-x-hidden!">
           <div className="rounded-t-lg text-xs! font-semibold text-white flex items-center justify-between py-1.5 px-1 border-b border-gray-500">
             <button
               onClick={applyFilters}
@@ -132,7 +138,7 @@ export default function FilterUI({
           <ul className="max-h-40 overflow-auto">
             {filteredValues.length > 0 ? (
               filteredValues.map((v) => {
-                const isSelected = tempSelected.includes(v);
+                const isSelected = tempSelected?.includes(v) ?? false;
 
                 return (
                   <li
@@ -143,7 +149,7 @@ export default function FilterUI({
                     className={`
                       border-b border-gray-300
                       px-3 py-1 cursor-pointer flex items-center justify-between
-                      hover:bg-gray-100
+                      hover:bg-gray-100 overflow-x-hidden!
                       ${
                         isSelected
                           ? "bg-blue-100 text-blue-700 font-medium"
@@ -155,7 +161,7 @@ export default function FilterUI({
                       {type === "select" && (
                         <input type="checkbox" readOnly checked={isSelected} />
                       )}
-                      {v}
+                      <p className="wrap-break-words!">{v}</p>
                     </span>
 
                     {type === "sort" && v === "Asc" && (

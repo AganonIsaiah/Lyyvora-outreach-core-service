@@ -6,16 +6,24 @@ import SelectedFilters from "./SelectedFilters";
 import { FilterState } from "@/lib/types";
 
 export default function ClinicsFilters() {
-  const { filters, setFilters, filtersConfig } = useDashboardContext();
+  const { filters, setFilters, filtersConfig, clinics } = useDashboardContext();
 
-  const handleChange = (key: string, value: string, type: "select" | "sort") => {
+  if (clinics.length <= 0) return;
+
+  const handleChange = (
+    key: string,
+    value: string,
+    type: "select" | "sort"
+  ) => {
     setFilters((prev: FilterState) => {
       if (type === "sort") return { ...prev, [key]: [value] };
 
-      const exists = prev[key].includes(value);
+      const exists = (prev[key] || []).includes(value);
       return {
         ...prev,
-        [key]: exists ? prev[key].filter((v) => v !== value) : [...prev[key], value],
+        [key]: exists
+          ? prev[key].filter((v) => v !== value)
+          : [...(prev[key] || []), value],
       };
     });
   };
