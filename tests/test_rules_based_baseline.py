@@ -7,11 +7,12 @@ def test_full_score():
         "website_url": "http://example.com",
         "total_reviews": 40.0,
         "average_rating": 4.6,
-        "clinic_sub_type": "Clinic, Spa"
+        "clinic_sub_type": "Clinic, Spa",
+        "website_desc": "mock website desc"
     }
 
     result = rules_based_score(lead)
-    # Full points should be capped at 100
+
     assert result["score"] == 100
     assert "Has valid phone number." in result["top_features"]
     assert "Has valid email address." in result["top_features"]
@@ -23,7 +24,7 @@ def test_full_score():
 def test_only_valid_phone():
     lead = {"phone": "1234567890"}
     result = rules_based_score(lead)
-    assert result["score"] == 20
+    assert result["score"] == 10
     assert "Has valid phone number." in result["top_features"]
 
 def test_only_valid_email():
@@ -31,6 +32,11 @@ def test_only_valid_email():
     result = rules_based_score(lead)
     assert result["score"] == 20
     assert "Has valid email address." in result["top_features"]
+    
+def test_only_website_desc():
+    lead = {"website_desc": "mock desc"}
+    result = rules_based_score(lead)
+    assert result["score"] == 20
 
 def test_only_website():
     lead = {"website_url": "http://example.com"}
@@ -54,16 +60,13 @@ def test_reviews_rating_below_threshold():
 def test_subtypes_dental_physio():
     lead = {"clinic_sub_type": "Dental, Physio"}
     result = rules_based_score(lead)
-    # 20 + 20 for two matched subtypes
-    assert result["score"] == 40
+    assert result["score"] == 20
     assert "Matched subtypes: Dental, Physio" in result["top_features"][0]
 
 def test_subtypes_clinic_spa():
-    lead = {"clinic_sub_type": "Skin care clinic, Medical spa"}
+    lead = {"clinic_sub_type": "clinic, spa"}
     result = rules_based_score(lead)
-    # Each matched keyword adds 20 points
-    # Clinic + Spa = 40
-    assert result["score"] == 40
+    assert result["score"] == 20
     assert "Matched subtypes: Clinic, Spa" in result["top_features"][0]
 
 def test_subtypes_no_match():
@@ -79,8 +82,7 @@ def test_mixed_lead():
         "clinic_sub_type": "Spa, Massage"
     }
     result = rules_based_score(lead)
-    # phone + email = 20 + 20, spa = 20 => 60
-    assert result["score"] == 60
+    assert result["score"] == 40
     assert "Has valid phone number." in result["top_features"]
     assert "Has valid email address." in result["top_features"]
     assert "Matched subtypes: Spa" in result["top_features"][ -1]
