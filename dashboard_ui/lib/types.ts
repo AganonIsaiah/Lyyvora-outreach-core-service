@@ -1,11 +1,6 @@
 export enum ClinicStatus {
-  NOT_QUEUED = "Not Queued",
-  NOT_CONTACTED = "Not Contacted",
-  EMAIL_1_SENT = "Email 1 Sent",
-  FOLLOW_UP_1 = "Follow-up 1",
-  FOLLOW_UP_2 = "Follow-up 2",
-  REPLIED = "Replied",
-  CLOSED = "Closed"
+  NOT_GENERATED = "Not Generated",
+  GENERATED = "Generated"
 };
 
 export enum Routes {
@@ -43,13 +38,13 @@ export interface Clinic {
   type: string[];
   city: string; 
   province: string; 
-  status: ClinicStatus;
+  email_status: ClinicStatus;
   total_reviews: number; 
   average_rating: number;
   lead_score: number;
   last_contact_date?: string; 
   next_contact_date?: string; 
-  notes: string; // Maps to website_dsc
+  notes: string;
   top_features: string;
   emails_for_outreach: ClinicEmails[];  
 };
@@ -58,17 +53,14 @@ export interface Metric {
   label: string;
   value: number;
   desc: string;
-  descValue?: number;
+  desc_value?: number;
 }
 
 export interface CampaignStatus {
-  daily_email_limit: number;
-  follow_up_1: number;
-  follow_up_2: number;
+  max_word_limit: number;
+  number_of_clinics: number;
   prompt: string;
-  contacted_clinics: number;
   total_clinics: number;
-  clinic_percentage: number;
 }
 
 export interface DashboardResponse {
@@ -76,4 +68,6 @@ export interface DashboardResponse {
   metrics: Metric[];
   filters: Filter[];
   campaign_status: CampaignStatus;
+  show_export: boolean;
+  total_clinics: number;
 }

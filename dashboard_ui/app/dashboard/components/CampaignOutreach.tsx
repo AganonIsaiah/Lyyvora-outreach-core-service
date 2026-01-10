@@ -2,36 +2,106 @@
 
 import { useDashboardContext } from "@/context/DashboardContext";
 import EmergencyIcon from "@mui/icons-material/Emergency";
+import { useState, useRef, useEffect } from "react";
 
 export default function CampaignOutreach() {
   const { campaignStatus, setCampaignStatus, clinics } = useDashboardContext();
 
-  if (!campaignStatus || !clinics || clinics.length <= 0) return null;
+  // --- HOOKS MUST ALWAYS BE CALLED ---
+  const [wsClinicsGenerated, setWsClinicsGenerated] = useState(0);
+  const wsRef = useRef<WebSocket | null>(null);
 
-  const {
-    daily_email_limit,
-    follow_up_1,
-    follow_up_2,
-    prompt,
-    contacted_clinics,
-    total_clinics,
-  } = campaignStatus;
+  // Safe defaults to prevent conditional hook calls
+  const safeCampaignStatus = campaignStatus ?? {
+    max_word_limit: 120,
+    number_of_clinics: 5,
+    prompt: "",
+    total_clinics: 0,
+  };
+  const safeClinics = clinics ?? [];
 
-  const percentage = Math.min((contacted_clinics / total_clinics) * 100, 100);
+  const { max_word_limit, number_of_clinics, prompt } = safeCampaignStatus;
 
   const updateStatus = (
-    key: keyof typeof campaignStatus,
+    key: keyof typeof safeCampaignStatus,
     value: number | string
   ) => {
-    setCampaignStatus({
-      ...campaignStatus,
-      [key]: value,
-    });
+    if (!campaignStatus) return;
+    setCampaignStatus({ ...campaignStatus, [key]: value });
   };
+
+  const handleGenerateOutreach = async () => {
+    if (!safeClinics.length) return;
+    setWsClinicsGenerated(0); // reset progress
+
+    try {
+      const response = await fetch("http://localhost:8000/generate-outreach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email_batch_size: number_of_clinics,
+          prompt,
+          email_word_limit: max_word_limit,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to start outreach job");
+
+      const data = await response.json();
+      const wsUrl = `ws://localhost:8000${data.ws_url}`;
+
+      if (wsRef.current) wsRef.current.close();
+
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+
+        if (msg.type === "completed") {
+          console.log("Outreach generation finished");
+          window.location.reload();
+          return;
+        }
+
+        // Increment progress
+        const increment = msg.contacted_clinics ?? 1;
+        setWsClinicsGenerated((prev) =>
+          Math.min(prev + increment, number_of_clinics)
+        );
+      };
+
+      ws.onclose = () => console.log("WebSocket closed");
+      ws.onerror = (err) => console.error("WebSocket error:", err);
+    } catch (err: any) {
+      console.error(err.message);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, []);
+
+  const percentage =
+    number_of_clinics > 0
+      ? Math.min((wsClinicsGenerated / number_of_clinics) * 100, 100)
+      : 0;
+
+  // --- EARLY RETURN WITH SAFE DEFAULTS ---
+  if (!campaignStatus || !safeClinics.length) {
+    return (
+      <div className="flex flex-col gap-4 w-full h-full card-section">
+        <div className="text-gray-500 text-sm">No campaign data available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col justify-center gap-4 h-full! w-full! card-section">
       <div className="flex justify-between gap-10">
+        {/* Left Panel */}
         <div className="flex flex-col items-center justify-evenly">
           <span className="flex justify-between items-center">
             <span className="flex flex-col gap-0.25">
@@ -42,39 +112,52 @@ export default function CampaignOutreach() {
               </p>
             </span>
           </span>
+
           <span className="flex flex-col">
-            <label htmlFor="daily-email-limit" className="label-outreach">
+            <label htmlFor="max-word-limit" className="label-outreach">
               Max Word Limit
             </label>
             <input
               type="number"
-              id="daily-email-limit"
+              id="max-word-limit"
               className="input-outreach"
-              value={daily_email_limit ?? 0}
+              value={max_word_limit ?? 0}
               onChange={(e) =>
-                updateStatus("daily_email_limit", parseInt(e.target.value))
+                updateStatus(
+                  "max_word_limit",
+                  isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value)
+                )
               }
             />
           </span>
+
           <span className="flex flex-col">
-            <label htmlFor="daily-email-limit" className="label-outreach">
+            <label htmlFor="number-of-clinics" className="label-outreach">
               Number of Clinics
             </label>
             <input
               type="number"
-              id="daily-email-limit"
+              id="number-of-clinics"
               className="input-outreach"
-              value={daily_email_limit ?? 0}
+              value={number_of_clinics ?? 0}
               onChange={(e) =>
-                updateStatus("daily_email_limit", parseInt(e.target.value))
+                updateStatus(
+                  "number_of_clinics",
+                  isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value)
+                )
               }
             />
           </span>
-          <button className="bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8! cursor-pointer hover:bg-indigo-600! transition-all duration-200">
+
+          <button
+            className="bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8! cursor-pointer hover:bg-indigo-600! transition-all duration-200"
+            onClick={handleGenerateOutreach}
+          >
             Generate Outreach
           </button>
         </div>
 
+        {/* Right Panel */}
         <div className="flex flex-col flex-1">
           <label htmlFor="prompt" className="label-outreach">
             Prompt Template
@@ -82,12 +165,18 @@ export default function CampaignOutreach() {
           <textarea
             id="prompt"
             className="resize-none! input-outreach border w-full! min-h-85! border-gray-300 rounded px-2 py-1"
-            value={prompt ?? " "}
-            onChange={(e) => updateStatus("prompt", e.target.value)}
+            value={prompt ?? ""}
+            onChange={(e) =>
+              updateStatus(
+                "prompt",
+                e.target.value.replace(/[\t\r\n]+/g, " ").trim() // remove formatting
+              )
+            }
           />
         </div>
       </div>
 
+      {/* Progress Bar */}
       <div className="flex flex-col gap-1">
         <p className="text-xs font-semibold text-gray-500">Campaign Progress</p>
         <div className="w-full bg-slate-100 border border-slate-200 rounded-full h-2.5 overflow-hidden">
@@ -97,7 +186,7 @@ export default function CampaignOutreach() {
           ></div>
         </div>
         <span className="text-xs text-gray-500">
-          {contacted_clinics} of {total_clinics} clinics contacted (
+          {wsClinicsGenerated} of {number_of_clinics} clinics contacted (
           {Math.round(percentage)}%)
         </span>
       </div>

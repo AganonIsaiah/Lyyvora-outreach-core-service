@@ -31,6 +31,7 @@ interface DashboardContextProps {
     updater: ((prev: CampaignStatus) => CampaignStatus) | CampaignStatus
   ) => void;
   metrics: Metric[];
+  showExport: boolean;
 
   // pagination
   page: number;
@@ -54,6 +55,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     {} as CampaignStatus
   );
   const [metrics, setMetrics] = useState<Metric[]>([]);
+  const [showExport, setShowExport] = useState(false);
 
   // pagination
   const [page, setPage] = useState(1);
@@ -71,6 +73,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setFiltersConfig(data.filters);
         setCampaignStatus(data.campaign_status);
         setMetrics(data.metrics);
+        setShowExport(data.show_export);
 
         const totalClinicsMetric = data.metrics.find(
           (m) => m.label === "Total Clinics"
@@ -104,6 +107,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         total,
         totalPages: Math.ceil(total / limit),
         setPage,
+        showExport,
       }}
     >
       {children}

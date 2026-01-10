@@ -4,6 +4,8 @@ import shutil
 from fastapi import UploadFile, HTTPException
 
 from shared.configs import CSV_INPUT_FILE, DB_FILE
+from shared.queries import Queries
+
 from core.lead_data_pipeline.lead_data_pipeline import run_pipeline
 from core.lead_scoring_model.rules_based_baseline import run_rules_baseline
 
@@ -15,8 +17,12 @@ def drop_all_tables():
     cursor = conn.cursor()
     try:
         cursor.execute("DROP TABLE IF EXISTS lead_scores;")
-        cursor.execute("DROP TABLE IF EXISTS smartlead;")
+       
         cursor.execute("DROP TABLE IF EXISTS leads;")
+        
+        cursor.execute("DELETE FROM smartlead;")
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='smartlead';")
+        
         conn.commit()
         print("All tables dropped successfully.")
     except sqlite3.Error as e:

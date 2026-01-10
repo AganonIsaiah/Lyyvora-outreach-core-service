@@ -3,20 +3,17 @@ import ClinicsFilters from "./components/filters/ClinicsFilters";
 import CampaignOutreach from "./components/CampaignOutreach";
 import PipelineMetrics from "./components/metrics/PipelineMetrics";
 import ImportCard from "./components/csv_buttons/ImportCard";
-
+import Header from "./components/Header";
 import { DashboardProvider } from "@/context/DashboardContext";
 
 export default function Dashboard() {
   return (
     <DashboardProvider>
       <div className="overflow-auto text-sm w-full flex flex-col min-h-screen">
-        <span className="separator flex justify-between items-center px-4!">
-          <h1>Outreach Dashboard</h1>
-        </span>
+        <Header />
 
         <div className="w-full! flex justify-center">
           <div className="m-1! p-4 flex flex-col gap-8 max-w-330!">
-
             <div className="flex justify-between gap-10">
               <div className="flex flex-col gap-6">
                 <PipelineMetrics />

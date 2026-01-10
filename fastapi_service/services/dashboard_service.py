@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from ..models.dashboard_models import (
   Clinic, ClinicEmails, Metric, Filter,
-  CampaignStatus, DashboardResponse
+  CampaignStatus, DashboardResponse, DashboardRequest
 )
 from shared.configs import DB_FILE
 from shared.prompt_templates import prompt
@@ -128,7 +128,7 @@ def get_all_clinics_from_db(
     params.extend([s.value for s in email_status])
 
   where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
-  order_clause = "ORDER BY l.id ASC"
+  order_clause = "ORDER BY s.score DESC"
   
   if sort_by == "email_status":
     order_clause = f"""
@@ -203,6 +203,14 @@ def get_all_clinics_from_db(
   conn.close()
   return clinics
 
+def has_smartlead_records() -> bool:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM smartlead LIMIT 1;")
+    exists = cursor.fetchone() is not None
+    conn.close()
+    return exists
+
 def generate_dashboard(req: DashboardRequest):
   offset = (req.page - 1) * req.limit
   name = parse_comma_separated(req.name)
@@ -266,5 +274,7 @@ def generate_dashboard(req: DashboardRequest):
         clinics_data=clinics,
         metrics=metrics,
         filters=filters,
-        campaign_status=campaign_status
+        campaign_status=campaign_status,
+        total_clinics=total_clinics,
+        show_export=has_smartlead_records()     
   )

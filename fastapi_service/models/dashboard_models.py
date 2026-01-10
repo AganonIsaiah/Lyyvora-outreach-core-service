@@ -60,6 +60,8 @@ class DashboardResponse(BaseModel):
   metrics: List[Metric]
   filters: List[Filter]
   campaign_status: CampaignStatus
+  show_export: bool 
+  total_clinics: int
   
 class DashboardRequest(BaseModel):
   limit: int = 25

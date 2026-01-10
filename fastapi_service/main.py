@@ -1,16 +1,20 @@
-from fastapi import FastAPI, Query, UploadFile, File, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi import FastAPI, Query, UploadFile, File, WebSocket, WebSocketDisconnect, BackgroundTasks, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from typing import List, Optional
 import uuid 
+import csv
+import sqlite3
+from io import StringIO
 
 from .models.dashboard_models import DashboardRequest, DashboardResponse
 from core.outreach_generator.outreach_generator import run_email_generation
 
 from .services.dashboard_service import generate_dashboard
-from .services.import_service import process_uploaded_csv
+from .services.import_service import process_uploaded_csv, drop_all_tables
 from .services.ws_manager import manager
 from .services.outreach_service import run_outreach_job
-
+from shared.configs import DB_FILE
 
 app = FastAPI(title="Lyyvora Outreach API")
 
@@ -26,6 +30,51 @@ app.add_middleware(
 def home():
     return {"message": "Welcome"}
 
+
+@app.get("/export-smartlead-csv")
+def export_smartlead_csv():
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT clinic_name, email, subject_line_1, email_body_1,
+                   subject_line_2, email_body_2, subject_line_3, email_body_3,
+                   clinic_type, city, province
+            FROM smartlead
+        """)
+        rows = cursor.fetchall()
+
+        header = [
+            "clinic_name", "email", "subject_line_1", "email_body_1",
+            "subject_line_2", "email_body_2", "subject_line_3", "email_body_3",
+            "clinic_type", "city", "province"
+        ]
+
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(header)
+        writer.writerows(rows)
+        output.seek(0)
+
+        return StreamingResponse(
+            output,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=smartlead_ready.csv"}
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@app.post("/drop-tables")
+def drop_tables():
+  try:
+    drop_all_tables()
+    return {"status": "success", "message": "All tables dropped successfully."}
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=str(e))
+
 @app.websocket("/ws/outreach/{job_id}")
 async def outreach_ws(websocket: WebSocket, job_id: str):
     await manager.connect(job_id, websocket)
@@ -38,10 +87,12 @@ async def outreach_ws(websocket: WebSocket, job_id: str):
 @app.post("/generate-outreach")
 def generate_outreach(
     background_tasks: BackgroundTasks,
-    email_batch_size: int = Query(1, ge=1, le=50),
-    prompt: str | None = Query(None),
-    email_word_limit: int = Query(120, ge=20, le=500)
+    payload: dict = Body(...)
 ):
+    email_batch_size = payload.get("email_batch_size", 1)
+    prompt = payload.get("prompt")
+    email_word_limit = payload.get("email_word_limit", 120)
+
     job_id = str(uuid.uuid4())
 
     background_tasks.add_task(
@@ -56,6 +107,7 @@ def generate_outreach(
         "job_id": job_id,
         "ws_url": f"/ws/outreach/{job_id}"
     }
+
 
 @app.post("/import-csv")
 async def import_csv(file: UploadFile = File(...)):

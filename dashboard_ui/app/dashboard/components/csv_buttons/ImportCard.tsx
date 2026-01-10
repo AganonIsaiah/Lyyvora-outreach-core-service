@@ -1,13 +1,18 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useDashboardContext } from "@/context/DashboardContext";
 import EmergencyIcon from "@mui/icons-material/Emergency";
 import { IMPORT_COLUMNS } from "@/lib/constants";
 
+const BASE_URL = "http://localhost:8000";
+
 export default function ImportCard() {
   const importColumns = IMPORT_COLUMNS;
-
   const { clinics } = useDashboardContext();
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   function ColumnChips({ columns }: { columns: string[] }) {
     return (
@@ -25,6 +30,43 @@ export default function ImportCard() {
     );
   }
 
+  function openFilePicker() {
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileChange(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setUploading(true);
+
+      const res = await fetch(`${BASE_URL}/import-csv`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("CSV import failed");
+
+      alert("CSV imported successfully");
+
+      // Optional: refresh dashboard data
+      window.location.reload();
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to import CSV");
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // reset input
+    }
+  }
+
   return (
     <div
       className={`card-section ${
@@ -34,36 +76,36 @@ export default function ImportCard() {
       }`}
     >
       <h2 className="text-base font-semibold">
-        {clinics && clinics.length > 0
-          ? "Update CSV"
-          : "Import CSV"}
+        {clinics && clinics.length > 0 ? "Update CSV" : "Import CSV"}
       </h2>
 
       <p className="text-slate-400 text-xs flex gap-1 mt-0.5">
         <EmergencyIcon className="text-[10px]! mt-0.5" />
-         {clinics && clinics.length > 0
+        {clinics && clinics.length > 0
           ? "Append or replace the CSV file to continue outreach, include following columns:"
           : "Import a CSV file to begin outreach, include the following columns:"}
       </p>
 
       <ColumnChips columns={importColumns} />
 
-      <div className="flex">
-        {clinics.length <= 0 || !clinics ? (
-          <button className="bg-blue-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-blue-600 transition-all duration-200">
-            Import CSV
-          </button>
-        ) : (
-          <div className="flex gap-4">
-            <button className="bg-blue-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-blue-600 transition-all duration-200">
-              Replace CSV
-            </button>
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        hidden
+        onChange={handleFileChange}
+      />
 
-            <button className="bg-teal-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-teal-600 transition-all duration-200">
-              Append to CSV
-            </button>
-          </div>
-        )}
+      <div className="flex">
+        <button
+          disabled={uploading}
+          onClick={openFilePicker}
+          className={`bg-blue-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-blue-600 transition-all duration-200
+          ${uploading ? "opacity-60 cursor-not-allowed" : ""}`}
+        >
+          {uploading ? "Uploading..." : clinics.length > 0 ? "Replace CSV" : "Import CSV"}
+        </button>
       </div>
     </div>
   );

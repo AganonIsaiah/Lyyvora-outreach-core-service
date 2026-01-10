@@ -411,4 +411,5 @@ export const mockDashboardResponse: DashboardResponse = {
   metrics: mockMetrics,
   filters: mockFilters,
   campaign_status: mockCampaignStatus,
+  
 }

@@ -40,7 +40,7 @@ export default function ClinicsTable() {
                 <th>Type</th>
                 <th>City</th>
                 <th>Province</th>
-                <th>Status</th>
+                <th>Email Status</th>
                 <th>Average Rating</th>
                 <th>Last Contact Date</th>
                 <th>Next Contact Date</th>
@@ -76,10 +76,10 @@ export default function ClinicsTable() {
                   <td>
                     <span
                       className={`whitespace-nowrap font-semibold px-2 py-1 rounded-xl text-xs ${
-                        CLINIC_STATUS_COLOR[c.status]
+                        CLINIC_STATUS_COLOR[c.email_status]
                       }`}
                     >
-                      {c.status}
+                      {c.email_status}
                     </span>
                   </td>
                   <td>{c.average_rating}</td>

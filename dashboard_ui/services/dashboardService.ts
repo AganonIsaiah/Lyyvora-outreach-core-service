@@ -1,7 +1,7 @@
 import { DashboardResponse, FilterState } from "@/lib/types";
 import { mockDashboardResponse } from "@/mock/dashboard-data";
 
-const MOCK_DATA = true;
+const MOCK_DATA = false;
 const BASE_URL = "http://localhost:8000";
 
 export const dashboardService = {
@@ -22,8 +22,6 @@ export const dashboardService = {
 
       if (filters.sub_type?.length) 
         filters.sub_type.forEach((v) => params.append("sub_type", v));
-
-      console.log("filters sub: ", params)
 
       if (filters.city?.length)
         filters.city.forEach((v) => params.append("city", v));
