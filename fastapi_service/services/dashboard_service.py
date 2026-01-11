@@ -57,7 +57,7 @@ def get_total_filtered_clinics_count(
     filters.append(build_multi_like("clinic_sub_type", sub_type, params, csv=True))
   if email_status:
     placeholders = ",".join("?" for _ in email_status)
-    filters.append(f"status IN ({placeholders})")
+    filters.append(f"email_status IN ({placeholders})")
     params.extend([s.value for s in email_status])
 
   where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
@@ -192,8 +192,6 @@ def get_all_clinics_from_db(
           total_reviews=row["total_reviews"] or 0,
           average_rating=row["average_rating"] or 0.0,
           lead_score=row["score"] or 0,
-          last_contact_date=None,
-          next_contact_date=None,
           notes=row["website_desc"] or "",
           top_features=row["top_features"] or "",
           emails_for_outreach=emails
@@ -203,10 +201,10 @@ def get_all_clinics_from_db(
   conn.close()
   return clinics
 
-def has_smartlead_records() -> bool:
+def has_lead_records() -> bool:
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    cursor.execute("SELECT 1 FROM smartlead LIMIT 1;")
+    cursor.execute("SELECT 1 FROM leads LIMIT 1;")
     exists = cursor.fetchone() is not None
     conn.close()
     return exists
@@ -243,10 +241,7 @@ def generate_dashboard(req: DashboardRequest):
   filter_values = get_all_filter_values()
 
   metrics = [
-        Metric(label="Total Clinics", value=total_clinics, desc="Number of clinics", desc_value=0.0),
-        Metric(label="Contacted Clinics", value=0, desc="Clinics contacted"),
-        Metric(label="Emails Sent Today", value=0, desc="Emails sent today"),
-        Metric(label="Replies Received", value=0, desc="Change")
+        Metric(label="Total Clinics", value=total_clinics, desc="Number of clinics")
   ]
 
   filters: list[Filter] = [
@@ -256,9 +251,7 @@ def generate_dashboard(req: DashboardRequest):
         Filter(key="province", label="Province", values=sorted(filter_values["province"]), type="select"),
         Filter(key="email_status", label="Email Status", values=[s.value for s in ClinicStatus], type="select"),
         Filter(key="lead_score", label="Lead Score", values=["Asc", "Desc"], type="sort"),
-        Filter(key="average_rating", label="Average Rating", values=["Asc", "Desc"], type="sort"),
-        Filter(key="last_contact_date", label="Last Contact Date", values=["Asc", "Desc"], type="sort"),
-        Filter(key="next_contact_date", label="Next Contact Date", values=["Asc", "Desc"], type="sort"),
+        Filter(key="average_rating", label="Average Rating", values=["Asc", "Desc"], type="sort")
   ]
 
   campaign_status = CampaignStatus(
@@ -276,5 +269,5 @@ def generate_dashboard(req: DashboardRequest):
         filters=filters,
         campaign_status=campaign_status,
         total_clinics=total_clinics,
-        show_export=has_smartlead_records()     
+        show_export=has_lead_records()     
   )

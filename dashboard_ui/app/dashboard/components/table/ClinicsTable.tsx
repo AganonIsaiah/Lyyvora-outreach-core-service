@@ -18,17 +18,25 @@ export default function ClinicsTable() {
   const setPage = dashboard?.setPage ?? (() => {});
   const loading = dashboard?.loading ?? false;
   const campaignStatus = dashboard?.campaignStatus ?? { total_clinics: 0 };
-
   const isDashboardEmpty = clinics.length === 0;
+
+  if (!dashboard.showExport)
+    return (
+      <div className="border border-gray-200 border-t-0 rounded-b-lg shadow-sm">
+        <div className="px-4! py-6! text-gray-500 font-semibold">
+          Dashboard is empty, click the Import CSV button to populate the table
+          with data.
+        </div>
+      </div>
+    );
 
   return (
     <div className="bg-white rounded-b-lg shadow-sm border border-gray-200 flex flex-col h-[calc(100vh-27vh)] min-h-40">
       <div className="overflow-y-auto overflow-x-hidden flex-1">
         {clinics.length === 0 ? (
           <div className="p-4 font-semibold text-gray-500 text-sm flex flex-col gap-2">
-            {isDashboardEmpty
-              ? "Dashboard is empty, click the import CSV button to populate the table."
-              : "No clinics match the selected filters. Try changing your filter options."}
+            No clinics match the selected filters. Try changing your filter
+            options.
           </div>
         ) : (
           <table className="min-w-full divide-y divide-gray-200 w-full">
@@ -42,8 +50,6 @@ export default function ClinicsTable() {
                 <th>Province</th>
                 <th>Email Status</th>
                 <th>Average Rating</th>
-                <th>Last Contact Date</th>
-                <th>Next Contact Date</th>
                 <th>Notes</th>
                 <th>Expand</th>
               </tr>
@@ -53,7 +59,7 @@ export default function ClinicsTable() {
                 <tr key={c.id} className="border-b border-gray-200 h-12">
                   <td>{c.id}</td>
 
-                  <td className="truncate max-w-35 cursor-pointer!">
+                  <td className="truncate max-w-50 cursor-pointer!">
                     <Tooltip title={c.name}>
                       <span className="inline-block truncate w-full">
                         {c.name}
@@ -63,7 +69,7 @@ export default function ClinicsTable() {
 
                   <td>{c.lead_score}</td>
 
-                  <td className="truncate max-w-40 cursor-pointer!">
+                  <td className="truncate max-w-60 cursor-pointer!">
                     <Tooltip title={c.type.join(", ")}>
                       <span className="inline-block truncate w-full">
                         {c.type.join(", ")}
@@ -83,21 +89,6 @@ export default function ClinicsTable() {
                     </span>
                   </td>
                   <td>{c.average_rating}</td>
-                  <td>
-                    {c.last_contact_date ? (
-                      <p>{c.last_contact_date}</p>
-                    ) : (
-                      <HorizontalRuleIcon className="text-gray-500 text-sm" />
-                    )}
-                  </td>
-                  <td>
-                    {c.next_contact_date ? (
-                      <p>{c.next_contact_date}</p>
-                    ) : (
-                      <HorizontalRuleIcon className="text-gray-500 text-sm" />
-                    )}
-                  </td>
-
                   <td className="truncate max-w-40 cursor-pointer!">
                     <Tooltip title={c.notes || ""}>
                       <span className="inline-block truncate w-full">

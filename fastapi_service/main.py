@@ -8,8 +8,6 @@ import sqlite3
 from io import StringIO
 
 from .models.dashboard_models import DashboardRequest, DashboardResponse
-from core.outreach_generator.outreach_generator import run_email_generation
-
 from .services.dashboard_service import generate_dashboard
 from .services.import_service import process_uploaded_csv, drop_all_tables
 from .services.ws_manager import manager
@@ -138,4 +136,18 @@ def get_dashboard(
         sort_order=sort_order
     )
     
-    return generate_dashboard(req)
+    try:
+        return generate_dashboard(req)
+    except sqlite3.Error:
+        print("SQLite error:", e)
+
+        return DashboardResponse(
+            clinics_data=[],
+            filters=[],
+            campaign_status={},
+            metrics=[],
+            show_export=False,
+            total_clinics=0
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

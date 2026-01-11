@@ -16,10 +16,12 @@ def drop_all_tables():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     try:
-        cursor.execute("DROP TABLE IF EXISTS lead_scores;")
-       
-        cursor.execute("DROP TABLE IF EXISTS leads;")
-        
+        cursor.execute("DELETE FROM lead_scores;")
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='lead_scores';")
+         
+        cursor.execute("DELETE FROM leads;")
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='leads';")
+         
         cursor.execute("DELETE FROM smartlead;")
         cursor.execute("DELETE FROM sqlite_sequence WHERE name='smartlead';")
         

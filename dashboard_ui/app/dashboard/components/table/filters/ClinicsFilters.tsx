@@ -6,9 +6,9 @@ import SelectedFilters from "./SelectedFilters";
 import { FilterState } from "@/lib/types";
 
 export default function ClinicsFilters() {
-  const { filters, setFilters, filtersConfig, clinics } = useDashboardContext();
+  const { filters, setFilters, filtersConfig, clinics, showExport } = useDashboardContext();
 
-  if (clinics.length <= 0) return;
+  if (!showExport) return;
 
   const handleChange = (
     key: string,
@@ -46,7 +46,7 @@ export default function ClinicsFilters() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-evenly gap-2 h-21 w-full bg-gray-50 p-2! shadow-sm border border-gray-200">
+      <div className="flex items-center justify-evenly gap-2 h-18 w-full bg-gray-50 p-2! shadow-sm border border-gray-200">
         {filtersConfig.map((filter) => (
           <FilterUI
             key={filter.key}

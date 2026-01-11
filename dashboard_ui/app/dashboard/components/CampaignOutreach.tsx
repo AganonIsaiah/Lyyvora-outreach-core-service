@@ -5,19 +5,17 @@ import EmergencyIcon from "@mui/icons-material/Emergency";
 import { useState, useRef, useEffect } from "react";
 
 export default function CampaignOutreach() {
-  const { campaignStatus, setCampaignStatus, clinics } = useDashboardContext();
-
-  // --- HOOKS MUST ALWAYS BE CALLED ---
+  const { campaignStatus, setCampaignStatus, clinics, showExport } = useDashboardContext();
   const [wsClinicsGenerated, setWsClinicsGenerated] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // Safe defaults to prevent conditional hook calls
   const safeCampaignStatus = campaignStatus ?? {
     max_word_limit: 120,
     number_of_clinics: 5,
     prompt: "",
     total_clinics: 0,
   };
+
   const safeClinics = clinics ?? [];
 
   const { max_word_limit, number_of_clinics, prompt } = safeCampaignStatus;
@@ -32,7 +30,8 @@ export default function CampaignOutreach() {
 
   const handleGenerateOutreach = async () => {
     if (!safeClinics.length) return;
-    setWsClinicsGenerated(0); // reset progress
+    setWsClinicsGenerated(0);
+    alert("Outreach generation started!");
 
     try {
       const response = await fetch("http://localhost:8000/generate-outreach", {
@@ -59,12 +58,10 @@ export default function CampaignOutreach() {
         const msg = JSON.parse(event.data);
 
         if (msg.type === "completed") {
-          console.log("Outreach generation finished");
+          alert("Outreach generation finished!");
           window.location.reload();
           return;
         }
-
-        // Increment progress
         const increment = msg.contacted_clinics ?? 1;
         setWsClinicsGenerated((prev) =>
           Math.min(prev + increment, number_of_clinics)
@@ -75,6 +72,7 @@ export default function CampaignOutreach() {
       ws.onerror = (err) => console.error("WebSocket error:", err);
     } catch (err: any) {
       console.error(err.message);
+      alert("Failed to start outreach generation");
     }
   };
 
@@ -89,8 +87,7 @@ export default function CampaignOutreach() {
       ? Math.min((wsClinicsGenerated / number_of_clinics) * 100, 100)
       : 0;
 
-  // --- EARLY RETURN WITH SAFE DEFAULTS ---
-  if (!campaignStatus || !safeClinics.length) {
+  if (!showExport) {
     return (
       <div className="flex flex-col gap-4 w-full h-full card-section">
         <div className="text-gray-500 text-sm">No campaign data available</div>
@@ -101,7 +98,6 @@ export default function CampaignOutreach() {
   return (
     <div className="flex flex-col justify-center gap-4 h-full! w-full! card-section">
       <div className="flex justify-between gap-10">
-        {/* Left Panel */}
         <div className="flex flex-col items-center justify-evenly">
           <span className="flex justify-between items-center">
             <span className="flex flex-col gap-0.25">
@@ -157,7 +153,6 @@ export default function CampaignOutreach() {
           </button>
         </div>
 
-        {/* Right Panel */}
         <div className="flex flex-col flex-1">
           <label htmlFor="prompt" className="label-outreach">
             Prompt Template
@@ -169,14 +164,13 @@ export default function CampaignOutreach() {
             onChange={(e) =>
               updateStatus(
                 "prompt",
-                e.target.value.replace(/[\t\r\n]+/g, " ").trim() // remove formatting
+                e.target.value.replace(/[\t\r\n]+/g, " ").trim()
               )
             }
           />
         </div>
       </div>
 
-      {/* Progress Bar */}
       <div className="flex flex-col gap-1">
         <p className="text-xs font-semibold text-gray-500">Campaign Progress</p>
         <div className="w-full bg-slate-100 border border-slate-200 rounded-full h-2.5 overflow-hidden">

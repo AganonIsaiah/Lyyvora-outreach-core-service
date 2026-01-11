@@ -20,8 +20,8 @@ export const dashboardService = {
       if (filters.name?.length)
         filters.name.forEach((v) => params.append("name", v));
 
-      if (filters.sub_type?.length) 
-        filters.sub_type.forEach((v) => params.append("sub_type", v));
+      if (filters.type?.length)
+        filters.type.forEach((v) => params.append("type", v));
 
       if (filters.city?.length)
         filters.city.forEach((v) => params.append("city", v));
@@ -29,8 +29,8 @@ export const dashboardService = {
       if (filters.province?.length)
         filters.province.forEach((v) => params.append("province", v));
 
-      if (filters.status?.length)
-        filters.status.forEach((v) => params.append("status", v));
+      if (filters.email_status?.length)
+        filters.email_status.forEach((v) => params.append("email_status", v));
 
       if (filters.lead_score?.length) {
         params.append("sort_by", "lead_score");
@@ -44,7 +44,26 @@ export const dashboardService = {
     }
 
     const res = await fetch(`${BASE_URL}/dashboard?${params.toString()}`);
-    if (!res.ok) throw new Error("Failed to fetch dashboard data");
-    return res.json();
+    if (!res.ok) {
+      return {
+        clinics_data: [],
+        filters: [],
+        campaign_status: {} as any,
+        metrics: [],
+        show_export: false,
+        total_clinics: 0
+      };
+    }
+
+    const data = await res.json();
+
+    return {
+      clinics_data: data.clinics_data || [],
+      filters: data.filters || [],
+      campaign_status: data.campaign_status || {},
+      metrics: data.metrics || [],
+      show_export: data.show_export ?? false,
+      total_clinics: data.total_clinics ?? 0
+    };
   },
 };

@@ -1,15 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useDashboardContext } from "@/context/DashboardContext";
 import EmergencyIcon from "@mui/icons-material/Emergency";
+
+import { useDashboardContext } from "@/context/DashboardContext";
 import { IMPORT_COLUMNS } from "@/lib/constants";
 
 const BASE_URL = "http://localhost:8000";
 
 export default function ImportCard() {
   const importColumns = IMPORT_COLUMNS;
-  const { clinics } = useDashboardContext();
+  const { clinics, showExport } = useDashboardContext();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -54,23 +55,20 @@ export default function ImportCard() {
       if (!res.ok) throw new Error("CSV import failed");
 
       alert("CSV imported successfully");
-
-      // Optional: refresh dashboard data
       window.location.reload();
-
     } catch (err) {
       console.error(err);
       alert("Failed to import CSV");
     } finally {
       setUploading(false);
-      e.target.value = ""; // reset input
+      e.target.value = ""; 
     }
   }
 
   return (
     <div
       className={`card-section ${
-        clinics.length <= 0 || !clinics
+        !showExport
           ? "w-full! border-0! shadow-none!"
           : "w-120!"
       }`}
@@ -88,7 +86,6 @@ export default function ImportCard() {
 
       <ColumnChips columns={importColumns} />
 
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"

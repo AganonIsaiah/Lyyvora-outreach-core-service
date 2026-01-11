@@ -35,8 +35,6 @@ class Clinic(BaseModel):
   total_reviews: int
   average_rating: float
   lead_score: float
-  last_contact_date: Optional[date] = None
-  next_contact_date: Optional[date] = None
   notes: str
   top_features: str
   emails_for_outreach: List[ClinicEmails]

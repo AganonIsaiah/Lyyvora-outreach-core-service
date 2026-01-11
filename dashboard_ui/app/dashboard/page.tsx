@@ -1,9 +1,11 @@
-import ClinicsTable from "./components/ClinicsTable";
-import ClinicsFilters from "./components/filters/ClinicsFilters";
+import ClinicsTable from "./components/table/ClinicsTable";
+import ClinicsFilters from "./components/table/filters/ClinicsFilters";
+import TableHeader from "./components/table/TableHeader";
 import CampaignOutreach from "./components/CampaignOutreach";
 import PipelineMetrics from "./components/metrics/PipelineMetrics";
 import ImportCard from "./components/csv_buttons/ImportCard";
 import Header from "./components/Header";
+import DropTableCard from "./components/csv_buttons/DropTablesCard";
 import { DashboardProvider } from "@/context/DashboardContext";
 
 export default function Dashboard() {
@@ -18,6 +20,7 @@ export default function Dashboard() {
               <div className="flex flex-col gap-6">
                 <PipelineMetrics />
                 <ImportCard />
+                <DropTableCard />
               </div>
               <div className="flex flex-1!">
                 <CampaignOutreach />
@@ -25,9 +28,7 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-col">
-              <h1 className="rounded-t-lg shadow-sm border border-gray-200 w-full flex items-center justify-center h-12">
-                Clinic Table
-              </h1>
+              <TableHeader />
               <ClinicsFilters />
               <ClinicsTable />
             </div>

@@ -42,8 +42,6 @@ export interface Clinic {
   total_reviews: number; 
   average_rating: number;
   lead_score: number;
-  last_contact_date?: string; 
-  next_contact_date?: string; 
   notes: string;
   top_features: string;
   emails_for_outreach: ClinicEmails[];  

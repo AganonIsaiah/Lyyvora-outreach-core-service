@@ -32,8 +32,6 @@ interface DashboardContextProps {
   ) => void;
   metrics: Metric[];
   showExport: boolean;
-
-  // pagination
   page: number;
   limit: number;
   total: number;
@@ -56,13 +54,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   );
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [showExport, setShowExport] = useState(false);
-
-  // pagination
   const [page, setPage] = useState(1);
   const [limit] = useState(25);
   const [total, setTotal] = useState(0);
 
-  // fetch dashboard data
   useEffect(() => {
     setLoading(true);
 
@@ -84,7 +79,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, [page, filters]);
 
-  // reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
   }, [filters]);

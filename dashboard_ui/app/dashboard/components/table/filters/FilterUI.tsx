@@ -93,10 +93,10 @@ export default function FilterUI({
 
   return (
     <div ref={ref} className="relative">
-      <p className="text-xs font-semibold mb-1">{label}</p>
+      <p className="text-xs! font-semibold mb-1">{label}</p>
 
       <button
-        className="cursor-pointer text-sm w-33 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+        className="cursor-pointer text-sm w-40 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
         onClick={() => setIsOpen((v) => !v)}
       >
         <span className="text-gray-400 truncate text-xs font-semibold">
