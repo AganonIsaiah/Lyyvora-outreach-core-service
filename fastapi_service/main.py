@@ -110,16 +110,28 @@ async def append_leads(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=(e))
 
 @app.get("/export-smartlead-csv")
-def export_smartlead_csv():
+def export_smartlead_csv(campaign_batch: Optional[str] = Query(None)):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
     try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT clinic_name, email, subject_line_1, email_body_1,
-                   subject_line_2, email_body_2, subject_line_3, email_body_3,
-                   clinic_type, city, province
-            FROM smartlead
-        """)
+        if campaign_batch:
+            cursor.execute("""
+                SELECT
+                    clinic_name, email, subject_line_1, email_body_1,
+                    subject_line_2, email_body_2, subject_line_3, email_body_3,
+                    clinic_type, city, province
+                FROM smartlead
+                WHERE campaign_batch = ?
+            """, (campaign_batch,))
+        else:
+            cursor.execute("""
+                SELECT
+                    clinic_name, email, subject_line_1, email_body_1,
+                    subject_line_2, email_body_2, subject_line_3, email_body_3,
+                    clinic_type, city, province
+                FROM smartlead
+            """)
+
         rows = cursor.fetchall()
 
         header = [
@@ -144,6 +156,7 @@ def export_smartlead_csv():
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         conn.close()
+
 
 @app.post("/drop-tables")
 def drop_tables():
@@ -201,6 +214,7 @@ def get_dashboard(
     city: Optional[List[str]] = Query(None),
     province: Optional[List[str]] = Query(None),
     email_status: Optional[List[str]] = Query(None),
+    campaign_batch: Optional[List[str]] = Query(None),
     sort_by: Optional[str] = Query(None, regex="^(email_status|lead_score|average_rating)$"),
     sort_order: str = Query("desc", regex="^(asc|desc)$")
 ):
@@ -212,6 +226,7 @@ def get_dashboard(
         city=city,
         province=province,
         email_status=email_status,
+        campaign_batch=campaign_batch,
         sort_by=sort_by,
         sort_order=sort_order
     )

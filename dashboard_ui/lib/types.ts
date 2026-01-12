@@ -45,6 +45,7 @@ export interface Clinic {
   notes: string;
   top_features: string;
   emails_for_outreach: ClinicEmails[];  
+  campaign_batch: string;
 };
 
 export interface Metric {

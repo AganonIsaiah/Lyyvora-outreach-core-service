@@ -88,7 +88,6 @@ def prompt(clinic_info: dict = {}, user_prompt: str = "", max_words: int = 120) 
     return f"""
         TASK
         {user_prompt}
-
         {ROLE}
         {SEQUENCE_STRATEGY}
         {ANGLE_CONSTRAINTS}

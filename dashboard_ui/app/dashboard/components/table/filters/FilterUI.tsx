@@ -96,7 +96,7 @@ export default function FilterUI({
       <p className="text-xs! font-semibold mb-1">{label}</p>
 
       <button
-        className="cursor-pointer text-sm w-40 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+        className="cursor-pointer text-sm w-33 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
         onClick={() => setIsOpen((v) => !v)}
       >
         <span className="text-gray-400 truncate text-xs font-semibold">
@@ -157,11 +157,13 @@ export default function FilterUI({
                       }
                     `}
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 w-full">
                       {type === "select" && (
                         <input type="checkbox" readOnly checked={isSelected} />
                       )}
-                      <p className="wrap-break-words!">{v}</p>
+                      <p className="whitespace-normal wrap-break-words break-all w-full">
+                        {v}
+                      </p>
                     </span>
 
                     {type === "sort" && v === "Asc" && (

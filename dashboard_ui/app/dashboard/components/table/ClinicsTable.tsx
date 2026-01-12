@@ -42,15 +42,16 @@ export default function ClinicsTable() {
             <thead className="bg-gray-100 sticky top-0 z-10">
               <tr>
                 <th className="w-12">ID</th>
-                <th className="w-40">Name</th>
-                <th className="w-20">Lead Score</th>
+                <th className="w-35">Name</th>
+                <th className="w-18">Lead Score</th>
                 <th className="w-48">Type</th>
-                <th className="w-28">City</th>
-                <th className="w-28">Province</th>
+                <th className="w-20">City</th>
+                <th className="w-20">Province</th>
                 <th className="w-32">Email Status</th>
+                <th className="w-50">Campaign Batch ID</th>
                 <th className="w-20">Average Rating</th>
                 <th className="w-46">Notes</th>
-                <th className="w-20 text-left!">Expand</th>
+                <th className="w-20">Expand</th>
               </tr>
             </thead>
             <tbody>
@@ -83,6 +84,9 @@ export default function ClinicsTable() {
                       {c.email_status}
                     </span>
                   </td>
+
+                  <td>{c.campaign_batch || <HorizontalRuleIcon className="text-gray-500 text-sm" />}</td>
+
                   <td>{c.average_rating}</td>
                   <td className="truncate">
                     <Tooltip title={c.notes || ""}>

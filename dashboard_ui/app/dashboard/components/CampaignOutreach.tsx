@@ -101,7 +101,7 @@ export default function CampaignOutreach() {
         <div className="flex flex-col items-center justify-evenly">
           <span className="flex justify-between items-center">
             <span className="flex flex-col gap-0.25">
-              <h2>Campaign Status</h2>
+              <h2>Outreach Generator</h2>
               <p className="text-slate-400 text-xs flex gap-1 items-center">
                 <EmergencyIcon className="text-[10px]!" />
                 Adjust settings before generating email outreach

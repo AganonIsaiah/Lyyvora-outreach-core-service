@@ -32,6 +32,9 @@ export const dashboardService = {
       if (filters.email_status?.length)
         filters.email_status.forEach((v) => params.append("email_status", v));
 
+      if (filters.campaign_batch?.length)
+        filters.campaign_batch.forEach((v) => params.append("campaign_batch", v));
+
       if (filters.lead_score?.length) {
         params.append("sort_by", "lead_score");
         params.append("sort_order", filters.lead_score[0].toLowerCase());

@@ -38,6 +38,7 @@ class Clinic(BaseModel):
   notes: str
   top_features: str
   emails_for_outreach: List[ClinicEmails]
+  campaign_batch: str
 
 class Metric(BaseModel):
   label: str
@@ -70,5 +71,6 @@ class DashboardRequest(BaseModel):
   city: Optional[List[str]] = None
   province: Optional[List[str]] = None
   email_status: Optional[List[str]] = None
+  campaign_batch: Optional[List[str]] = None
   sort_by: Optional[str] = None
   sort_order: str = "desc"
