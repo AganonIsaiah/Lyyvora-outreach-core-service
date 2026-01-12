@@ -14,10 +14,6 @@ STATUS_PRIORITY = {
     ClinicStatus.NOT_GENERATED: 1,
 }
 
-# -------------------------
-# Helpers
-# -------------------------
-
 def parse_comma_separated(values: Optional[List[str]]) -> Optional[List[str]]:
     if not values:
         return None
@@ -37,11 +33,6 @@ def build_multi_like(column: str, values: List[str], params: List[str], csv: boo
             parts.append(f"{column} LIKE ?")
             params.append(f"%{v}%")
     return "(" + " OR ".join(parts) + ")"
-
-
-# -------------------------
-# Counts
-# -------------------------
 
 def get_total_clinics_count() -> int:
     conn = sqlite3.connect(DB_FILE)
@@ -94,11 +85,6 @@ def get_total_filtered_clinics_count(
     total = cursor.fetchone()[0]
     conn.close()
     return total
-
-
-# -------------------------
-# Filters
-# -------------------------
 
 def get_all_filter_values():
     conn = sqlite3.connect(DB_FILE)
@@ -247,11 +233,19 @@ def get_all_clinics_from_db(
     conn.close()
     return clinics
 
-
-# -------------------------
-# Utilities
-# -------------------------
-
+def get_not_generated_emails_count() -> int:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM leads
+            WHERE email_status = ?
+        """, (ClinicStatus.NOT_GENERATED.value,))
+        return cursor.fetchone()[0]
+    finally:
+        conn.close()
+        
 def has_lead_records() -> bool:
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -259,11 +253,6 @@ def has_lead_records() -> bool:
     exists = cursor.fetchone() is not None
     conn.close()
     return exists
-
-
-# -------------------------
-# Main dashboard
-# -------------------------
 
 def generate_dashboard(req: DashboardRequest):
 
@@ -293,6 +282,7 @@ def generate_dashboard(req: DashboardRequest):
     )
 
     total_clinics = get_total_clinics_count()
+    not_generated_count = get_not_generated_emails_count()
 
     filtered_clinics_count = get_total_filtered_clinics_count(
         name=name,
@@ -336,5 +326,6 @@ def generate_dashboard(req: DashboardRequest):
         campaign_status=campaign_status,
         total_clinics=total_clinics,
         filtered_clinics_count=filtered_clinics_count,
-        show_export=has_lead_records()
+        show_export=has_lead_records(),
+        not_generated_emails_count=not_generated_count
     )

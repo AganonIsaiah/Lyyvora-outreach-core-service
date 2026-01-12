@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: lyyvora_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./data:/app/data        
+    env_file:
+      - .env                
+    restart: unless-stopped      
+
+  ui:
+    build:
+      context: ./dashboard_ui
+      dockerfile: Dockerfile
+    container_name: lyyvora_ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped

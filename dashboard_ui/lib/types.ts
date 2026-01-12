@@ -70,4 +70,5 @@ export interface DashboardResponse {
   show_export: boolean;
   total_clinics: number;
   filtered_clinics_count: number;
+  not_generated_emails_count: number;
 }

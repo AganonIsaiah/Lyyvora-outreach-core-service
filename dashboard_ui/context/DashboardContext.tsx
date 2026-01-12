@@ -37,6 +37,7 @@ interface DashboardContextProps {
   total: number;
   filteredCount: number;
   totalPages: number;
+  notGeneratedEmailsCount: number;
   setPage: (p: number) => void;
 }
 
@@ -59,6 +60,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [limit] = useState(25);
   const [total, setTotal] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
+  const [notGeneratedEmailsCount, setNotGeneratedEmailsCount] = useState(0);
+
 
   useEffect(() => {
     setLoading(true);
@@ -71,11 +74,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setCampaignStatus(data.campaign_status);
         setMetrics(data.metrics);
         setShowExport(data.show_export);
-
-        const totalClinicsMetric = data.metrics.find(
-          (m) => m.label === "Total Clinics"
-        );
-        setTotal(totalClinicsMetric?.value || 0);
+        setNotGeneratedEmailsCount(data.not_generated_emails_count)
+        setTotal(data.total_clinics);
         setFilteredCount(
           data.filtered_clinics_count
         );
@@ -108,6 +108,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         totalPages: Math.ceil(filteredCount / limit),
         setPage,
         showExport,
+        notGeneratedEmailsCount
       }}
     >
       {children}

@@ -55,7 +55,8 @@ export const dashboardService = {
         metrics: [],
         show_export: false,
         total_clinics: 0,
-        filtered_clinics_count: 0
+        filtered_clinics_count: 0,
+        not_generated_emails_count: 0
       };
     }
 
@@ -68,7 +69,8 @@ export const dashboardService = {
       metrics: data.metrics || [],
       show_export: data.show_export ?? false,
       total_clinics: data.total_clinics ?? 0,
-      filtered_clinics_count: data.filtered_clinics_count ?? 0
+      filtered_clinics_count: data.filtered_clinics_count ?? 0,
+      not_generated_emails_count: data.not_generated_emails_count ?? 0
     };
   },
 };

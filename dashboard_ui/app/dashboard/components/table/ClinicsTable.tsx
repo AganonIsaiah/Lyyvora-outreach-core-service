@@ -18,6 +18,7 @@ export default function ClinicsTable() {
   const setPage = dashboard?.setPage ?? (() => {});
   const loading = dashboard?.loading ?? false;
   const currentClinicCount = dashboard?.filteredCount ?? 0;
+  const totalClinics = dashboard?.total ?? 0;
 
   if (!dashboard.showExport)
     return (
@@ -122,7 +123,7 @@ export default function ClinicsTable() {
             <span className="font-semibold">{totalPages}</span>
             <span className="ml-4">
               Total Records{" "}
-              <span className="font-semibold">{currentClinicCount}</span>
+              <span className="font-semibold">{totalClinics}</span>
             </span>
           </p>
 

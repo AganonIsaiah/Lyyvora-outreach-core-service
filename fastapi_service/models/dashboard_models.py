@@ -14,10 +14,6 @@ class Filter(BaseModel):
   values: List[str]
   type: FilterType
 
-class SidebarRoute(BaseModel):
-  label: str
-  href: Routes
-
 class ClinicEmails(BaseModel):
   subject_line: str
   email_body: str
@@ -62,6 +58,7 @@ class DashboardResponse(BaseModel):
   show_export: bool 
   total_clinics: int
   filtered_clinics_count: int
+  not_generated_emails_count: int
   
 class DashboardRequest(BaseModel):
   limit: int = 25

@@ -5,7 +5,14 @@ import EmergencyIcon from "@mui/icons-material/Emergency";
 import { useState, useRef, useEffect } from "react";
 
 export default function CampaignOutreach() {
-  const { campaignStatus, setCampaignStatus, clinics, showExport } = useDashboardContext();
+  const {
+    campaignStatus,
+    setCampaignStatus,
+    clinics,
+    showExport,
+    notGeneratedEmailsCount,
+    total
+  } = useDashboardContext();
   const [wsClinicsGenerated, setWsClinicsGenerated] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -29,7 +36,11 @@ export default function CampaignOutreach() {
   };
 
   const handleGenerateOutreach = async () => {
-    if (!safeClinics.length) return;
+    if (notGeneratedEmailsCount - number_of_clinics <= 0) {
+      alert("Number of clinics exceeds limit, outreach generation has failed!");
+      return;
+    }
+
     setWsClinicsGenerated(0);
     alert("Outreach generation started!");
 
@@ -64,7 +75,11 @@ export default function CampaignOutreach() {
         }
         const increment = msg.contacted_clinics ?? 1;
         setWsClinicsGenerated((prev) =>
-          Math.min(prev + increment, number_of_clinics)
+          Math.min(
+            prev + increment,
+            number_of_clinics,
+            notGeneratedEmailsCount ?? number_of_clinics
+          )
         );
       };
 
@@ -83,8 +98,13 @@ export default function CampaignOutreach() {
   }, []);
 
   const percentage =
-    number_of_clinics > 0
-      ? Math.min((wsClinicsGenerated / number_of_clinics) * 100, 100)
+    number_of_clinics > 0 && notGeneratedEmailsCount > 0
+      ? Math.min(
+          (wsClinicsGenerated /
+            Math.min(number_of_clinics, notGeneratedEmailsCount)) *
+            100,
+          100
+        )
       : 0;
 
   if (!showExport) {
@@ -136,12 +156,16 @@ export default function CampaignOutreach() {
               id="number-of-clinics"
               className="input-outreach"
               value={number_of_clinics ?? 0}
-              onChange={(e) =>
-                updateStatus(
-                  "number_of_clinics",
-                  isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value)
-                )
-              }
+              onChange={(e) => {
+                let value = parseInt(e.target.value);
+                if (isNaN(value)) value = 0;
+
+                if (notGeneratedEmailsCount != null) {
+                  value = Math.min(value, notGeneratedEmailsCount);
+                }
+
+                updateStatus("number_of_clinics", value);
+              }}
             />
           </span>
 

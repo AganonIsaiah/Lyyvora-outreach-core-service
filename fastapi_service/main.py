@@ -243,7 +243,8 @@ def get_dashboard(
             metrics=[],
             show_export=False,
             total_clinics=0,
-            filtered_clinics_count=0
+            filtered_clinics_count=0,
+            not_generated_emails_count=0
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
