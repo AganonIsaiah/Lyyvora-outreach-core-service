@@ -154,7 +154,7 @@ def run_email_generation(
 
     campaign_batch = f"outreach_{time.strftime('%Y%m%d_%H%M%S')}"
     logger.start_batch(f"{campaign_batch}")
-    print(f"START outreach generation for {EMAIL_BATCH_SIZE} emails | batch={campaign_batch}")
+    # print(f"START outreach generation for {EMAIL_BATCH_SIZE} emails | batch={campaign_batch}")
 
     batch_start = time.perf_counter()
 
@@ -181,7 +181,7 @@ def run_email_generation(
         if progress_callback:
             progress_callback()
 
-    export_to_csv(conn=conn, campaign_batch=campaign_batch)
+    # export_to_csv(conn=conn, campaign_batch=campaign_batch) # Uncomment to save .csv to /datasets/smartlead_csv
 
     batch_elapsed = time.perf_counter() - batch_start
     logger.end_batch(
@@ -190,7 +190,7 @@ def run_email_generation(
         avg_per_item=batch_elapsed / max(EMAIL_BATCH_SIZE, 1)
     )
 
-    print(f"END outreach generation | total_duration={batch_elapsed:.2f}s | average_time_per_email={batch_elapsed / EMAIL_BATCH_SIZE:.2f}")
+    # print(f"END outreach generation | total_duration={batch_elapsed:.2f}s | average_time_per_email={batch_elapsed / EMAIL_BATCH_SIZE:.2f}")
 
     conn.close()
 

@@ -1,18 +1,15 @@
-// app/clinics/[id]/page.tsx
 "use client";
 
 import ClinicDetailUI from "./components/ClinicDetailUI";
-import { useDashboardContext, DashboardProvider } from "@/context/DashboardContext";
+import { DashboardProvider } from "@/context/DashboardContext";
 import { useParams } from "next/navigation";
 
 function ClinicDetailInner() {
   const { id } = useParams();
-  const { clinics } = useDashboardContext();
 
-  const clinic = clinics.find((c) => c.id.toString() === id);
+  if (!id || Array.isArray(id)) return <div>Invalid clinic ID</div>;
 
-  if (!clinic) return <div>Clinic not found</div>;
-  return <ClinicDetailUI clinic={clinic} />;
+  return <ClinicDetailUI clinicId={id} />;
 }
 
 export default function ClinicDetailPage() {

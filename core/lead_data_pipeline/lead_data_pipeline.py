@@ -2,10 +2,12 @@ import pandas as pd
 import sqlite3
 import re
 from urllib.parse import urlparse
+from fastapi import UploadFile
+from io import BytesIO, StringIO
 
 from shared.queries import Queries
 from shared.logging_module import Logger
-from shared.configs import CSV_INPUT_FILE, DB_FILE
+from shared.configs import  DB_FILE
 from shared.types import ClinicStatus
 
 logger = Logger(log_file="lead_data_pipeline.log")
@@ -95,19 +97,26 @@ def save_to_sqlite(df: pd.DataFrame):
     cursor = conn.cursor()
     
     cursor.execute(Queries.create_table_leads())
+    cursor.execute(Queries.create_table_lead_scores())
+    cursor.execute(Queries.create_smartlead_table())
     df.to_sql("leads", conn, if_exists="append", index=False)
     
     conn.commit()
     conn.close()
+    logger.info("Leads, lead_scores, and smartlead tables are ensured to exist.")
 
-def run_pipeline():
+def run_pipeline(file: UploadFile):
     logger.info("Pipeline started.")
-    print("Pipeline started.")
-    
-    # Load CSV
-    df = pd.read_csv(CSV_INPUT_FILE)
-    logger.info(f"Loaded {len(df)} rows from {CSV_INPUT_FILE}")
-    print(f"Loaded {len(df)} rows from {CSV_INPUT_FILE}")
+    # print("Pipeline started.")
+
+    file.file.seek(0)  
+    contents = file.file.read()
+    try:
+        df = pd.read_csv(BytesIO(contents))
+    except Exception:
+        df = pd.read_csv(StringIO(contents.decode('utf-8')))
+
+    logger.info(f"Loaded {len(df)} rows from uploaded CSV")
 
     # Map raw CSV columns to DB columns
     logger.info("Renaming columns to match DB schema.")
@@ -119,6 +128,18 @@ def run_pipeline():
         "state": "province",
         "business_phone": "phone"
     })
+    
+    required_columns = [
+    "clinic_name", "clinic_main_type", "clinic_sub_type",
+    "city", "province", "phone", "email",
+    "website_url", "website_desc", "total_reviews", "average_rating"
+    ]
+    
+    for col in required_columns:
+        if col not in df.columns:
+            df[col] = None
+            logger.info(f"Added missing column '{col}' with default None")
+
 
     # Clean & map
     logger.info("Cleaning text fields and normalizing data.")
@@ -188,7 +209,7 @@ def run_pipeline():
     logger.info(f"Saved {len(df)} rows to SQLite.")
 
     logger.info("Pipeline completed successfully.")
-    print("Pipeline completed successfully.")
+    # print("Pipeline completed successfully.")
 
 if __name__ == "__main__":
     run_pipeline()

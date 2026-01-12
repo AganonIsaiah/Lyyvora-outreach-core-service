@@ -35,6 +35,7 @@ interface DashboardContextProps {
   page: number;
   limit: number;
   total: number;
+  filteredCount: number;
   totalPages: number;
   setPage: (p: number) => void;
 }
@@ -57,6 +58,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [page, setPage] = useState(1);
   const [limit] = useState(25);
   const [total, setTotal] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -74,6 +76,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           (m) => m.label === "Total Clinics"
         );
         setTotal(totalClinicsMetric?.value || 0);
+        setFilteredCount(
+          data.filtered_clinics_count
+        );
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
@@ -99,7 +104,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        filteredCount,
+        totalPages: Math.ceil(filteredCount / limit),
         setPage,
         showExport,
       }}

@@ -41,7 +41,7 @@ export default function TableHeader() {
       {showExport && (
         <button
           onClick={handleExport}
-          className="ml-auto text-sm bg-blue-500 text-white px-2 py-1.5 rounded hover:bg-blue-600 cursor-pointer transition-all duration-200"
+          className="ml-auto text-sm bg-amber-500 text-white px-2 py-1.5 rounded hover:bg-amber-600 cursor-pointer transition-all duration-200"
         >
           Export Smartlead CSV
         </button>

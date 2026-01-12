@@ -21,7 +21,7 @@ export const dashboardService = {
         filters.name.forEach((v) => params.append("name", v));
 
       if (filters.type?.length)
-        filters.type.forEach((v) => params.append("type", v));
+        filters.type.forEach((v) => params.append("sub_type", v));
 
       if (filters.city?.length)
         filters.city.forEach((v) => params.append("city", v));
@@ -51,11 +51,12 @@ export const dashboardService = {
         campaign_status: {} as any,
         metrics: [],
         show_export: false,
-        total_clinics: 0
+        total_clinics: 0,
+        filtered_clinics_count: 0
       };
     }
 
-    const data = await res.json();
+    const data: DashboardResponse = await res.json();
 
     return {
       clinics_data: data.clinics_data || [],
@@ -63,7 +64,8 @@ export const dashboardService = {
       campaign_status: data.campaign_status || {},
       metrics: data.metrics || [],
       show_export: data.show_export ?? false,
-      total_clinics: data.total_clinics ?? 0
+      total_clinics: data.total_clinics ?? 0,
+      filtered_clinics_count: data.filtered_clinics_count ?? 0
     };
   },
 };

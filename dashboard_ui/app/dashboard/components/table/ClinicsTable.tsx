@@ -17,8 +17,7 @@ export default function ClinicsTable() {
   const totalPages = dashboard?.totalPages ?? 1;
   const setPage = dashboard?.setPage ?? (() => {});
   const loading = dashboard?.loading ?? false;
-  const campaignStatus = dashboard?.campaignStatus ?? { total_clinics: 0 };
-  const isDashboardEmpty = clinics.length === 0;
+  const currentClinicCount = dashboard?.filteredCount ?? 0;
 
   if (!dashboard.showExport)
     return (
@@ -39,44 +38,40 @@ export default function ClinicsTable() {
             options.
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200 w-full">
+          <table className="min-w-full divide-y divide-gray-200 w-full table-fixed">
             <thead className="bg-gray-100 sticky top-0 z-10">
               <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Lead Score</th>
-                <th>Type</th>
-                <th>City</th>
-                <th>Province</th>
-                <th>Email Status</th>
-                <th>Average Rating</th>
-                <th>Notes</th>
-                <th>Expand</th>
+                <th className="w-12">ID</th>
+                <th className="w-40">Name</th>
+                <th className="w-20">Lead Score</th>
+                <th className="w-48">Type</th>
+                <th className="w-28">City</th>
+                <th className="w-28">Province</th>
+                <th className="w-32">Email Status</th>
+                <th className="w-20">Average Rating</th>
+                <th className="w-46">Notes</th>
+                <th className="w-20 text-left!">Expand</th>
               </tr>
             </thead>
             <tbody>
               {clinics.map((c) => (
                 <tr key={c.id} className="border-b border-gray-200 h-12">
                   <td>{c.id}</td>
-
-                  <td className="truncate max-w-50 cursor-pointer!">
+                  <td className="truncate">
                     <Tooltip title={c.name}>
                       <span className="inline-block truncate w-full">
                         {c.name}
                       </span>
                     </Tooltip>
                   </td>
-
                   <td>{c.lead_score}</td>
-
-                  <td className="truncate max-w-60 cursor-pointer!">
+                  <td className="truncate">
                     <Tooltip title={c.type.join(", ")}>
                       <span className="inline-block truncate w-full">
                         {c.type.join(", ")}
                       </span>
                     </Tooltip>
                   </td>
-
                   <td>{c.city}</td>
                   <td>{c.province}</td>
                   <td>
@@ -89,7 +84,7 @@ export default function ClinicsTable() {
                     </span>
                   </td>
                   <td>{c.average_rating}</td>
-                  <td className="truncate max-w-40 cursor-pointer!">
+                  <td className="truncate">
                     <Tooltip title={c.notes || ""}>
                       <span className="inline-block truncate w-full">
                         {c.notes || (
@@ -98,7 +93,6 @@ export default function ClinicsTable() {
                       </span>
                     </Tooltip>
                   </td>
-
                   <td>
                     <button
                       onClick={() => router.push(`/clinics/${c.id}`)}
@@ -124,9 +118,7 @@ export default function ClinicsTable() {
             <span className="font-semibold">{totalPages}</span>
             <span className="ml-4">
               Total Records{" "}
-              <span className="font-semibold">
-                {campaignStatus.total_clinics}
-              </span>
+              <span className="font-semibold">{currentClinicCount}</span>
             </span>
           </p>
 

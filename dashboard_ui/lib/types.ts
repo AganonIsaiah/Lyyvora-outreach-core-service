@@ -68,4 +68,5 @@ export interface DashboardResponse {
   campaign_status: CampaignStatus;
   show_export: boolean;
   total_clinics: number;
+  filtered_clinics_count: number;
 }

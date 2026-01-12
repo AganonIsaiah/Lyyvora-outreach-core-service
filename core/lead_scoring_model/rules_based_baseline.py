@@ -29,7 +29,7 @@ def rules_based_score(lead: Dict[str, Any]) -> Dict[str, Any]:
         
     if lead.get("website_desc"):
         score += 20
-        top_features.append(f"Has notes: {lead.get("website_desc")}")
+        top_features.append(f"Has a website description.")
     
     if lead.get("total_reviews") is not None and lead.get("total_reviews", 0) >= 30.0:
         score += 10

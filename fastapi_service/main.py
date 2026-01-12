@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Query, UploadFile, File, WebSocket, WebSocketDisconnect, BackgroundTasks, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import uuid 
 import csv
 import sqlite3
@@ -12,6 +12,7 @@ from .services.dashboard_service import generate_dashboard
 from .services.import_service import process_uploaded_csv, drop_all_tables
 from .services.ws_manager import manager
 from .services.outreach_service import run_outreach_job
+from .services.append_service import append_csv_to_leads
 from shared.configs import DB_FILE
 
 app = FastAPI(title="Lyyvora Outreach API")
@@ -28,6 +29,85 @@ app.add_middleware(
 def home():
     return {"message": "Welcome"}
 
+@app.get("/clinics/{clinic_id}")
+def get_clinic(clinic_id: int) -> Dict[str, Any]:
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT l.*, COALESCE(ls.score, 0) AS lead_score, ls.top_features, ls.explanation
+        FROM leads l
+        LEFT JOIN lead_scores ls
+        ON l.id = ls.leads_id AND ls.model_version = 'rules_v1'
+        WHERE l.id = ?
+    """, (clinic_id,))
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Clinic not found")
+
+    clinic = dict(row)
+    cursor.execute("""
+        SELECT 
+            subject_line_1, email_body_1,
+            subject_line_2, email_body_2,
+            subject_line_3, email_body_3
+        FROM smartlead
+        WHERE leads_id = ?
+        LIMIT 1
+    """, (clinic_id,))
+    smartlead_row = cursor.fetchone()
+    conn.close()
+
+    if smartlead_row:
+        clinic["emails_for_outreach"] = [
+            {
+                "type": "Email 1",
+                "subject_line": smartlead_row["subject_line_1"],
+                "email_body": smartlead_row["email_body_1"]
+            },
+            {
+                "type": "Email 2",
+                "subject_line": smartlead_row["subject_line_2"],
+                "email_body": smartlead_row["email_body_2"]
+            },
+            {
+                "type": "Email 3",
+                "subject_line": smartlead_row["subject_line_3"],
+                "email_body": smartlead_row["email_body_3"]
+            }
+        ]
+    else:
+        clinic["emails_for_outreach"] = []
+
+    if isinstance(clinic.get("clinic_sub_type"), str):
+        clinic["type"] = [s.strip() for s in clinic["clinic_sub_type"].split(",")]
+    else:
+        clinic["type"] = []
+
+    clinic["name"] = clinic.get("clinic_name") or "Clinic Name"
+    clinic["lead_score"] = clinic.get("lead_score") or 0
+    clinic["notes"] = clinic.get("website_desc") or "N/A"
+    clinic["email"] = clinic.get("email") or "N/A"
+    clinic["website_url"] = clinic.get("website_url") or "N/A"
+    clinic["city"] = clinic.get("city") or "N/A"
+    clinic["province"] = clinic.get("province") or "N/A"
+    clinic["total_reviews"] = clinic.get("total_reviews") or "N/A"
+    clinic["average_rating"] = clinic.get("average_rating") or "N/A"
+    clinic["email_status"] = clinic.get("email_status") or "N/A"
+
+    return clinic
+
+
+@app.post("/append-leads")
+async def append_leads(file: UploadFile = File(...)):
+    try:
+        res = append_csv_to_leads(file)
+        return res 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=(e))
 
 @app.get("/export-smartlead-csv")
 def export_smartlead_csv():
@@ -147,7 +227,8 @@ def get_dashboard(
             campaign_status={},
             metrics=[],
             show_export=False,
-            total_clinics=0
+            total_clinics=0,
+            filtered_clinics_count=0
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

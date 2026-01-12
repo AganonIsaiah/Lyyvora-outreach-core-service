@@ -4,10 +4,10 @@ import { useDashboardContext } from "@/context/DashboardContext";
 import MetricUI from "./MetricUI";
 
 export default function PipelineMetrics() {
-  const { metrics, clinics } = useDashboardContext();
+  const { metrics, showExport } = useDashboardContext();
 
-  if (!clinics || clinics.length <= 0) return;
-
+  if (!showExport) return;
+  
   return (
     <div className="flex flex-wrap gap-y-10 gap-x-2 justify-evenly w-120!">
       {metrics.length > 0 ? (

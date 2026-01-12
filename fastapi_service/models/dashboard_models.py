@@ -60,6 +60,7 @@ class DashboardResponse(BaseModel):
   campaign_status: CampaignStatus
   show_export: bool 
   total_clinics: int
+  filtered_clinics_count: int
   
 class DashboardRequest(BaseModel):
   limit: int = 25

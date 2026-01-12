@@ -10,10 +10,10 @@ const BASE_URL = "http://localhost:8000";
 
 export default function ImportCard() {
   const importColumns = IMPORT_COLUMNS;
-  const { clinics, showExport } = useDashboardContext();
+  const { showExport } = useDashboardContext();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadMode, setUploadMode] = useState<"import" | "append">("import");
 
   function ColumnChips({ columns }: { columns: string[] }) {
     return (
@@ -31,12 +31,14 @@ export default function ImportCard() {
     );
   }
 
-  function openFilePicker() {
+  function openFilePicker(mode: "import" | "append") {
+    setUploadMode(mode);
     fileInputRef.current?.click();
   }
 
   async function handleFileChange(
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
+    mode: "import" | "append"
   ) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -45,41 +47,42 @@ export default function ImportCard() {
     formData.append("file", file);
 
     try {
-      setUploading(true);
+      const endpoint = mode === "append" ? "/append-leads" : "/import-csv";
 
-      const res = await fetch(`${BASE_URL}/import-csv`, {
+      const res = await fetch(`${BASE_URL}${endpoint}`, {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) throw new Error("CSV import failed");
+      if (!res.ok) throw new Error(`${mode} CSV failed`);
 
-      alert("CSV imported successfully");
+      alert(
+        mode === "append"
+          ? "CSV appended successfully"
+          : "CSV imported successfully"
+      );
       window.location.reload();
     } catch (err) {
       console.error(err);
-      alert("Failed to import CSV");
+      alert(`Failed to ${mode} CSV`);
     } finally {
-      setUploading(false);
-      e.target.value = ""; 
+      e.target.value = "";
     }
   }
 
   return (
     <div
       className={`card-section ${
-        !showExport
-          ? "w-full! border-0! shadow-none!"
-          : "w-120!"
+        !showExport ? "w-full! border-0! shadow-none!" : "w-120!"
       }`}
     >
       <h2 className="text-base font-semibold">
-        {clinics && clinics.length > 0 ? "Update CSV" : "Import CSV"}
+        {showExport ? "Replace or Append to the CSV " : "Import CSV"}
       </h2>
 
       <p className="text-slate-400 text-xs flex gap-1 mt-0.5">
         <EmergencyIcon className="text-[10px]! mt-0.5" />
-        {clinics && clinics.length > 0
+        {showExport
           ? "Append or replace the CSV file to continue outreach, include following columns:"
           : "Import a CSV file to begin outreach, include the following columns:"}
       </p>
@@ -91,18 +94,25 @@ export default function ImportCard() {
         type="file"
         accept=".csv"
         hidden
-        onChange={handleFileChange}
+        onChange={(e) => handleFileChange(e, uploadMode)}
       />
 
-      <div className="flex">
+      <div className="flex gap-4">
         <button
-          disabled={uploading}
-          onClick={openFilePicker}
-          className={`bg-blue-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-blue-600 transition-all duration-200
-          ${uploading ? "opacity-60 cursor-not-allowed" : ""}`}
+          onClick={() => openFilePicker("import")}
+          className={`bg-blue-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-blue-600 transition-all duration-200`}
         >
-          {uploading ? "Uploading..." : clinics.length > 0 ? "Replace CSV" : "Import CSV"}
+          {showExport ? "Replace CSV" : "Import CSV"}
         </button>
+
+        {showExport && (
+          <button
+            onClick={() => openFilePicker("append")}
+            className={`bg-lime-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-lime-600 transition-all duration-200`}
+          >
+            Append to CSV
+          </button>
+        )}
       </div>
     </div>
   );
