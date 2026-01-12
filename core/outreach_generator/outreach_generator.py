@@ -14,6 +14,15 @@ from shared.prompt_templates import prompt
 
 OLLAMA_MODEL = "deepseek-v3.1:671b-cloud"
 
+EMAIL_SIGNATURE = """
+
+Best regards,
+Sharmeen Aqeel 
+Founder & CEO, Lyyvora
+Lending-as-a-service for healthcare clinics
+https://lyyvora.com/
+"""
+
 load_dotenv()
 
 logger = Logger(log_file="outreach_generator.log")
@@ -36,6 +45,10 @@ def generate_email(clinic_info: dict, user_prompt: str | None = None, max_words:
     logger.end_item(clinic_name, duration=elapsed)
 
     return email_text.strip()
+
+def add_signature(email_body: str) -> str:
+    email_body = email_body.rstrip()
+    return f"{email_body}\n\n{EMAIL_SIGNATURE.strip()}"
 
 def parse_email(email_text: str):
     """
@@ -165,15 +178,19 @@ def run_email_generation(
             logger.error(f"Failed to parse email for {clinic_info['clinic_name']}. Skipping.")
             continue
 
+        email_body_1 = add_signature(parsed[3])
+        email_body_2 = add_signature(parsed[4])
+        email_body_3 = add_signature(parsed[5])
+
         save_to_sql(
             conn,
             clinic_info=clinic_info,
             subject_line_1=parsed[0],
-            email_body_1=parsed[3],
+            email_body_1=email_body_1,
             subject_line_2=parsed[1],
-            email_body_2=parsed[4],
+            email_body_2=email_body_2,
             subject_line_3=parsed[2],
-            email_body_3=parsed[5],
+            email_body_3=email_body_3,
             campaign_batch=campaign_batch
         )
         set_clinic_status_queued(conn, clinic_info["id"])
