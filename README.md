@@ -2,6 +2,15 @@
 - Lightweight MVP service for Lyyvora built with Python 3.14.2
 - This service helps Lyyvora prioritize and engage healthcare clinics by cleaning public lead data, scoring prospects with ML, generating safe personalized outreach messages, and evaluating financing readiness with a rules engine
 
+# Quick Startup and Run
+1. Create a `.env` file and set `OLLAMA_API=api_key`, you can get the api key here: https://ollama.com/settings/keys
+
+2. Download Docker Desktop: https://www.docker.com/products/docker-desktop/
+
+3. Run the command `docker-compose up --build -d` and visit: http://localhost:3000/dashboard
+
+4. When finished, run `docker-compose down` for cleanup
+
 ## Table of Contents
 - [Setup and Run](#setup-and-run)
     - [Quick Setup and Run](#quick-setup-and-run)
@@ -14,9 +23,6 @@
 # Setup and Run
 ## Before you Run, you must set the Environment Variables in the `.env` file
 - To set `OLLAMA_API` get the key here: https://ollama.com/settings/keys
-
-## Quick Setup and Run
-Enter the command `make` in the terminal to view the run options
 
 ## Setup and Run FastAPI and React Frontend
 ### 1) Activate the virtual env using the terminal, then enter the following commands:
@@ -41,8 +47,6 @@ Once the server is running, visit http://127.0.0.1:8000/docs to see available AP
 ### To run a certain file
 - `python3 -m core.<package_name>.<file_name>`
 
-# To Open Notebook
-Jupyter Notebook is used here for interactive testing, data exploration, and clear documentation of the pipeline
 
 # Libraries
 - FastAPI
@@ -52,10 +56,6 @@ Jupyter Notebook is used here for interactive testing, data exploration, and cle
 - pandas
 
 # Architecture Layout
-
-### Dashboard UI Mockups
-Click here to view the dashboard UI mockup: 
-
 ### Database Schema Diagram
 Click here to view the database diagram:
 https://dbdiagram.io/d/Riipen-Lyyvora-DB-Schema-69214ff8228c5bbc1affa94e
