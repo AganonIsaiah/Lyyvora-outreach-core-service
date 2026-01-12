@@ -50,7 +50,7 @@ export default function CampaignOutreach() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email_batch_size: number_of_clinics,
-          prompt,
+          prompt: prompt,
           email_word_limit: max_word_limit,
         }),
       });
@@ -137,6 +137,7 @@ export default function CampaignOutreach() {
               type="number"
               id="max-word-limit"
               className="input-outreach"
+              min={1}
               value={max_word_limit ?? 0}
               onChange={(e) =>
                 updateStatus(
@@ -156,6 +157,7 @@ export default function CampaignOutreach() {
               id="number-of-clinics"
               className="input-outreach"
               value={number_of_clinics ?? 0}
+              min={1}
               onChange={(e) => {
                 let value = parseInt(e.target.value);
                 if (isNaN(value)) value = 0;
@@ -188,7 +190,7 @@ export default function CampaignOutreach() {
             onChange={(e) =>
               updateStatus(
                 "prompt",
-                e.target.value.replace(/[\t\r\n]+/g, " ").trim()
+                e.target.value
               )
             }
           />
