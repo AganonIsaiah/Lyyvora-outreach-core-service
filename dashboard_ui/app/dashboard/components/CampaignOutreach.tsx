@@ -36,7 +36,7 @@ export default function CampaignOutreach() {
   };
 
   const handleGenerateOutreach = async () => {
-    if (notGeneratedEmailsCount - number_of_clinics <= 0) {
+    if (notGeneratedEmailsCount - number_of_clinics < 0) {
       alert("Number of clinics exceeds limit, outreach generation has failed!");
       return;
     }
