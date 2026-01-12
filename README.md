@@ -8,6 +8,7 @@
 2. Download Docker Desktop: https://www.docker.com/products/docker-desktop/
 
 3. Run the command `docker-compose up --build -d` and visit: http://localhost:3000/dashboard
+http://localhost:8000/docs
 
 4. When finished, run `docker-compose down` for cleanup
 
