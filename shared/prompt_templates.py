@@ -28,7 +28,7 @@ STRICT GUARDRAILS
 - Create the subject line in title case
 - Do NOT include em dashes
 - Do NOT generate an email greeting (i.e., Hello (clinic name)), email greetings are hardcoded
-- Do NOT generate an email signature
+- Do NOT generate an email signature, email signatures are hardcoded
 - Do NOT invent new metrics, numbers, partnerships, or claims
 - Do NOT exaggerate outcomes or imply guaranteed funding
 - Do NOT promise funding, approval, or outcomes
