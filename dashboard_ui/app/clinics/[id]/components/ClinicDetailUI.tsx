@@ -148,9 +148,9 @@ export default function ClinicDetailUI({ clinicId }: Props) {
                       <span className="font-semibold">Subject:</span>{" "}
                       {displayValue(email.subject_line)}
                     </p>
-                    <p className="text-sm">
+                    <p className="text-sm whitespace-pre-wrap">
                       <span className="font-semibold">Body:</span>{" "}
-                      {displayValue(email.email_body)}
+                      {email.email_body}
                     </p>
                   </div>
                 ))}
