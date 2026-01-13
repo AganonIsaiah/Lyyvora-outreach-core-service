@@ -1,5 +1,5 @@
 # Lyyvora-outreach-core-service
-- Lightweight MVP service for Lyyvora built with Python 3.14.2
+- Outreach service for Lyyvora built with Python 3.14.2
 - This service helps Lyyvora prioritize and engage healthcare clinics by cleaning public lead data, scoring prospects with ML, generating safe personalized outreach messages, and evaluating financing readiness with a rules engine
 
 # Quick Startup and Run
