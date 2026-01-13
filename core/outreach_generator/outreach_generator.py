@@ -50,10 +50,11 @@ def add_signature(email_body: str) -> str:
     email_body = email_body.rstrip()
     return f"{email_body}\n\n{EMAIL_SIGNATURE.strip()}"
 
+def add_greeting(email_body: str, clinic_name: str) -> str:
+    email_body = email_body.rstrip()
+    return f"Hello {clinic_name},\n\n{email_body}"
+
 def parse_email(email_text: str):
-    """
-    Returns tuple: (subject_line_1, subject_line_2, subject_line_3, email_body_1, email_body_2, email_body_3)
-    """
     try:
         subjects = []
         bodies = []
@@ -167,8 +168,6 @@ def run_email_generation(
 
     campaign_batch = f"outreach_{time.strftime('%Y%m%d_%H%M%S')}"
     logger.start_batch(f"{campaign_batch}")
-    # print(f"START outreach generation for {EMAIL_BATCH_SIZE} emails | batch={campaign_batch}")
-
     batch_start = time.perf_counter()
 
     for clinic_info in clinic_infos:
@@ -178,9 +177,9 @@ def run_email_generation(
             logger.error(f"Failed to parse email for {clinic_info['clinic_name']}. Skipping.")
             continue
 
-        email_body_1 = add_signature(parsed[3])
-        email_body_2 = add_signature(parsed[4])
-        email_body_3 = add_signature(parsed[5])
+        email_body_1 = add_greeting(add_signature(parsed[3]), clinic_name=clinic_info['clinic_name'])
+        email_body_2 = add_greeting(add_signature(parsed[4]), clinic_name=clinic_info['clinic_name'])
+        email_body_3 = add_greeting(add_signature(parsed[5]), clinic_name=clinic_info['clinic_name'])
 
         save_to_sql(
             conn,
@@ -198,16 +197,12 @@ def run_email_generation(
         if progress_callback:
             progress_callback()
 
-    # export_to_csv(conn=conn, campaign_batch=campaign_batch) # Uncomment to save .csv to /datasets/smartlead_csv
-
     batch_elapsed = time.perf_counter() - batch_start
     logger.end_batch(
         f"{campaign_batch}",
         duration=batch_elapsed,
         avg_per_item=batch_elapsed / max(EMAIL_BATCH_SIZE, 1)
     )
-
-    # print(f"END outreach generation | total_duration={batch_elapsed:.2f}s | average_time_per_email={batch_elapsed / EMAIL_BATCH_SIZE:.2f}")
 
     conn.close()
 
