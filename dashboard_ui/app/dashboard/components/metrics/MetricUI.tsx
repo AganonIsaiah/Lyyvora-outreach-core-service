@@ -28,7 +28,7 @@ export default function MetricUI({ metric }: MetricUIProps) {
       : "text-gray-500";
 
   return (
-    <div className="flex flex-col gap-1 p-4 bg-white border border-gray-200 rounded-lg shadow-sm w-1/2! h-25! justify-center items-center">
+    <div className="flex flex-col gap-1 p-4 bg-white border border-gray-200 rounded-lg shadow-sm w-full! h-25! justify-center items-center">
       <p className="text-xs text-gray-500 font-medium">{label ?? ""}</p>
 
       <p className="text-2xl font-semibold text-gray-900">{value ?? 0}</p>
