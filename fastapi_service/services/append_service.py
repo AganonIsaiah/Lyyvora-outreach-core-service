@@ -8,7 +8,6 @@ logger = Logger(log_file="append_service.log")
 
 
 def append_csv_to_leads(file: UploadFile):
- 
     logger.info("Append service started.")
 
     try:
@@ -20,7 +19,10 @@ def append_csv_to_leads(file: UploadFile):
         run_rules_baseline()
         logger.info("Rules-based baseline completed successfully.")
 
-        return {"status": "success", "message": "Leads appended and scored successfully."}
+        return {
+            "status": "success",
+            "message": "Leads appended and scored successfully.",
+        }
 
     except Exception as e:
         logger.error(f"Append service failed: {e}")
