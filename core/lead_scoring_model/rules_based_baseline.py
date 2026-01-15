@@ -160,7 +160,7 @@ def run_rules_baseline():
         inserted = bulk_insert_scores(batch)
         scored += inserted
 
-    elapsed = (datetime.utcnow() - start_time).total_seconds()
+    elapsed = (datetime.now(UTC) - start_time).total_seconds()
 
     logger.info("========== RULES BASELINE FINISHED ==========")
     logger.info(f"Scored: {scored}")

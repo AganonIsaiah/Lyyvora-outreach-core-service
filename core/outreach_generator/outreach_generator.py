@@ -1,21 +1,20 @@
-import sqlite3
 from ollama import Client
 import os
 from dotenv import load_dotenv
 import time
 import csv
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from configs.queries import Queries
 from configs.logging_module import Logger
-from configs.path_configs import DB_FILE, SMARTLEAD_CSV_OUTPUT_FILE
+from configs.path_configs import SMARTLEAD_CSV_OUTPUT_FILE
 from configs.types import ClinicStatus
 from configs.prompt_templates import prompt
+from configs.database import supabase
 
 OLLAMA_MODEL = "deepseek-v3.1:671b-cloud"
 
 EMAIL_SIGNATURE = """
-
 Best regards,
 Sharmeen Aqeel 
 Founder & CEO, Lyyvora
@@ -30,6 +29,9 @@ client = Client(
     host="https://ollama.com",
     headers={"Authorization": f"Bearer {os.environ.get('OLLAMA_API')}"},
 )
+
+BATCH_SIZE = 50
+MAX_WORKERS = 5
 
 
 def generate_email(
@@ -46,32 +48,31 @@ def generate_email(
             ),
         }
     ]
-    email_text = ""
 
-    response = client.chat(OLLAMA_MODEL, messages=messages)
-    email_text = response.message.content
+    try:
+        response = client.chat(OLLAMA_MODEL, messages=messages)
+        email_text = response.message.content
+    except Exception as e:
+        logger.error(f"Ollama API error for {clinic_name}: {e}")
+        email_text = ""
 
     elapsed = time.perf_counter() - start_time
     logger.end_item(clinic_name, duration=elapsed)
-
     return email_text.strip()
 
 
 def add_signature(email_body: str) -> str:
-    email_body = email_body.rstrip()
-    return f"{email_body}\n\n{EMAIL_SIGNATURE.strip()}"
+    return f"{email_body.rstrip()}\n\n{EMAIL_SIGNATURE.strip()}"
 
 
 def add_greeting(email_body: str, clinic_name: str) -> str:
-    email_body = email_body.rstrip()
-    return f"Hello {clinic_name},\n\n{email_body}"
+    return f"Hello {clinic_name},\n\n{email_body.rstrip()}"
 
 
 def parse_email(email_text: str):
     try:
         subjects = []
         bodies = []
-
         for i in range(1, 4):
             subj_match = re.search(
                 f"subject_line_{i}\\s*:\\s*(.+)", email_text, re.IGNORECASE
@@ -81,169 +82,185 @@ def parse_email(email_text: str):
                 email_text,
                 re.IGNORECASE | re.DOTALL,
             )
-
             if subj_match and body_match:
                 subjects.append(subj_match.group(1).strip())
                 bodies.append(body_match.group(1).strip())
             else:
                 return None
-
         return (*subjects, *bodies)
-
     except Exception as e:
         logger.error(f"Error parsing email: {e}")
         return None
 
 
-def save_to_sql(
-    conn,
-    clinic_info: dict,
-    subject_line_1: str,
-    email_body_1: str,
-    subject_line_2: str,
-    email_body_2: str,
-    subject_line_3: str,
-    email_body_3: str,
-    campaign_batch: str,
-):
-    cursor = conn.cursor()
-    cursor.execute(Queries.create_smartlead_table())
-
+def batch_save_to_supabase(records: list[dict]):
+    if not records:
+        return
     try:
-        sql, values = Queries.insert_into_smartlead(
-            leads_id=clinic_info["id"],
-            clinic_name=clinic_info["clinic_name"],
-            email=clinic_info["email"],
-            subject_line_1=subject_line_1,
-            email_body_1=email_body_1,
-            subject_line_2=subject_line_2,
-            email_body_2=email_body_2,
-            subject_line_3=subject_line_3,
-            email_body_3=email_body_3,
-            clinic_type=clinic_info.get("clinic_sub_type"),
-            city=clinic_info.get("city"),
-            province=clinic_info.get("province"),
-            campaign_batch=campaign_batch,
+        supabase.table("smartlead").insert(records).execute()
+        logger.info(f"Batch inserted {len(records)} emails to Supabase")
+    except Exception as e:
+        logger.error(f"Supabase batch insert failed: {e}")
+
+
+def export_to_csv(campaign_batch: str):
+    try:
+        rows = (
+            supabase.table("smartlead")
+            .select("*")
+            .eq("campaign_batch", campaign_batch)
+            .execute()
+            .data
         )
-        cursor.execute(sql, values)
-        conn.commit()
+        if not rows:
+            logger.warning(f"No records found for campaign {campaign_batch}")
+            return
+
+        os.makedirs(SMARTLEAD_CSV_OUTPUT_FILE, exist_ok=True)
+        filename = os.path.join(SMARTLEAD_CSV_OUTPUT_FILE, f"{campaign_batch}.csv")
+
+        headers = [
+            "clinic_name",
+            "email",
+            "subject_line_1",
+            "email_body_1",
+            "subject_line_2",
+            "email_body_2",
+            "subject_line_3",
+            "email_body_3",
+            "clinic_type",
+            "city",
+            "province",
+        ]
+
+        with open(filename, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=headers)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow({k: row.get(k) for k in headers})
+
+        logger.info(f"Exported {len(rows)} rows to {filename}")
 
     except Exception as e:
-        logger.error(f'SQL insert failed for {clinic_info["clinic_name"]}: {e}')
+        logger.error(f"Failed to export CSV for {campaign_batch}: {e}")
 
 
-def export_to_csv(conn, campaign_batch: str):
-    cursor = conn.cursor()
-    sql, values = Queries.select_smartlead_batch(campaign_batch=campaign_batch)
-    cursor.execute(sql, values)
-    rows = cursor.fetchall()
-
-    headers = [
-        "clinic_name",
-        "email",
-        "subject_line_1",
-        "email_body_1",
-        "subject_line_2",
-        "email_body_2",
-        "subject_line_3",
-        "email_body_3",
-        "clinic_type",
-        "city",
-        "province",
-    ]
-
-    os.makedirs(SMARTLEAD_CSV_OUTPUT_FILE, exist_ok=True)
-    filename = os.path.join(SMARTLEAD_CSV_OUTPUT_FILE, f"{campaign_batch}.csv")
-
-    with open(filename, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(headers)
-        writer.writerows(rows)
-
-    logger.info(f"Exported {len(rows)} rows to {filename}")
-
-
-def set_clinic_status_queued(conn, clinic_id: int):
+def set_clinic_status_queued(clinic_ids: list[int]):
+    if not clinic_ids:
+        return
     try:
-        cursor = conn.cursor()
-        sql = Queries.update_email_status()
-        cursor.execute(sql, (ClinicStatus.GENERATED.value, clinic_id))
-        conn.commit()
+        supabase.table("leads").update(
+            {"email_status": ClinicStatus.GENERATED.value}
+        ).in_("id", clinic_ids).execute()
+        logger.info(f"Updated email_status=GENERATED for {len(clinic_ids)} clinics")
     except Exception as e:
-        logger.error(
-            f"Failed to update email_status to GENERATED for clinic_id={clinic_id}: {e}"
-        )
+        logger.error(f"Failed to update email_status batch: {e}")
+
+
+def generate_email_safe(clinic_info, user_prompt=None, max_words=120):
+    email_text = generate_email(
+        clinic_info, user_prompt=user_prompt, max_words=max_words
+    )
+    return clinic_info, email_text
 
 
 def run_email_generation(
-    EMAIL_BATCH_SIZE: int = 1,
+    EMAIL_BATCH_SIZE: int = 10,
     PROMPT: str | None = None,
     EMAIL_WORD_LIMIT: int = 120,
+    MAX_WORKERS: int | None = 10,
     progress_callback=None,
 ):
     if EMAIL_BATCH_SIZE < 1:
         EMAIL_BATCH_SIZE = 1
 
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute(Queries.create_smartlead_table())
-    conn.commit()
+    clinics = (
+        supabase.table("leads")
+        .select("*")
+        .eq("email_status", ClinicStatus.NOT_GENERATED.value)
+        .order("id", desc=False)
+        .limit(EMAIL_BATCH_SIZE)
+        .execute()
+        .data
+    )
 
-    sql, params = Queries.get_top_clinics_for_outreach(batch_size=EMAIL_BATCH_SIZE)
-    cursor.execute(sql, params)
-
-    rows = cursor.fetchall()
-    columns = [desc[0] for desc in cursor.description]
-    clinic_infos = [dict(zip(columns, row)) for row in rows]
+    if not clinics:
+        logger.info("No clinics found for email generation")
+        return
 
     campaign_batch = f"outreach_{time.strftime('%Y%m%d_%H%M%S')}"
-    logger.start_batch(f"{campaign_batch}")
+    logger.start_batch(campaign_batch)
     batch_start = time.perf_counter()
 
-    for clinic_info in clinic_infos:
-        email_text = generate_email(
-            clinic_info, user_prompt=PROMPT, max_words=EMAIL_WORD_LIMIT
-        )
-        parsed = parse_email(email_text)
-        if parsed is None:
-            logger.error(
-                f"Failed to parse email for {clinic_info['clinic_name']}. Skipping."
+    workers = min(MAX_WORKERS or 5, len(clinics))
+
+    records_to_insert = []
+    updated_clinic_ids = []
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = [
+            executor.submit(generate_email_safe, clinic, PROMPT, EMAIL_WORD_LIMIT)
+            for clinic in clinics
+        ]
+
+        for future in as_completed(futures):
+            clinic_info, email_text = future.result()
+            parsed = parse_email(email_text)
+            if parsed is None:
+                logger.error(
+                    f"Failed to parse email for {clinic_info['clinic_name']}. Skipping."
+                )
+                continue
+
+            email_body_1 = add_greeting(
+                add_signature(parsed[3]), clinic_info["clinic_name"]
             )
-            continue
+            email_body_2 = add_greeting(
+                add_signature(parsed[4]), clinic_info["clinic_name"]
+            )
+            email_body_3 = add_greeting(
+                add_signature(parsed[5]), clinic_info["clinic_name"]
+            )
 
-        email_body_1 = add_greeting(
-            add_signature(parsed[3]), clinic_name=clinic_info["clinic_name"]
-        )
-        email_body_2 = add_greeting(
-            add_signature(parsed[4]), clinic_name=clinic_info["clinic_name"]
-        )
-        email_body_3 = add_greeting(
-            add_signature(parsed[5]), clinic_name=clinic_info["clinic_name"]
-        )
+            record = {
+                "leads_id": clinic_info["id"],
+                "clinic_name": clinic_info["clinic_name"],
+                "email": clinic_info["email"],
+                "subject_line_1": parsed[0],
+                "email_body_1": email_body_1,
+                "subject_line_2": parsed[1],
+                "email_body_2": email_body_2,
+                "subject_line_3": parsed[2],
+                "email_body_3": email_body_3,
+                "clinic_type": clinic_info.get("clinic_sub_type"),
+                "city": clinic_info.get("city"),
+                "province": clinic_info.get("province"),
+                "campaign_batch": campaign_batch,
+            }
 
-        save_to_sql(
-            conn,
-            clinic_info=clinic_info,
-            subject_line_1=parsed[0],
-            email_body_1=email_body_1,
-            subject_line_2=parsed[1],
-            email_body_2=email_body_2,
-            subject_line_3=parsed[2],
-            email_body_3=email_body_3,
-            campaign_batch=campaign_batch,
-        )
-        set_clinic_status_queued(conn, clinic_info["id"])
+            records_to_insert.append(record)
+            updated_clinic_ids.append(clinic_info["id"])
 
-        if progress_callback:
-            progress_callback()
+            if progress_callback:
+                progress_callback()
+
+            if len(records_to_insert) >= BATCH_SIZE:
+                batch_save_to_supabase(records_to_insert)
+                records_to_insert = []
+
+    if records_to_insert:
+        batch_save_to_supabase(records_to_insert)
+
+    set_clinic_status_queued(updated_clinic_ids)
 
     batch_elapsed = time.perf_counter() - batch_start
     logger.end_batch(
-        f"{campaign_batch}",
+        campaign_batch,
         duration=batch_elapsed,
         avg_per_item=batch_elapsed / max(EMAIL_BATCH_SIZE, 1),
     )
-    conn.close()
+
+    export_to_csv(campaign_batch)
 
 
 if __name__ == "__main__":
