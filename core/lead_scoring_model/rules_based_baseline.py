@@ -1,13 +1,12 @@
-import sqlite3
 import json
-from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict, Any, List
+from datetime import datetime, UTC
 
 from configs.logging_module import Logger
-from configs.path_configs import DB_FILE
-from configs.queries import Queries
+from configs.database import supabase
 
 MODEL_VERSION = "rules_v1"
+BATCH_SIZE = 500
 logger = Logger(log_file="rules_based_baseline.log")
 
 
@@ -29,129 +28,150 @@ def rules_based_score(lead: Dict[str, Any]) -> Dict[str, Any]:
 
     if lead.get("website_desc"):
         score += 20
-        top_features.append(f"Has a website description.")
+        top_features.append("Has a website description.")
 
-    if lead.get("total_reviews") is not None and lead.get("total_reviews", 0) >= 30.0:
+    if lead.get("total_reviews") is not None and lead.get("total_reviews") >= 30:
         score += 10
         top_features.append("Has at least 30 reviews.")
 
-    if lead.get("average_rating") is not None and lead.get("average_rating", 0) >= 4.5:
+    if lead.get("average_rating") is not None and lead.get("average_rating") >= 4.5:
         score += 10
         top_features.append("Has an average rating of at least 4.5.")
 
     subtypes = lead.get("clinic_sub_type")
     if subtypes:
-        subtypes_list = [s.strip().lower() for s in subtypes.split(",")]
+        subs = [s.strip().lower() for s in subtypes.split(",")]
         keywords = ["dental", "physio", "clinic", "spa"]
-        matched_keywords = []
-
-        for keyword in keywords:
-            for subtype in subtypes_list:
-                if keyword in subtype:
-                    matched_keywords.append(keyword.capitalize())
-                    score += 10
-                    break
-
-        if matched_keywords:
-            top_features.append(f"Matched subtypes: {', '.join(matched_keywords)}")
+        matched = [k.capitalize() for k in keywords if any(k in s for s in subs)]
+        if matched:
+            score += 10 * len(matched)
+            top_features.append(f"Matched subtypes: {', '.join(set(matched))}")
 
     score = min(score, 100)
     explanation = f"Rules applied: {', '.join(top_features)}"
-    logger.debug(
-        f"Lead ID {lead.get('id', 'N/A')}: score={score}, features={top_features}"
-    )
-    return {"score": score, "top_features": top_features, "explanation": explanation}
+    logger.debug(f"[Scoring] Lead {lead.get('id')} → score={score}")
+
+    return {
+        "score": score,
+        "top_features": top_features,
+        "explanation": explanation,
+    }
 
 
-def get_connection():
-    return sqlite3.connect(DB_FILE)
-
-
-def ensure_tables(conn):
+def fetch_leads() -> List[Dict[str, Any]]:
+    logger.info("Fetching leads from Supabase...")
     try:
-        cursor = conn.cursor()
-        logger.info("Ensuring lead_scores table exists.")
-        cursor.execute(Queries.create_table_lead_scores())
-        conn.commit()
-        logger.info("lead_scores table verified/created successfully.")
-    except sqlite3.Error as e:
-        logger.error(f"Error creating lead_scores table: {e}")
-        raise
-
-
-def fetch_leads(conn):
-    try:
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute(Queries.fetch_leads())
-        rows = cursor.fetchall()
-        logger.info(f"Fetched {len(rows)} leads from the database.")
-        if rows:
-            logger.debug(f"Lead columns: {rows[0].keys()}")
-        return [dict(row) for row in rows]
-    except sqlite3.Error as e:
-        logger.error(f"Failed to fetch leads: {e}")
+        res = supabase.table("leads").select("*").execute()
+        leads = res.data or []
+        logger.info(f"Fetched {len(leads)} leads.")
+        return leads
+    except Exception as e:
+        logger.critical(f"Failed to fetch leads: {e}")
         return []
 
 
-def already_scored(conn, leads_id: int) -> bool:
-    cursor = conn.cursor()
-    cursor.execute(Queries.already_scored(), (leads_id, MODEL_VERSION))
-    return cursor.fetchone() is not None
+def fetch_already_scored_ids() -> set:
+    logger.info("Fetching already-scored lead IDs...")
+    scored_ids = set()
+    offset = 0
+    limit = 1000
+
+    while True:
+        try:
+            res = (
+                supabase.table("lead_scores")
+                .select("leads_id")
+                .eq("model_version", MODEL_VERSION)
+                .range(offset, offset + limit - 1)
+                .execute()
+            )
+            batch = res.data or []
+            if not batch:
+                break
+            for row in batch:
+                if row.get("leads_id") is not None:
+                    scored_ids.add(row["leads_id"])
+            offset += limit
+        except Exception as e:
+            logger.error(f"Failed while fetching scored IDs: {e}")
+            break
+
+    logger.info(f"Found {len(scored_ids)} already-scored leads.")
+    return scored_ids
 
 
-def insert_score(conn, leads_id: int, score_data: Dict[str, Any]):
+def bulk_insert_scores(payload: List[Dict[str, Any]]) -> int:
+    if not payload:
+        return 0
+
     try:
-        cursor = conn.cursor()
-        logger.info(f"Inserting score for lead ID {leads_id}: {score_data['score']}")
-        cursor.execute(
-            Queries.insert_lead_score(),
-            (
-                leads_id,
-                score_data["score"],
-                json.dumps(score_data["top_features"]),
-                score_data["explanation"],
-                datetime.now(timezone.utc).isoformat(),
-                MODEL_VERSION,
-            ),
-        )
-        conn.commit()
-        logger.info(f"Score inserted successfully for lead ID {leads_id}")
-    except sqlite3.IntegrityError as e:
-        logger.warning(f"Failed to insert score for lead ID {leads_id}: {e}")
-    except sqlite3.Error as e:
-        logger.error(f"Database error on lead ID {leads_id}: {e}")
-        raise
+        supabase.table("lead_scores").insert(payload).execute()
+        return len(payload)
+    except Exception as e:
+        logger.error(f"Bulk insert failed for batch size {len(payload)}: {e}")
+        return 0
 
 
 def run_rules_baseline():
-    logger.info("Starting rules-based baseline scoring")
-    conn = get_connection()
-    ensure_tables(conn)
-    leads = fetch_leads(conn)
-    scored, skipped = 0, 0
-    logger.info("Starting rules-based scoring loop.")
+    start_time = datetime.now(UTC)
+    logger.info("========== RULES BASELINE STARTED ==========")
+    logger.info(f"Model version: {MODEL_VERSION}")
+
+    leads = fetch_leads()
+    already_scored_ids = fetch_already_scored_ids()
+
+    scored = skipped = failed = 0
+    batch = []
 
     for lead in leads:
         lead_id = lead.get("id")
-        logger.debug(f"Processing lead ID: {lead_id}")
 
-        if already_scored(conn, lead_id):
-            skipped += 1
-            logger.debug(f"Lead ID {lead_id} already scored, skipping.")
+        if not lead_id:
+            failed += 1
+            logger.warning("Skipped lead with missing ID.")
             continue
 
-        score_data = rules_based_score(lead)
-        insert_score(conn, lead_id, score_data)
-        scored += 1
+        if lead_id in already_scored_ids:
+            skipped += 1
+            continue
 
-    conn.close()
-    logger.info(
-        f"Rules baseline complete | scored={scored}, skipped={skipped}, model={MODEL_VERSION}"
-    )
-    print(
-        f"Rules baseline complete | scored={scored}, skipped={skipped}, model={MODEL_VERSION}"
-    )
+        try:
+            score_data = rules_based_score(lead)
+            batch.append(
+                {
+                    "leads_id": lead_id,
+                    "score": score_data["score"],
+                    "top_features": json.dumps(score_data["top_features"]),
+                    "explanation": score_data["explanation"],
+                    "model_version": MODEL_VERSION,
+                }
+            )
+
+            if len(batch) >= BATCH_SIZE:
+                inserted = bulk_insert_scores(batch)
+                scored += inserted
+                batch.clear()
+
+        except Exception as e:
+            failed += 1
+            logger.exception(f"Scoring crash on lead {lead_id}: {e}")
+
+    if batch:
+        inserted = bulk_insert_scores(batch)
+        scored += inserted
+
+    elapsed = (datetime.utcnow() - start_time).total_seconds()
+
+    logger.info("========== RULES BASELINE FINISHED ==========")
+    logger.info(f"Scored: {scored}")
+    logger.info(f"Skipped: {skipped}")
+    logger.info(f"Failed: {failed}")
+    logger.info(f"Runtime: {elapsed:.2f}s")
+    logger.info(f"Model: {MODEL_VERSION}")
+
+    # print(
+    #     f"Rules baseline complete | scored={scored}, skipped={skipped}, failed={failed}, time={elapsed:.2f}s"
+    # )
 
 
 if __name__ == "__main__":

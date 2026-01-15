@@ -1,89 +1,73 @@
 import pandas as pd
-import sqlite3
 import re
 from urllib.parse import urlparse
-from fastapi import UploadFile
-from io import BytesIO, StringIO
+from datetime import datetime, UTC
 
-from configs.queries import Queries
 from configs.logging_module import Logger
-from configs.path_configs import DB_FILE
 from configs.types import ClinicStatus
+from configs.database import supabase
 
 logger = Logger(log_file="lead_data_pipeline.log")
 
+BATCH_SIZE = 500
+EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w+$")
+NON_DIGITS = re.compile(r"\D")
+CLINIC_SPLIT_REGEX = re.compile(r"[@#|-]")
 
-def get_primary_email(email1: str, email2: str):
-    EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
 
-    for email in [email1, email2]:
-        if not isinstance(email, str):
-            continue
+# ---------- Cleaners ----------
 
-        email_clean = email.strip().lower()
 
-        if re.match(EMAIL_REGEX, email_clean):
-            return email_clean
-        else:
-            logger.warning(f"Dropping invalid email: {email_clean}")
-
+def get_primary_email(email1, email2):
+    for email in (email1, email2):
+        if isinstance(email, str):
+            e = email.strip().lower()
+            if EMAIL_REGEX.match(e):
+                return e
+            else:
+                logger.warning(f"Dropping invalid email: {e}")
     return None
 
 
-def clean_text(text: str):
+def clean_text(text):
+    return text.strip() if isinstance(text, str) else None
+
+
+def clean_clinic_name(text):
     if not isinstance(text, str):
         return None
-
-    return text.strip()
-
-
-def clean_clinic_name(text: str):
-    if not isinstance(text, str):
-        return None
-
-    regex_chars = r"[@#|-]"
-    return re.split(regex_chars, text)[0].strip()
+    return CLINIC_SPLIT_REGEX.split(text)[0].strip()
 
 
-def clean_phone(phone: str):
+def clean_phone(phone):
     if not isinstance(phone, str):
         return None
-
-    digits = re.sub(r"\D", "", phone)
-
+    digits = NON_DIGITS.sub("", phone)
     if len(digits) == 11 and digits.startswith("1"):
         digits = digits[1:]
-
     if len(digits) != 10:
         logger.warning(f"Dropping invalid phone: {phone}")
         return None
-
     return digits
 
 
-def clean_website(site: str):
+def clean_website(site):
     if not isinstance(site, str) or not site.strip():
         return None
-
     site = site.strip()
     parsed = urlparse(site)
-
-    if parsed.scheme in ["http", "https"] and parsed.netloc:
+    if parsed.scheme in ("http", "https") and parsed.netloc:
         return site
-
     if "." in site and " " not in site:
         return site
-
     logger.warning(f"Invalid website URL: {site}")
     return None
 
 
-def normalize_province(p: str):
+def normalize_province(p):
     if not isinstance(p, str):
         return None
-
     p = p.strip().upper()
-
     lookup = {
         "ON": "ON",
         "ONTARIO": "ON",
@@ -118,39 +102,67 @@ def normalize_province(p: str):
         "NU": "NU",
         "NUNAVUT": "NU",
     }
-
     return lookup.get(p, p)
 
 
-def save_to_sqlite(df: pd.DataFrame):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-
-    cursor.execute(Queries.create_table_leads())
-    cursor.execute(Queries.create_table_lead_scores())
-    cursor.execute(Queries.create_smartlead_table())
-    df.to_sql("leads", conn, if_exists="append", index=False)
-
-    conn.commit()
-    conn.close()
-    logger.info("Leads, lead_scores, and smartlead tables are ensured to exist.")
+# ---------- Supabase ----------
 
 
-def run_pipeline(file: UploadFile):
-    logger.info("Pipeline started.")
-    # print("Pipeline started.")
+def sanitize_record(record: dict) -> dict:
+    clean = {}
+    for k, v in record.items():
+        if pd.isna(v):
+            clean[k] = None
+        else:
+            clean[k] = (
+                int(v)
+                if isinstance(v, (pd.Int64Dtype, int)) and "reviews" in k
+                else float(v)
+                if isinstance(v, (float, pd.Float64Dtype))
+                else v
+            )
+    return clean
 
-    file.file.seek(0)
-    contents = file.file.read()
-    try:
-        df = pd.read_csv(BytesIO(contents))
-    except Exception:
-        df = pd.read_csv(StringIO(contents.decode("utf-8")))
 
-    logger.info(f"Loaded {len(df)} rows from uploaded CSV")
+def save_to_supabase(df: pd.DataFrame):
+    logger.info("Saving rows to Supabase...")
+    start = datetime.now(UTC)
 
-    # Map raw CSV columns to DB columns
-    logger.info("Renaming columns to match DB schema.")
+    records = df.to_dict(orient="records")
+    total = len(records)
+    inserted = 0
+
+    for i in range(0, total, BATCH_SIZE):
+        batch = [sanitize_record(r) for r in records[i : i + BATCH_SIZE]]
+        try:
+            supabase.table("leads").insert(batch).execute()
+            inserted += len(batch)
+            logger.info(f"Inserted {inserted}/{total} rows...")
+        except Exception as e:
+            logger.error(f"Batch insert failed at {i}-{i+len(batch)}: {e}")
+
+    elapsed = (datetime.now(UTC) - start).total_seconds()
+    rate = inserted / elapsed if elapsed else 0
+    logger.info(
+        f"Supabase insert finished | rows={inserted} | time={elapsed:.2f}s | rate={rate:.1f}/s"
+    )
+
+
+# ---------- Pipeline ----------
+
+
+def run_pipeline(file_path: str):
+    pipeline_start = datetime.now(UTC)
+    logger.info("========== PIPELINE STARTED ==========")
+
+    # ---- Load ----
+    t0 = datetime.now(UTC)
+    df = pd.read_csv(file_path)
+    logger.info(
+        f"Loaded {len(df)} rows | time={(datetime.now(UTC)-t0).total_seconds():.2f}s"
+    )
+
+    # ---- Normalize columns ----
     df = df.rename(
         columns={
             "business_name": "clinic_name",
@@ -162,77 +174,61 @@ def run_pipeline(file: UploadFile):
         }
     )
 
-    required_columns = [
+    required = [
         "clinic_name",
         "clinic_main_type",
         "clinic_sub_type",
         "city",
         "province",
         "phone",
-        "email",
+        "email_1",
+        "email_2",
         "website_url",
         "website_desc",
         "total_reviews",
         "average_rating",
     ]
-
-    for col in required_columns:
+    for col in required:
         if col not in df.columns:
             df[col] = None
-            logger.info(f"Added missing column '{col}' with default None")
+            logger.info(f"Added missing column '{col}'")
 
-    # Clean & map
-    logger.info("Cleaning text fields and normalizing data.")
+    # ---- Cleaning ----
+    t0 = datetime.now(UTC)
+
     for col in ["clinic_main_type", "clinic_sub_type", "city"]:
-        df[col] = df[col].apply(clean_text)
-        logger.info(f"Cleaned column '{col}'")
+        df[col] = df[col].map(clean_text)
 
-    df["clinic_name"] = df["clinic_name"].apply(clean_clinic_name)
-    logger.info("Cleaned 'clinic_name' column.")
+    df["clinic_name"] = df["clinic_name"].map(clean_clinic_name)
+    df["province"] = df["province"].map(normalize_province)
+    df["phone"] = df["phone"].map(clean_phone)
+    df["website_url"] = df["website_url"].map(clean_website)
 
-    df["province"] = df["province"].apply(normalize_province)
-    logger.info("Normalized 'province' column.")
+    df["email"] = [
+        get_primary_email(e1, e2)
+        for e1, e2 in zip(df.get("email_1", []), df.get("email_2", []))
+    ]
 
-    df["phone"] = df["phone"].apply(clean_phone)
-    logger.info("Cleaned 'phone' column.")
-
-    df["website_url"] = df["website_url"].apply(clean_website)
-    logger.info("Cleaned 'website_url' column.")
-
-    df["email"] = df.apply(
-        lambda row: get_primary_email(row.get("email_1"), row.get("email_2")), axis=1
+    # ---- Fix numeric types ----
+    df["total_reviews"] = (
+        pd.to_numeric(df["total_reviews"], errors="coerce").dropna().astype("Int64")
     )
-    logger.info("Mapped primary email for each row.")
-
-    df["total_reviews"] = pd.to_numeric(df["total_reviews"], errors="coerce")
     df["average_rating"] = pd.to_numeric(df["average_rating"], errors="coerce")
-    logger.info("Converted 'total_reviews' and 'average_rating' to numeric.")
 
-    # Deduplicate
-    before = len(df)
-    df = df.drop_duplicates(subset=["clinic_name", "city"], keep="first")
     logger.info(
-        f"Dropped {before - len(df)} duplicate rows based on ['clinic_name', 'city']."
+        f"Cleaning completed | time={(datetime.now(UTC)-t0).total_seconds():.2f}s"
     )
 
+    # ---- Deduping ----
+    t0 = datetime.now(UTC)
     before = len(df)
-    df = df[df["phone"].isna() | ~df.duplicated(subset=["phone"], keep="first")]
-    logger.info(f"Dropped {before - len(df)} duplicate rows based on 'phone'.")
+    df = df.drop_duplicates(subset=["clinic_name", "city"])
+    df = df.dropna(subset=["clinic_name", "email"])
+    logger.info(
+        f"Dedup/filter removed {before - len(df)} rows | time={(datetime.now(UTC)-t0).total_seconds():.2f}s"
+    )
 
-    before = len(df)
-    df = df[df["email"].isna() | ~df.duplicated(subset=["email"], keep="first")]
-    logger.info(f"Dropped {before - len(df)} duplicate rows based on 'email'.")
-
-    # Drop missing essential fields
-    before = len(df)
-    df = df.dropna(subset=["clinic_name"])
-    logger.info(f"Dropped {before - len(df)} rows missing 'clinic_name'.")
-
-    before = len(df)
-    df = df.dropna(subset=["email"])
-    logger.info(f"Dropped {before - len(df)} rows missing 'email'.")
-
-    # Reorder for SQLite
+    # ---- Final prep ----
     df = df[
         [
             "clinic_name",
@@ -248,22 +244,18 @@ def run_pipeline(file: UploadFile):
             "average_rating",
         ]
     ]
-    logger.info("Reordered columns for SQLite.")
-
-    # Convert NaN to None for SQLite
     df = df.where(pd.notnull(df), None)
-    logger.info("Converted NaN values to None for SQLite.")
-
-    # Set status to Not Queued
     df["email_status"] = ClinicStatus.NOT_GENERATED.value
 
-    # Save
-    save_to_sqlite(df)
-    logger.info(f"Saved {len(df)} rows to SQLite.")
+    # ---- Save ----
+    save_to_supabase(df)
 
-    logger.info("Pipeline completed successfully.")
-    # print("Pipeline completed successfully.")
+    total_time = (datetime.now(UTC) - pipeline_start).total_seconds()
+    logger.info(
+        f"========== PIPELINE FINISHED | total_time={total_time:.2f}s | rows={len(df)} =========="
+    )
 
 
 if __name__ == "__main__":
-    run_pipeline()
+    CSV_PATH = "/Users/isaie/Projects/Lyyvora-outreach-core-service/datasets/real_set_v1/real_records.csv"
+    run_pipeline(CSV_PATH)
