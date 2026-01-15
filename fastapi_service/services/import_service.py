@@ -1,8 +1,8 @@
 import sqlite3
 from fastapi import UploadFile, HTTPException
 
-from shared.configs import DB_FILE
-from shared.queries import Queries
+from configs.path_configs import DB_FILE
+from configs.queries import Queries
 
 from core.lead_data_pipeline.lead_data_pipeline import run_pipeline
 from core.lead_scoring_model.rules_based_baseline import run_rules_baseline

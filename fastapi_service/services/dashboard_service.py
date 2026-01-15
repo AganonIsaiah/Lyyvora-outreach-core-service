@@ -10,10 +10,10 @@ from ..models.dashboard_models import (
     DashboardResponse,
     DashboardRequest,
 )
-from shared.configs import DB_FILE
-from shared.prompt_templates import prompt
-from shared.types import ClinicStatus
-from shared.queries import Queries
+from configs.path_configs import DB_FILE
+from configs.prompt_templates import prompt
+from configs.types import ClinicStatus
+from configs.queries import Queries
 
 STATUS_PRIORITY = {
     ClinicStatus.GENERATED: 2,

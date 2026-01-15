@@ -1,4 +1,4 @@
-from shared.types import ClinicStatus
+from configs.types import ClinicStatus
 
 
 class Queries:

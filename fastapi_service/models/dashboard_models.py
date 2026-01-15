@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Optional, Dict
 from datetime import date
 from pydantic import BaseModel
-from shared.types import ClinicStatus
+from configs.types import ClinicStatus
 
 FilterType = str
 EmailType = str

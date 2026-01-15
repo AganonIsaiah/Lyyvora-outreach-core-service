@@ -2,7 +2,7 @@ import pandas as pd
 from fastapi import UploadFile
 from core.lead_data_pipeline.lead_data_pipeline import run_pipeline
 from core.lead_scoring_model.rules_based_baseline import run_rules_baseline
-from shared.logging_module import Logger
+from configs.logging_module import Logger
 
 logger = Logger(log_file="append_service.log")
 

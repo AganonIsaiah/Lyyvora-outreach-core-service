@@ -5,10 +5,10 @@ from urllib.parse import urlparse
 from fastapi import UploadFile
 from io import BytesIO, StringIO
 
-from shared.queries import Queries
-from shared.logging_module import Logger
-from shared.configs import DB_FILE
-from shared.types import ClinicStatus
+from configs.queries import Queries
+from configs.logging_module import Logger
+from configs.path_configs import DB_FILE
+from configs.types import ClinicStatus
 
 logger = Logger(log_file="lead_data_pipeline.log")
 

@@ -6,11 +6,11 @@ import time
 import csv
 import re
 
-from shared.queries import Queries
-from shared.logging_module import Logger
-from shared.configs import DB_FILE, SMARTLEAD_CSV_OUTPUT_FILE
-from shared.types import ClinicStatus
-from shared.prompt_templates import prompt
+from configs.queries import Queries
+from configs.logging_module import Logger
+from configs.path_configs import DB_FILE, SMARTLEAD_CSV_OUTPUT_FILE
+from configs.types import ClinicStatus
+from configs.prompt_templates import prompt
 
 OLLAMA_MODEL = "deepseek-v3.1:671b-cloud"
 

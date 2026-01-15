@@ -23,8 +23,8 @@ from .services.import_service import process_uploaded_csv, drop_all_tables
 from .services.ws_manager import manager
 from .services.outreach_service import run_outreach_job
 from .services.append_service import append_csv_to_leads
-from shared.configs import DB_FILE
-from shared.queries import Queries
+from configs.path_configs import DB_FILE
+from configs.queries import Queries
 
 app = FastAPI(title="Lyyvora Outreach API")
 

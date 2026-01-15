@@ -1,7 +1,7 @@
 import logging
 import os
 
-from shared.configs import PROJECT_ROOT
+from configs.path_configs import PROJECT_ROOT
 
 
 class Logger:
