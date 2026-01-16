@@ -291,7 +291,7 @@ def run_email_generation(
         avg_per_item=batch_elapsed / max(EMAIL_BATCH_SIZE, 1),
     )
 
-    export_to_csv(campaign_batch)
+    # export_to_csv(campaign_batch)
 
 
 if __name__ == "__main__":

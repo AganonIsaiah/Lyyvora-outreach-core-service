@@ -183,7 +183,7 @@ async def import_csv(file: UploadFile = File(...)):
 
 @app.get("/dashboard", response_model=DashboardResponse)
 def get_dashboard(
-    limit: int = Query(1, ge=1, le=100),
+    limit: int = Query(25, ge=1, le=100),
     page: int = Query(1, ge=1),
     name: Optional[List[str]] = Query(None),
     sub_type: Optional[List[str]] = Query(None),
@@ -208,21 +208,8 @@ def get_dashboard(
         sort_by=sort_by,
         sort_order=sort_order,
     )
-
     try:
         return generate_dashboard(req)
-    except sqlite3.Error:
-        print("SQLite error:", e)
-
-        return DashboardResponse(
-            clinics_data=[],
-            filters=[],
-            campaign_status={},
-            metrics=[],
-            show_export=False,
-            total_clinics=0,
-            filtered_clinics_count=0,
-            not_generated_emails_count=0,
-        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Include type info for debugging
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")
