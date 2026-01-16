@@ -7,8 +7,14 @@ import ImportCard from "./components/csv_buttons/ImportCard";
 import Header from "./components/Header";
 import DropTableCard from "./components/csv_buttons/DropTablesCard";
 import { DashboardProvider } from "@/context/DashboardContext";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function Dashboard() {
+export default async function Dashboard() {
+
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
   return (
     <DashboardProvider>
       <div className="overflow-auto text-sm w-full flex flex-col min-h-screen">

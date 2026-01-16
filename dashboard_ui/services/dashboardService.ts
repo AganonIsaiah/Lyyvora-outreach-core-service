@@ -33,7 +33,9 @@ export const dashboardService = {
         filters.email_status.forEach((v) => params.append("email_status", v));
 
       if (filters.campaign_batch?.length)
-        filters.campaign_batch.forEach((v) => params.append("campaign_batch", v));
+        filters.campaign_batch.forEach((v) =>
+          params.append("campaign_batch", v)
+        );
 
       if (filters.lead_score?.length) {
         params.append("sort_by", "lead_score");
@@ -46,7 +48,15 @@ export const dashboardService = {
       }
     }
 
-    const res = await fetch(`${BASE_URL}/dashboard?${params.toString()}`);
+    const res = await fetch(`${BASE_URL}/dashboard?${params.toString()}`, {
+      credentials: "include", 
+    });
+
+    if (res.status === 401) {
+      if (typeof window !== "undefined") window.location.href = "/login";
+      return Promise.reject(new Error("Not authenticated"));
+    }
+    
     if (!res.ok) {
       return {
         clinics_data: [],
@@ -56,7 +66,7 @@ export const dashboardService = {
         show_export: false,
         total_clinics: 0,
         filtered_clinics_count: 0,
-        not_generated_emails_count: 0
+        not_generated_emails_count: 0,
       };
     }
 
@@ -70,7 +80,7 @@ export const dashboardService = {
       show_export: data.show_export ?? false,
       total_clinics: data.total_clinics ?? 0,
       filtered_clinics_count: data.filtered_clinics_count ?? 0,
-      not_generated_emails_count: data.not_generated_emails_count ?? 0
+      not_generated_emails_count: data.not_generated_emails_count ?? 0,
     };
   },
 };

@@ -9,6 +9,8 @@ from fastapi import (
     HTTPException,
     Body,
     Depends,
+    Cookie,
+    Response,
 )
 from fastapi.security import (
     OAuth2PasswordRequestForm,
@@ -47,12 +49,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-security = HTTPBearer()
 
-
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    payload = decode_access_token(token)
+def get_current_user(access_token: str = Cookie(None)):
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Missing access token")
+    payload = decode_access_token(access_token)
     if not payload or "sub" not in payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     return payload["sub"]
@@ -64,11 +65,22 @@ def home():
 
 
 @app.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends()):
+def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
     if not authenticate_user(form_data.username, form_data.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
     token = create_access_token({"sub": form_data.username})
-    return {"access_token": token, "token_type": "bearer"}
+
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        secure=True,
+        max_age=60 * 60,
+    )
+
+    return {"message": "Login successful"}
 
 
 @app.get("/clinics/{clinic_id}")

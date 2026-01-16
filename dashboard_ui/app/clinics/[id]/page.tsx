@@ -1,21 +1,22 @@
-"use client";
-
 import ClinicDetailUI from "./components/ClinicDetailUI";
 import { DashboardProvider } from "@/context/DashboardContext";
-import { useParams } from "next/navigation";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 
-function ClinicDetailInner() {
-  const { id } = useParams();
-
-  if (!id || Array.isArray(id)) return <div>Invalid clinic ID</div>;
-
-  return <ClinicDetailUI clinicId={id} />;
+interface ClinicDetailPageProps {
+  params: { id: string | string[] };
 }
 
-export default function ClinicDetailPage() {
+export default async function ClinicDetailPage({ params }: ClinicDetailPageProps) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  const id = params.id;
+  if (!id || Array.isArray(id)) return <div>Invalid clinic ID</div>;
+
   return (
     <DashboardProvider>
-      <ClinicDetailInner />
+      <ClinicDetailUI clinicId={id} />
     </DashboardProvider>
   );
 }
