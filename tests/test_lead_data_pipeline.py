@@ -1,22 +1,20 @@
-from core.lead_data_pipeline.lead_data_pipeline import (
-    clean_text,
-    clean_phone,
-    get_primary_email,
-    clean_website,
-    normalize_province,
-)
+from unittest.mock import MagicMock, patch
+
+mock_client = MagicMock()
+mock_table = MagicMock()
+mock_client.table.return_value = mock_table
+mock_table.insert.return_value.execute.return_value = None
+
+with patch("configs.database.supabase", mock_client):
+    from core.lead_data_pipeline.lead_data_pipeline import (
+        clean_text,
+        clean_phone,
+        get_primary_email,
+        clean_website,
+        normalize_province,
+    )
 
 import pytest
-from unittest.mock import MagicMock
-
-
-@pytest.fixture(autouse=True)
-def mock_supabase(monkeypatch):
-    mock_client = MagicMock()
-    mock_table = MagicMock()
-    mock_client.table.return_value = mock_table
-    mock_table.insert.return_value.execute.return_value = None
-    monkeypatch.setattr("configs.database.supabase", mock_client)
 
 
 def test_clean_text_basic():
