@@ -8,16 +8,9 @@ logger = Logger(log_file="append_service.log")
 
 
 def append_csv_to_leads(file: UploadFile):
-    logger.info("Append service started.")
-
     try:
-        logger.info("Running lead data pipeline.")
         run_pipeline(file)
-        logger.info("Lead data pipeline completed successfully.")
-
-        logger.info("Running rules-based baseline scoring.")
         run_rules_baseline()
-        logger.info("Rules-based baseline completed successfully.")
 
         return {
             "status": "success",

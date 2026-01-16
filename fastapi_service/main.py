@@ -14,17 +14,16 @@ from fastapi.responses import StreamingResponse
 from typing import List, Optional, Dict, Any
 import uuid
 import csv
-import sqlite3
 from io import StringIO
 
 from .models.dashboard_models import DashboardRequest, DashboardResponse
 from .services.dashboard_service import generate_dashboard
-from .services.import_service import process_uploaded_csv, drop_all_tables
+from .services.import_service import process_uploaded_csv, drop_all_tables_supabase
 from .services.ws_manager import manager
 from .services.outreach_service import run_outreach_job
 from .services.append_service import append_csv_to_leads
-from configs.path_configs import DB_FILE
-from configs.queries import Queries
+from .services.clinic_service import get_clinic_by_id
+from configs.database import supabase
 
 app = FastAPI(title="Lyyvora Outreach API")
 
@@ -44,54 +43,7 @@ def home():
 
 @app.get("/clinics/{clinic_id}")
 def get_clinic(clinic_id: int) -> Dict[str, Any]:
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-
-    sql, params = Queries.get_clinic_with_score(clinic_id)
-    cursor.execute(sql, params)
-    row = cursor.fetchone()
-
-    if not row:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Clinic not found")
-
-    clinic = dict(row)
-
-    sql, params = Queries.get_smartlead_for_clinic(clinic_id)
-    cursor.execute(sql, params)
-    smartlead_row = cursor.fetchone()
-    conn.close()
-
-    if smartlead_row:
-        clinic["emails_for_outreach"] = [
-            {
-                "type": f"Email {i+1}",
-                "subject_line": smartlead_row[f"subject_line_{i+1}"],
-                "email_body": smartlead_row[f"email_body_{i+1}"],
-            }
-            for i in range(3)
-        ]
-    else:
-        clinic["emails_for_outreach"] = []
-
-    if isinstance(clinic.get("clinic_sub_type"), str):
-        clinic["type"] = [s.strip() for s in clinic["clinic_sub_type"].split(",")]
-    else:
-        clinic["type"] = []
-
-    clinic.setdefault("name", clinic.get("clinic_name") or "Clinic Name")
-    clinic.setdefault("lead_score", clinic.get("lead_score") or 0)
-    clinic.setdefault("notes", clinic.get("website_desc") or "N/A")
-    clinic.setdefault("email", clinic.get("email") or "N/A")
-    clinic.setdefault("website_url", clinic.get("website_url") or "N/A")
-    clinic.setdefault("city", clinic.get("city") or "N/A")
-    clinic.setdefault("province", clinic.get("province") or "N/A")
-    clinic.setdefault("total_reviews", clinic.get("total_reviews") or "N/A")
-    clinic.setdefault("average_rating", clinic.get("average_rating") or "N/A")
-    clinic.setdefault("email_status", clinic.get("email_status") or "N/A")
-
-    return clinic
+    return get_clinic_by_id(clinic_id)
 
 
 @app.post("/append-leads")
@@ -105,46 +57,63 @@ async def append_leads(file: UploadFile = File(...)):
 
 @app.get("/export-smartlead-csv")
 def export_smartlead_csv(campaign_batch: Optional[str] = Query(None)):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+    columns = [
+        "clinic_name",
+        "email",
+        "subject_line_1",
+        "email_body_1",
+        "subject_line_2",
+        "email_body_2",
+        "subject_line_3",
+        "email_body_3",
+        "clinic_type",
+        "city",
+        "province",
+    ]
+
     try:
-        sql, params = Queries.select_smartlead_by_campaign(campaign_batch)
-        cursor.execute(sql, params)
-        rows = cursor.fetchall()
+        query = supabase.table("smartlead").select(",".join(columns))
+        if campaign_batch:
+            query = query.eq("campaign_batch", campaign_batch)
 
-        header = [
-            "clinic_name",
-            "email",
-            "subject_line_1",
-            "email_body_1",
-            "subject_line_2",
-            "email_body_2",
-            "subject_line_3",
-            "email_body_3",
-            "clinic_type",
-            "city",
-            "province",
-        ]
+        resp = query.execute()
 
-        output = StringIO()
-        writer = csv.writer(output)
-        writer.writerow(header)
-        writer.writerows(rows)
-        output.seek(0)
+        if isinstance(resp.data, dict) and "code" in resp.data:
+            raise HTTPException(
+                status_code=500,
+                detail=resp.data.get("message", "Unknown Supabase error"),
+            )
+
+        rows = resp.data
+
+        def row_generator(rows, header):
+            output = StringIO()
+            writer = csv.DictWriter(output, fieldnames=header)
+            writer.writeheader()
+            yield output.getvalue()
+            output.seek(0)
+            output.truncate(0)
+
+            for row in rows:
+                writer.writerow({k: row.get(k, "") for k in header})
+                yield output.getvalue()
+                output.seek(0)
+                output.truncate(0)
 
         return StreamingResponse(
-            output,
+            row_generator(rows, columns),
             media_type="text/csv",
             headers={"Content-Disposition": "attachment; filename=smartlead_ready.csv"},
         )
-    finally:
-        conn.close()
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/drop-tables")
 def drop_tables():
     try:
-        drop_all_tables()
+        drop_all_tables_supabase()
         return {"status": "success", "message": "All tables dropped successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -209,7 +178,11 @@ def get_dashboard(
         sort_order=sort_order,
     )
     try:
-        return generate_dashboard(req)
+        result = generate_dashboard(req)
+        return result
     except Exception as e:
-        # Include type info for debugging
+        import traceback
+
+        print("Full error traceback:")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")

@@ -1,32 +1,20 @@
-import sqlite3
 from fastapi import UploadFile, HTTPException
-
-from configs.path_configs import DB_FILE
-from configs.queries import Queries
-
+from configs.database import supabase
 from core.lead_data_pipeline.lead_data_pipeline import run_pipeline
 from core.lead_scoring_model.rules_based_baseline import run_rules_baseline
 
+TABLES_TO_TRUNCATE = ["lead_scores", "smartlead", "leads"]
 
-def drop_all_tables():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    try:
-        cursor.execute(Queries.create_table_leads())
-        cursor.execute(Queries.create_table_lead_scores())
-        cursor.execute(Queries.create_smartlead_table())
 
-        for table in ["lead_scores", "leads", "smartlead"]:
-            cursor.execute(Queries.delete_all_from_table(table))
-            cursor.execute(Queries.reset_autoincrement(table))
+def drop_all_tables_supabase():
+    for table in TABLES_TO_TRUNCATE:
+        try:
+            resp = supabase.table(table).delete().neq("id", 0).execute()
+            print(f"Cleared table: {table}")
+        except Exception as e:
+            raise Exception(f"Error clearing {table}: {str(e)}")
 
-        conn.commit()
-        print("All tables dropped successfully.")
-    except sqlite3.Error as e:
-        print(f"Error dropping tables: {e}")
-        raise
-    finally:
-        conn.close()
+    print("All tables cleared successfully.")
 
 
 def process_uploaded_csv(file: UploadFile) -> dict:
@@ -34,8 +22,10 @@ def process_uploaded_csv(file: UploadFile) -> dict:
         raise HTTPException(status_code=400, detail="Only CSV files are supported.")
 
     try:
+        drop_all_tables_supabase()
+
         file.file.seek(0)
-        drop_all_tables()
+
         run_pipeline(file)
         run_rules_baseline()
 
