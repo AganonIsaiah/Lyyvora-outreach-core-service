@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import time
 import csv
 import re
+import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from configs.logging_module import Logger
@@ -31,7 +32,7 @@ client = Client(
 )
 
 BATCH_SIZE = 50
-MAX_WORKERS = 5
+MAX_WORKERS = 5  # keep 3-5 to avoid 429s
 
 
 def generate_email(
@@ -39,7 +40,6 @@ def generate_email(
 ) -> str:
     clinic_name = clinic_info.get("clinic_name", "N/A")
     start_time = time.perf_counter()
-
     messages = [
         {
             "role": "user",
@@ -49,11 +49,28 @@ def generate_email(
         }
     ]
 
-    try:
-        response = client.chat(OLLAMA_MODEL, messages=messages)
-        email_text = response.message.content
-    except Exception as e:
-        logger.error(f"Ollama API error for {clinic_name}: {e}")
+    retry_count = 3
+    for attempt in range(1, retry_count + 1):
+        try:
+            response = client.chat(OLLAMA_MODEL, messages=messages)
+            email_text = response.message.content
+            if email_text:
+                break
+        except Exception as e:
+            if "429" in str(e):
+                wait_time = 1 + random.random()
+                logger.warning(
+                    f"429 rate limit for {clinic_name}, retrying in {wait_time:.2f}s (attempt {attempt}/{retry_count})"
+                )
+                time.sleep(wait_time)
+            else:
+                logger.error(f"Ollama API error for {clinic_name}: {e}")
+                email_text = ""
+                break
+    else:
+        logger.error(
+            f"Failed to generate email for {clinic_name} after {retry_count} attempts"
+        )
         email_text = ""
 
     elapsed = time.perf_counter() - start_time
@@ -168,7 +185,7 @@ def run_email_generation(
     EMAIL_BATCH_SIZE: int = 10,
     PROMPT: str | None = None,
     EMAIL_WORD_LIMIT: int = 120,
-    MAX_WORKERS: int | None = 10,
+    MAX_WORKERS: int | None = 5,
     progress_callback=None,
 ):
     if EMAIL_BATCH_SIZE < 1:
@@ -198,14 +215,28 @@ def run_email_generation(
     updated_clinic_ids = []
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = [
-            executor.submit(generate_email_safe, clinic, PROMPT, EMAIL_WORD_LIMIT)
-            for clinic in clinics
-        ]
+        futures = []
+        for clinic in clinics:
+            # small randomized delay between submissions to reduce 429s
+            time.sleep(random.uniform(0.1, 0.3))
+            futures.append(
+                executor.submit(generate_email_safe, clinic, PROMPT, EMAIL_WORD_LIMIT)
+            )
 
         for future in as_completed(futures):
             clinic_info, email_text = future.result()
+
+            # retry parsing once if empty
             parsed = parse_email(email_text)
+            if parsed is None:
+                logger.warning(
+                    f"Parsing failed for {clinic_info['clinic_name']}, retrying once..."
+                )
+                _, email_text = generate_email_safe(
+                    clinic_info, PROMPT, EMAIL_WORD_LIMIT
+                )
+                parsed = parse_email(email_text)
+
             if parsed is None:
                 logger.error(
                     f"Failed to parse email for {clinic_info['clinic_name']}. Skipping."
