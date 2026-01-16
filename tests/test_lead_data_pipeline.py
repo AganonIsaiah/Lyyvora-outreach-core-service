@@ -14,8 +14,6 @@ with patch("configs.database.supabase", mock_client):
         normalize_province,
     )
 
-import pytest
-
 
 def test_clean_text_basic():
     assert clean_text("  hello world  ") == "hello world"
