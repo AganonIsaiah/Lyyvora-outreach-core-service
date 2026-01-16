@@ -8,7 +8,6 @@ import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from configs.logging_module import Logger
-from configs.path_configs import SMARTLEAD_CSV_OUTPUT_FILE
 from configs.types import ClinicStatus
 from configs.prompt_templates import prompt
 from configs.database import supabase
@@ -120,48 +119,6 @@ def batch_save_to_supabase(records: list[dict]):
         logger.error(f"Supabase batch insert failed: {e}")
 
 
-def export_to_csv(campaign_batch: str):
-    try:
-        rows = (
-            supabase.table("smartlead")
-            .select("*")
-            .eq("campaign_batch", campaign_batch)
-            .execute()
-            .data
-        )
-        if not rows:
-            logger.warning(f"No records found for campaign {campaign_batch}")
-            return
-
-        os.makedirs(SMARTLEAD_CSV_OUTPUT_FILE, exist_ok=True)
-        filename = os.path.join(SMARTLEAD_CSV_OUTPUT_FILE, f"{campaign_batch}.csv")
-
-        headers = [
-            "clinic_name",
-            "email",
-            "subject_line_1",
-            "email_body_1",
-            "subject_line_2",
-            "email_body_2",
-            "subject_line_3",
-            "email_body_3",
-            "clinic_type",
-            "city",
-            "province",
-        ]
-
-        with open(filename, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=headers)
-            writer.writeheader()
-            for row in rows:
-                writer.writerow({k: row.get(k) for k in headers})
-
-        logger.info(f"Exported {len(rows)} rows to {filename}")
-
-    except Exception as e:
-        logger.error(f"Failed to export CSV for {campaign_batch}: {e}")
-
-
 def set_clinic_status_queued(clinic_ids: list[int]):
     if not clinic_ids:
         return
@@ -217,7 +174,6 @@ def run_email_generation(
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = []
         for clinic in clinics:
-            # small randomized delay between submissions to reduce 429s
             time.sleep(random.uniform(0.1, 0.3))
             futures.append(
                 executor.submit(generate_email_safe, clinic, PROMPT, EMAIL_WORD_LIMIT)
@@ -226,7 +182,6 @@ def run_email_generation(
         for future in as_completed(futures):
             clinic_info, email_text = future.result()
 
-            # retry parsing once if empty
             parsed = parse_email(email_text)
             if parsed is None:
                 logger.warning(
@@ -290,8 +245,6 @@ def run_email_generation(
         duration=batch_elapsed,
         avg_per_item=batch_elapsed / max(EMAIL_BATCH_SIZE, 1),
     )
-
-    # export_to_csv(campaign_batch)
 
 
 if __name__ == "__main__":

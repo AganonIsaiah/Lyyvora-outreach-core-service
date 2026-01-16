@@ -8,6 +8,12 @@ from fastapi import (
     BackgroundTasks,
     HTTPException,
     Body,
+    Depends,
+)
+from fastapi.security import (
+    OAuth2PasswordRequestForm,
+    HTTPBearer,
+    HTTPAuthorizationCredentials,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -16,14 +22,20 @@ import uuid
 import csv
 from io import StringIO
 
-from .models.dashboard_models import DashboardRequest, DashboardResponse
 from .services.dashboard_service import generate_dashboard
 from .services.import_service import process_uploaded_csv, drop_all_tables_supabase
 from .services.ws_manager import manager
 from .services.outreach_service import run_outreach_job
 from .services.append_service import append_csv_to_leads
 from .services.clinic_service import get_clinic_by_id
+from .services.auth_service import (
+    authenticate_user,
+    create_access_token,
+    decode_access_token,
+)
+
 from configs.database import supabase
+from .models.dashboard_models import DashboardRequest, DashboardResponse
 
 app = FastAPI(title="Lyyvora Outreach API")
 
@@ -35,19 +47,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+security = HTTPBearer()
+
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    payload = decode_access_token(token)
+    if not payload or "sub" not in payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return payload["sub"]
+
 
 @app.get("/")
 def home():
     return {"message": "Welcome"}
 
 
+@app.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    if not authenticate_user(form_data.username, form_data.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_access_token({"sub": form_data.username})
+    return {"access_token": token, "token_type": "bearer"}
+
+
 @app.get("/clinics/{clinic_id}")
-def get_clinic(clinic_id: int) -> Dict[str, Any]:
+def get_clinic(clinic_id: int, user: str = Depends(get_current_user)) -> Dict[str, Any]:
     return get_clinic_by_id(clinic_id)
 
 
 @app.post("/append-leads")
-async def append_leads(file: UploadFile = File(...)):
+async def append_leads(
+    file: UploadFile = File(...), user: str = Depends(get_current_user)
+):
     try:
         res = append_csv_to_leads(file)
         return res
@@ -56,7 +88,9 @@ async def append_leads(file: UploadFile = File(...)):
 
 
 @app.get("/export-smartlead-csv")
-def export_smartlead_csv(campaign_batch: Optional[str] = Query(None)):
+def export_smartlead_csv(
+    campaign_batch: Optional[str] = Query(None), user: str = Depends(get_current_user)
+):
     columns = [
         "clinic_name",
         "email",
@@ -111,7 +145,7 @@ def export_smartlead_csv(campaign_batch: Optional[str] = Query(None)):
 
 
 @app.post("/drop-tables")
-def drop_tables():
+def drop_tables(user: str = Depends(get_current_user)):
     try:
         drop_all_tables_supabase()
         return {"status": "success", "message": "All tables dropped successfully."}
@@ -121,6 +155,12 @@ def drop_tables():
 
 @app.websocket("/ws/outreach/{job_id}")
 async def outreach_ws(websocket: WebSocket, job_id: str):
+    token = websocket.query_params.get("token")
+    payload = decode_access_token(token)
+    if not payload or "sub" not in payload:
+        await websocket.close(code=1008)
+        return
+
     await manager.connect(job_id, websocket)
     try:
         while True:
@@ -130,7 +170,11 @@ async def outreach_ws(websocket: WebSocket, job_id: str):
 
 
 @app.post("/generate-outreach")
-def generate_outreach(background_tasks: BackgroundTasks, payload: dict = Body(...)):
+def generate_outreach(
+    background_tasks: BackgroundTasks,
+    payload: dict = Body(...),
+    user: str = Depends(get_current_user),
+):
     email_batch_size = payload.get("email_batch_size", 1)
     prompt = payload.get("prompt")
     email_word_limit = payload.get("email_word_limit", 120)
@@ -145,13 +189,16 @@ def generate_outreach(background_tasks: BackgroundTasks, payload: dict = Body(..
 
 
 @app.post("/import-csv")
-async def import_csv(file: UploadFile = File(...)):
+async def import_csv(
+    file: UploadFile = File(...), user: str = Depends(get_current_user)
+):
     res = process_uploaded_csv(file)
     return res
 
 
 @app.get("/dashboard", response_model=DashboardResponse)
 def get_dashboard(
+    user: str = Depends(get_current_user),
     limit: int = Query(25, ge=1, le=100),
     page: int = Query(1, ge=1),
     name: Optional[List[str]] = Query(None),
