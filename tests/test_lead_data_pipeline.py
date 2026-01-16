@@ -6,6 +6,18 @@ from core.lead_data_pipeline.lead_data_pipeline import (
     normalize_province,
 )
 
+import pytest
+from unittest.mock import MagicMock
+
+
+@pytest.fixture(autouse=True)
+def mock_supabase(monkeypatch):
+    mock_client = MagicMock()
+    mock_table = MagicMock()
+    mock_client.table.return_value = mock_table
+    mock_table.insert.return_value.execute.return_value = None
+    monkeypatch.setattr("configs.database.supabase", mock_client)
+
 
 def test_clean_text_basic():
     assert clean_text("  hello world  ") == "hello world"
