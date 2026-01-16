@@ -8,23 +8,34 @@ from fastapi import (
     BackgroundTasks,
     HTTPException,
     Body,
+    Depends,
+)
+from fastapi.security import (
+    OAuth2PasswordRequestForm,
+    HTTPBearer,
+    HTTPAuthorizationCredentials,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from typing import List, Optional, Dict, Any
 import uuid
 import csv
-import sqlite3
 from io import StringIO
 
-from .models.dashboard_models import DashboardRequest, DashboardResponse
 from .services.dashboard_service import generate_dashboard
-from .services.import_service import process_uploaded_csv, drop_all_tables
+from .services.import_service import process_uploaded_csv, drop_all_tables_supabase
 from .services.ws_manager import manager
 from .services.outreach_service import run_outreach_job
 from .services.append_service import append_csv_to_leads
-from configs.path_configs import DB_FILE
-from configs.queries import Queries
+from .services.clinic_service import get_clinic_by_id
+from .services.auth_service import (
+    authenticate_user,
+    create_access_token,
+    decode_access_token,
+)
+
+from configs.database import supabase
+from .models.dashboard_models import DashboardRequest, DashboardResponse
 
 app = FastAPI(title="Lyyvora Outreach API")
 
@@ -36,66 +47,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+security = HTTPBearer()
+
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    payload = decode_access_token(token)
+    if not payload or "sub" not in payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return payload["sub"]
+
 
 @app.get("/")
 def home():
     return {"message": "Welcome"}
 
 
+@app.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    if not authenticate_user(form_data.username, form_data.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_access_token({"sub": form_data.username})
+    return {"access_token": token, "token_type": "bearer"}
+
+
 @app.get("/clinics/{clinic_id}")
-def get_clinic(clinic_id: int) -> Dict[str, Any]:
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-
-    sql, params = Queries.get_clinic_with_score(clinic_id)
-    cursor.execute(sql, params)
-    row = cursor.fetchone()
-
-    if not row:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Clinic not found")
-
-    clinic = dict(row)
-
-    sql, params = Queries.get_smartlead_for_clinic(clinic_id)
-    cursor.execute(sql, params)
-    smartlead_row = cursor.fetchone()
-    conn.close()
-
-    if smartlead_row:
-        clinic["emails_for_outreach"] = [
-            {
-                "type": f"Email {i+1}",
-                "subject_line": smartlead_row[f"subject_line_{i+1}"],
-                "email_body": smartlead_row[f"email_body_{i+1}"],
-            }
-            for i in range(3)
-        ]
-    else:
-        clinic["emails_for_outreach"] = []
-
-    if isinstance(clinic.get("clinic_sub_type"), str):
-        clinic["type"] = [s.strip() for s in clinic["clinic_sub_type"].split(",")]
-    else:
-        clinic["type"] = []
-
-    clinic.setdefault("name", clinic.get("clinic_name") or "Clinic Name")
-    clinic.setdefault("lead_score", clinic.get("lead_score") or 0)
-    clinic.setdefault("notes", clinic.get("website_desc") or "N/A")
-    clinic.setdefault("email", clinic.get("email") or "N/A")
-    clinic.setdefault("website_url", clinic.get("website_url") or "N/A")
-    clinic.setdefault("city", clinic.get("city") or "N/A")
-    clinic.setdefault("province", clinic.get("province") or "N/A")
-    clinic.setdefault("total_reviews", clinic.get("total_reviews") or "N/A")
-    clinic.setdefault("average_rating", clinic.get("average_rating") or "N/A")
-    clinic.setdefault("email_status", clinic.get("email_status") or "N/A")
-
-    return clinic
+def get_clinic(clinic_id: int, user: str = Depends(get_current_user)) -> Dict[str, Any]:
+    return get_clinic_by_id(clinic_id)
 
 
 @app.post("/append-leads")
-async def append_leads(file: UploadFile = File(...)):
+async def append_leads(
+    file: UploadFile = File(...), user: str = Depends(get_current_user)
+):
     try:
         res = append_csv_to_leads(file)
         return res
@@ -104,47 +88,66 @@ async def append_leads(file: UploadFile = File(...)):
 
 
 @app.get("/export-smartlead-csv")
-def export_smartlead_csv(campaign_batch: Optional[str] = Query(None)):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+def export_smartlead_csv(
+    campaign_batch: Optional[str] = Query(None), user: str = Depends(get_current_user)
+):
+    columns = [
+        "clinic_name",
+        "email",
+        "subject_line_1",
+        "email_body_1",
+        "subject_line_2",
+        "email_body_2",
+        "subject_line_3",
+        "email_body_3",
+        "clinic_type",
+        "city",
+        "province",
+    ]
+
     try:
-        sql, params = Queries.select_smartlead_by_campaign(campaign_batch)
-        cursor.execute(sql, params)
-        rows = cursor.fetchall()
+        query = supabase.table("smartlead").select(",".join(columns))
+        if campaign_batch:
+            query = query.eq("campaign_batch", campaign_batch)
 
-        header = [
-            "clinic_name",
-            "email",
-            "subject_line_1",
-            "email_body_1",
-            "subject_line_2",
-            "email_body_2",
-            "subject_line_3",
-            "email_body_3",
-            "clinic_type",
-            "city",
-            "province",
-        ]
+        resp = query.execute()
 
-        output = StringIO()
-        writer = csv.writer(output)
-        writer.writerow(header)
-        writer.writerows(rows)
-        output.seek(0)
+        if isinstance(resp.data, dict) and "code" in resp.data:
+            raise HTTPException(
+                status_code=500,
+                detail=resp.data.get("message", "Unknown Supabase error"),
+            )
+
+        rows = resp.data
+
+        def row_generator(rows, header):
+            output = StringIO()
+            writer = csv.DictWriter(output, fieldnames=header)
+            writer.writeheader()
+            yield output.getvalue()
+            output.seek(0)
+            output.truncate(0)
+
+            for row in rows:
+                writer.writerow({k: row.get(k, "") for k in header})
+                yield output.getvalue()
+                output.seek(0)
+                output.truncate(0)
 
         return StreamingResponse(
-            output,
+            row_generator(rows, columns),
             media_type="text/csv",
             headers={"Content-Disposition": "attachment; filename=smartlead_ready.csv"},
         )
-    finally:
-        conn.close()
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/drop-tables")
-def drop_tables():
+def drop_tables(user: str = Depends(get_current_user)):
     try:
-        drop_all_tables()
+        drop_all_tables_supabase()
         return {"status": "success", "message": "All tables dropped successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -152,6 +155,12 @@ def drop_tables():
 
 @app.websocket("/ws/outreach/{job_id}")
 async def outreach_ws(websocket: WebSocket, job_id: str):
+    token = websocket.query_params.get("token")
+    payload = decode_access_token(token)
+    if not payload or "sub" not in payload:
+        await websocket.close(code=1008)
+        return
+
     await manager.connect(job_id, websocket)
     try:
         while True:
@@ -161,7 +170,11 @@ async def outreach_ws(websocket: WebSocket, job_id: str):
 
 
 @app.post("/generate-outreach")
-def generate_outreach(background_tasks: BackgroundTasks, payload: dict = Body(...)):
+def generate_outreach(
+    background_tasks: BackgroundTasks,
+    payload: dict = Body(...),
+    user: str = Depends(get_current_user),
+):
     email_batch_size = payload.get("email_batch_size", 1)
     prompt = payload.get("prompt")
     email_word_limit = payload.get("email_word_limit", 120)
@@ -176,14 +189,17 @@ def generate_outreach(background_tasks: BackgroundTasks, payload: dict = Body(..
 
 
 @app.post("/import-csv")
-async def import_csv(file: UploadFile = File(...)):
+async def import_csv(
+    file: UploadFile = File(...), user: str = Depends(get_current_user)
+):
     res = process_uploaded_csv(file)
     return res
 
 
 @app.get("/dashboard", response_model=DashboardResponse)
 def get_dashboard(
-    limit: int = Query(1, ge=1, le=100),
+    user: str = Depends(get_current_user),
+    limit: int = Query(25, ge=1, le=100),
     page: int = Query(1, ge=1),
     name: Optional[List[str]] = Query(None),
     sub_type: Optional[List[str]] = Query(None),
@@ -208,21 +224,12 @@ def get_dashboard(
         sort_by=sort_by,
         sort_order=sort_order,
     )
-
     try:
-        return generate_dashboard(req)
-    except sqlite3.Error:
-        print("SQLite error:", e)
-
-        return DashboardResponse(
-            clinics_data=[],
-            filters=[],
-            campaign_status={},
-            metrics=[],
-            show_export=False,
-            total_clinics=0,
-            filtered_clinics_count=0,
-            not_generated_emails_count=0,
-        )
+        result = generate_dashboard(req)
+        return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+
+        print("Full error traceback:")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")

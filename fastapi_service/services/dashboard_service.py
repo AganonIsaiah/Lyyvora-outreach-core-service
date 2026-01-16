@@ -1,6 +1,4 @@
-import sqlite3
 from typing import List, Optional
-
 from ..models.dashboard_models import (
     Clinic,
     ClinicEmails,
@@ -10,10 +8,9 @@ from ..models.dashboard_models import (
     DashboardResponse,
     DashboardRequest,
 )
-from configs.path_configs import DB_FILE
-from configs.prompt_templates import prompt
 from configs.types import ClinicStatus
-from configs.queries import Queries
+from configs.prompt_templates import prompt
+from configs.database import supabase
 
 STATUS_PRIORITY = {
     ClinicStatus.GENERATED: 2,
@@ -30,112 +27,51 @@ def parse_comma_separated(values: Optional[List[str]]) -> Optional[List[str]]:
     return result
 
 
-def build_multi_like(
-    column: str, values: List[str], params: List[str], csv: bool = False
-):
-    parts = []
-    for v in values:
-        if csv:
-            parts.append(f"( ',' || REPLACE({column}, ' ', '') || ',' LIKE ? )")
-            params.append(f"%,{v.replace(' ', '')},%")
-        else:
-            parts.append(f"{column} LIKE ?")
-            params.append(f"%{v}%")
-    return "(" + " OR ".join(parts) + ")"
-
-
 def get_total_clinics_count() -> int:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    try:
-        cursor.execute(Queries.total_clinics_count())
-        return cursor.fetchone()[0]
-    finally:
-        conn.close()
+    resp = supabase.table("leads").select("id", count="exact").execute()
+    return resp.count or 0
 
 
-def get_total_filtered_clinics_count(
-    name: Optional[List[str]] = None,
-    sub_type: Optional[List[str]] = None,
-    city: Optional[List[str]] = None,
-    province: Optional[List[str]] = None,
-    email_status: Optional[List[ClinicStatus]] = None,
-    campaign_batch: Optional[List[str]] = None,
-) -> int:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    filters = []
-    params = []
+def get_not_generated_emails_count() -> int:
+    resp = (
+        supabase.table("leads")
+        .select("id", count="exact")
+        .eq("email_status", ClinicStatus.NOT_GENERATED.value)
+        .execute()
+    )
+    return resp.count or 0
 
-    if name:
-        filters.append(build_multi_like("l.clinic_name", name, params))
-    if city:
-        filters.append(build_multi_like("l.city", city, params))
-    if province:
-        filters.append(build_multi_like("l.province", province, params))
-    if sub_type:
-        filters.append(
-            build_multi_like("l.clinic_sub_type", sub_type, params, csv=True)
-        )
-    if email_status:
-        placeholders = ",".join("?" for _ in email_status)
-        filters.append(f"l.email_status IN ({placeholders})")
-        params.extend([s.value for s in email_status])
-    if campaign_batch:
-        filters.append(build_multi_like("m.campaign_batch", campaign_batch, params))
 
-    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
-    query = Queries.total_filtered_clinics_count(where_clause)
-
-    cursor.execute(query, params)
-    total = cursor.fetchone()[0]
-    conn.close()
-    return total
+def has_lead_records() -> bool:
+    resp = supabase.table("leads").select("id").limit(1).execute()
+    return bool(resp.data)
 
 
 def get_all_filter_values():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+    names = supabase.table("leads").select("clinic_name").execute().data
+    cities = supabase.table("leads").select("city").execute().data
+    provinces = supabase.table("leads").select("province").execute().data
+    types = supabase.table("leads").select("clinic_sub_type").execute().data
+    campaign_batches = (
+        supabase.table("smartlead").select("campaign_batch").execute().data
+    )
 
-    def split_and_deduplicate(rows):
-        types_set = set()
-        for r in rows:
-            if r[0]:
-                for t in r[0].split(","):
-                    types_set.add(t.strip())
-        return sorted(types_set)
+    type_set = set()
+    for t in types:
+        val = t.get("clinic_sub_type")
+        if val:
+            for subtype in val.split(","):
+                type_set.add(subtype.strip())
 
     data = {
-        "name": [
-            r[0]
-            for r in cursor.execute(
-                Queries.distinct_values("leads", "clinic_name")
-            ).fetchall()
-        ],
-        "city": [
-            r[0]
-            for r in cursor.execute(Queries.distinct_values("leads", "city")).fetchall()
-        ],
-        "province": [
-            r[0]
-            for r in cursor.execute(
-                Queries.distinct_values("leads", "province")
-            ).fetchall()
-        ],
-        "type": split_and_deduplicate(
-            cursor.execute(
-                Queries.distinct_values("leads", "clinic_sub_type")
-            ).fetchall()
-        ),
+        "name": [r["clinic_name"] for r in names if r.get("clinic_name")],
+        "city": [r["city"] for r in cities if r.get("city")],
+        "province": [r["province"] for r in provinces if r.get("province")],
+        "type": sorted(type_set),
         "campaign_batch": [
-            r[0]
-            for r in cursor.execute(
-                Queries.distinct_values("smartlead", "campaign_batch")
-            ).fetchall()
+            r["campaign_batch"] for r in campaign_batches if r.get("campaign_batch")
         ],
     }
-
-    conn.close()
     return data
 
 
@@ -151,115 +87,126 @@ def get_all_clinics_from_db(
     sort_order: str = "desc",
     campaign_batch: Optional[List[str]] = None,
 ) -> List[Clinic]:
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-
-    filters = []
-    params = []
+    query = (
+        supabase.table("leads")
+        .select(
+            """
+        id, clinic_name, clinic_sub_type, city, province, email, website_url, website_desc,
+        total_reviews, average_rating, email_status,
+        lead_scores(score, top_features),
+        smartlead(subject_line_1,email_body_1,subject_line_2,email_body_2,subject_line_3,email_body_3,campaign_batch)
+        """
+        )
+        .range(offset, offset + limit - 1)
+    )
 
     if name:
-        filters.append(build_multi_like("l.clinic_name", name, params))
+        query = query.or_(*[f"clinic_name.ilike.*{n}*" for n in name])
     if city:
-        filters.append(build_multi_like("l.city", city, params))
+        query = query.or_(*[f"city.ilike.*{c}*" for c in city])
     if province:
-        filters.append(build_multi_like("l.province", province, params))
+        query = query.or_(*[f"province.ilike.*{p}*" for p in province])
     if sub_type:
-        filters.append(
-            build_multi_like("l.clinic_sub_type", sub_type, params, csv=True)
-        )
+        for st in sub_type:
+            query = query.ilike("clinic_sub_type", f"%{st}%")
     if email_status:
-        placeholders = ",".join("?" for _ in email_status)
-        filters.append(f"l.email_status IN ({placeholders})")
-        params.extend([s.value for s in email_status])
+        query = query.in_("email_status", [s.value for s in email_status])
     if campaign_batch:
-        filters.append(build_multi_like("m.campaign_batch", campaign_batch, params))
-
-    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
-    order_clause = "ORDER BY s.score DESC"
+        query = query.or_(
+            *[f"smartlead.campaign_batch.ilike.*{cb}*" for cb in campaign_batch]
+        )
 
     if sort_by == "email_status":
-        order_clause = f"""
-            ORDER BY CASE l.email_status
-            {" ".join(f"WHEN '{s.value}' THEN {p}" for s, p in STATUS_PRIORITY.items())}
-            END {"ASC" if sort_order == 'asc' else 'DESC'}
-        """
-    elif sort_by == "lead_score":
-        order_clause = f"ORDER BY s.score {'ASC' if sort_order=='asc' else 'DESC'}"
-    elif sort_by == "average_rating":
-        order_clause = (
-            f"ORDER BY l.average_rating {'ASC' if sort_order=='asc' else 'DESC'}"
+        clinics = query.execute().data or []
+        clinics.sort(
+            key=lambda c: STATUS_PRIORITY.get(ClinicStatus(c.get("email_status")), 0),
+            reverse=(sort_order != "asc"),
         )
+    else:
+        field = None
+        if sort_by == "lead_score":
+            field = "lead_scores.score"
+        elif sort_by == "average_rating":
+            field = "average_rating"
+        if field:
+            query = query.order(field, desc=(sort_order.lower() != "asc"))
+        clinics = query.execute().data or []
 
-    query = Queries.all_clinics_query(where_clause, order_clause, limit, offset)
-    params.extend([limit, offset])
+    result = []
+    for row in clinics:
+        lead_scores_list = row.get("lead_scores") or []
+        lead_score_data = lead_scores_list[0] if lead_scores_list else {}
 
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
+        smartlead_list = row.get("smartlead") or []
+        smartlead = smartlead_list[0] if smartlead_list else {}
 
-    clinics = []
-    for row in rows:
         emails: List[ClinicEmails] = [
             ClinicEmails(
-                subject_line=row[f"subject_line_{i}"] or "",
-                email_body=row[f"email_body_{i}"] or "",
+                subject_line=smartlead.get(f"subject_line_{i}") or "",
+                email_body=smartlead.get(f"email_body_{i}") or "",
                 type=f"Email {i}",
             )
             for i in range(1, 4)
-            if row[f"subject_line_{i}"] or row[f"email_body_{i}"]
+            if smartlead.get(f"subject_line_{i}") or smartlead.get(f"email_body_{i}")
         ]
 
         types_list = [
-            t.strip() for t in (row["clinic_sub_type"] or "").split(",") if t.strip()
+            t.strip()
+            for t in (row.get("clinic_sub_type") or "").split(",")
+            if t.strip()
         ]
 
-        clinics.append(
+        result.append(
             Clinic(
                 id=row["id"],
-                name=row["clinic_name"] or "Clinic Name",
-                email=row["email"] or "N/A",
-                website_url=row["website_url"] or "N/A",
+                name=row.get("clinic_name") or "Clinic Name",
+                email=row.get("email") or "N/A",
+                website_url=row.get("website_url") or "N/A",
                 type=types_list if types_list else ["Unknown"],
-                city=row["city"] or "N/A",
-                province=row["province"] or "N/A",
-                email_status=(
-                    ClinicStatus(row["email_status"])
-                    if row["email_status"]
-                    else ClinicStatus.NOT_QUEUED
-                ),
-                total_reviews=row["total_reviews"] or 0,
-                average_rating=row["average_rating"] or 0.0,
-                lead_score=row["score"] or 0,
-                notes=row["website_desc"] or "N/A",
-                top_features=row["top_features"] or "",
+                city=row.get("city") or "N/A",
+                province=row.get("province") or "N/A",
+                email_status=ClinicStatus(row.get("email_status"))
+                if row.get("email_status")
+                else ClinicStatus.NOT_QUEUED,
+                total_reviews=row.get("total_reviews") or 0,
+                average_rating=row.get("average_rating") or 0.0,
+                lead_score=lead_score_data.get("score") or 0,
+                notes=row.get("website_desc") or "N/A",
+                top_features=lead_score_data.get("top_features") or "",
                 emails_for_outreach=emails,
-                campaign_batch=row["campaign_batch"] or "",
+                campaign_batch=smartlead.get("campaign_batch") or "",
             )
         )
-
-    conn.close()
-    return clinics
+    return result
 
 
-def get_not_generated_emails_count() -> int:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            Queries.not_generated_emails_count(), (ClinicStatus.NOT_GENERATED.value,)
+def get_total_filtered_clinics_count(
+    name: Optional[List[str]] = None,
+    sub_type: Optional[List[str]] = None,
+    city: Optional[List[str]] = None,
+    province: Optional[List[str]] = None,
+    email_status: Optional[List[ClinicStatus]] = None,
+    campaign_batch: Optional[List[str]] = None,
+) -> int:
+    query = supabase.table("leads").select("id", count="exact")
+    if name:
+        query = query.or_(*[f"clinic_name.ilike.*{n}*" for n in name])
+    if city:
+        query = query.or_(*[f"city.ilike.*{c}*" for c in city])
+    if province:
+        query = query.or_(*[f"province.ilike.*{p}*" for p in province])
+    if sub_type:
+        for st in sub_type:
+            query = query.ilike("clinic_sub_type", f"%{st}%")
+    if email_status:
+        query = query.in_("email_status", [s.value for s in email_status])
+    if campaign_batch:
+        query = query.or_(
+            *[f"smartlead.campaign_batch.ilike.*{cb}*" for cb in campaign_batch]
         )
-        return cursor.fetchone()[0]
-    finally:
-        conn.close()
 
-
-def has_lead_records() -> bool:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute(Queries.has_lead_records())
-    exists = cursor.fetchone() is not None
-    conn.close()
-    return exists
+    resp = query.execute()
+    return resp.count or 0
 
 
 def generate_dashboard(req: DashboardRequest):
@@ -269,11 +216,10 @@ def generate_dashboard(req: DashboardRequest):
     sub_type = parse_comma_separated(req.sub_type)
     city = parse_comma_separated(req.city)
     province = parse_comma_separated(req.province)
+    campaign_batch = parse_comma_separated(req.campaign_batch)
 
     email_status = parse_comma_separated(req.email_status)
     email_status = [ClinicStatus(s) for s in email_status] if email_status else None
-
-    campaign_batch = parse_comma_separated(req.campaign_batch)
 
     clinics = get_all_clinics_from_db(
         limit=req.limit,
@@ -289,8 +235,6 @@ def generate_dashboard(req: DashboardRequest):
     )
 
     total_clinics = get_total_clinics_count()
-    not_generated_count = get_not_generated_emails_count()
-
     filtered_clinics_count = get_total_filtered_clinics_count(
         name=name,
         sub_type=sub_type,
@@ -299,7 +243,7 @@ def generate_dashboard(req: DashboardRequest):
         email_status=email_status,
         campaign_batch=campaign_batch,
     )
-
+    not_generated_count = get_not_generated_emails_count()
     filter_values = get_all_filter_values()
 
     metrics = [
@@ -356,7 +300,7 @@ def generate_dashboard(req: DashboardRequest):
 
     campaign_status = CampaignStatus(
         max_word_limit=120,
-        number_of_clinics=10,
+        number_of_clinics=req.limit,
         prompt=prompt(),
         contacted_clinics=0,
         total_clinics=total_clinics,
