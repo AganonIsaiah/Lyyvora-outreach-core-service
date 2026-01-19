@@ -78,7 +78,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         key="access_token",
         value=token,
         httponly=True,
-        samesite="lax",
+        samesite="none",
         secure=True,
         max_age=60 * 60 * 8,
     )
