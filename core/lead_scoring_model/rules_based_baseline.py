@@ -27,25 +27,25 @@ def rules_based_score(lead: Dict[str, Any]) -> Dict[str, Any]:
         top_features.append("Has valid website url.")
 
     if lead.get("website_desc"):
-        score += 20
+        score += 25
         top_features.append("Has a website description.")
 
     if lead.get("total_reviews") is not None and lead.get("total_reviews") >= 30:
-        score += 10
+        score += 15
         top_features.append("Has at least 30 reviews.")
 
     if lead.get("average_rating") is not None and lead.get("average_rating") >= 4.5:
-        score += 10
+        score += 20
         top_features.append("Has an average rating of at least 4.5.")
 
-    subtypes = lead.get("clinic_sub_type")
-    if subtypes:
-        subs = [s.strip().lower() for s in subtypes.split(",")]
-        keywords = ["dental", "physio", "clinic", "spa"]
-        matched = [k.capitalize() for k in keywords if any(k in s for s in subs)]
-        if matched:
-            score += 10 * len(matched)
-            top_features.append(f"Matched subtypes: {', '.join(set(matched))}")
+    # subtypes = lead.get("clinic_sub_type")
+    # if subtypes:
+    #     subs = [s.strip().lower() for s in subtypes.split(",")]
+    #     keywords = ["dental", "physio", "clinic", "spa"]
+    #     matched = [k.capitalize() for k in keywords if any(k in s for s in subs)]
+    #     if matched:
+    #         score += 10 * len(matched)
+    #         top_features.append(f"Matched subtypes: {', '.join(set(matched))}")
 
     score = min(score, 100)
     explanation = f"Rules applied: {', '.join(top_features)}"
