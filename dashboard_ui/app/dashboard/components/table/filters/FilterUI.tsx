@@ -110,8 +110,8 @@ export default function FilterUI({
       </button>
 
       {isOpen && (
-        <div className="absolute z-20 mt-2 w-36 bg-white border border-gray-300 rounded-lg shadow overflow-x-hidden!">
-          <div className="rounded-t-lg text-xs! font-semibold text-white flex items-center justify-between py-1.5 px-1 border-b border-gray-500">
+        <div className="absolute z-20 mt-2 w-38 bg-white border border-gray-300 rounded-lg shadow overflow-x-hidden!">
+          <div className="rounded-t-lg text-xs! font-semibold text-white flex items-center justify-between py-1.5 pl-3 pr-1.5 border-b border-gray-500">
             <button
               onClick={applyFilters}
               className="w-9 bg-blue-500 p-0.5! rounded-full cursor-pointer hover:bg-blue-600 transition-all duration-200"

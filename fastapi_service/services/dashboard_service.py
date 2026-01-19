@@ -11,6 +11,7 @@ from ..models.dashboard_models import (
 from configs.types import ClinicStatus
 from configs.prompt_templates import prompt
 from configs.database import supabase
+from datetime import datetime
 
 STATUS_PRIORITY = {
     ClinicStatus.GENERATED: 2,
@@ -48,7 +49,6 @@ def has_lead_records() -> bool:
 
 
 def get_all_filter_values():
-    """Fetch unique filter values from Supabase"""
     names = supabase.table("leads").select("clinic_name").execute().data
     cities = supabase.table("leads").select("city").execute().data
     provinces = supabase.table("leads").select("province").execute().data
@@ -64,14 +64,25 @@ def get_all_filter_values():
             for subtype in val.split(","):
                 type_set.add(subtype.strip())
 
+    def batch_datetime(batch_str):
+        try:
+            ts_str = batch_str.split("_", 1)[1]
+            return datetime.fromisoformat(ts_str)
+        except Exception:
+            return datetime.min
+
+    unique_batches = {
+        r["campaign_batch"] for r in campaign_batches if r.get("campaign_batch")
+    }
+
+    sorted_batches = sorted(unique_batches, key=batch_datetime, reverse=False)
+
     return {
         "name": set([r["clinic_name"] for r in names if r.get("clinic_name")]),
         "city": set([r["city"] for r in cities if r.get("city")]),
         "province": set([r["province"] for r in provinces if r.get("province")]),
         "type": set(type_set),
-        "campaign_batch": set(
-            [r["campaign_batch"] for r in campaign_batches if r.get("campaign_batch")]
-        ),
+        "campaign_batch": sorted_batches,
     }
 
 
@@ -84,8 +95,6 @@ def build_filters(
     email_status: Optional[List[ClinicStatus]] = None,
     campaign_batch: Optional[List[str]] = None,
 ):
-    """Apply filters to Supabase query"""
-    # OR filters for name, city, sub_type
     or_clauses = []
 
     if name:
@@ -96,18 +105,34 @@ def build_filters(
         or_clauses.extend([f"clinic_sub_type.ilike.%{st}%" for st in sub_type])
 
     if or_clauses:
-        # Supabase expects 'or' as comma-separated string of conditions
         query = query.or_(",".join(or_clauses))
 
-    # AND filters
     if province:
         for p in province:
             query = query.ilike("province", f"%{p}%")
     if email_status:
         query = query.in_("email_status", [s.value for s in email_status])
+
     if campaign_batch and len(campaign_batch) > 0:
-        # Only the first value counts for campaign_batch
-        query = query.eq("smartlead.campaign_batch", campaign_batch[0])
+        matching_ids = []
+
+        for batch_value in campaign_batch:
+            ids = [
+                r["leads_id"]
+                for r in supabase.table("smartlead")
+                .select("leads_id")
+                .eq("campaign_batch", batch_value)
+                .execute()
+                .data
+            ]
+            matching_ids.extend(ids)
+
+        matching_ids = list(set(matching_ids))
+
+        if matching_ids:
+            query = query.in_("id", matching_ids)
+        else:
+            query = query.eq("id", -1)
 
     return query
 
@@ -124,7 +149,6 @@ def get_all_clinics_from_db(
     sort_order: str = "desc",
     campaign_batch: Optional[List[str]] = None,
 ) -> List[Clinic]:
-    # --- Fetch all filtered records first (for correct global sorting) ---
     query = supabase.table("leads").select(
         """
         id,
@@ -156,7 +180,6 @@ def get_all_clinics_from_db(
     )
     clinics_data = query.execute().data or []
 
-    # --- Sort globally ---
     def get_lead_score(c):
         scores = c.get("lead_scores") or []
         return scores[0].get("score") if scores else 0
@@ -172,10 +195,8 @@ def get_all_clinics_from_db(
     elif sort_by == "email_status":
         clinics_data.sort(key=get_email_status_priority, reverse=reverse)
 
-    # --- Paginate manually ---
     paginated_data = clinics_data[offset : offset + limit]
 
-    # --- Map to Clinic objects ---
     result = []
     for row in paginated_data:
         lead_scores_list = row.get("lead_scores") or []
@@ -302,7 +323,7 @@ def generate_dashboard(req: DashboardRequest):
         Filter(
             key="campaign_batch",
             label="Campaign Batch ID",
-            values=sorted(filter_values["campaign_batch"]),
+            values=sorted(filter_values["campaign_batch"], reverse=True),
             type="select",
         ),
         Filter(

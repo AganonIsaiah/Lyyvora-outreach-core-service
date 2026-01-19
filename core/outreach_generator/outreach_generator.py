@@ -2,7 +2,7 @@ from ollama import Client
 import os
 from dotenv import load_dotenv
 import time
-import csv
+from datetime import datetime
 import re
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -173,7 +173,9 @@ def run_email_generation(
     clinics.sort(key=lambda c: (get_lead_score(c), -c["id"]), reverse=True)
     clinics = clinics[:EMAIL_BATCH_SIZE]
 
-    campaign_batch = f"outreach_{time.strftime('%Y%m%d_%H%M%S')}"
+    now = datetime.now()
+    campaign_batch = f"outreach_{now.strftime('%Y-%m-%dT%H:%M:%S')}"
+
     logger.start_batch(campaign_batch)
     batch_start = time.perf_counter()
 
