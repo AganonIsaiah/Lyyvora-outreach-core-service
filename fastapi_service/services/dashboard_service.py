@@ -48,6 +48,7 @@ def has_lead_records() -> bool:
 
 
 def get_all_filter_values():
+    """Fetch unique filter values from Supabase"""
     names = supabase.table("leads").select("clinic_name").execute().data
     cities = supabase.table("leads").select("city").execute().data
     provinces = supabase.table("leads").select("province").execute().data
@@ -63,7 +64,7 @@ def get_all_filter_values():
             for subtype in val.split(","):
                 type_set.add(subtype.strip())
 
-    data = {
+    return {
         "name": set([r["clinic_name"] for r in names if r.get("clinic_name")]),
         "city": set([r["city"] for r in cities if r.get("city")]),
         "province": set([r["province"] for r in provinces if r.get("province")]),
@@ -72,7 +73,36 @@ def get_all_filter_values():
             [r["campaign_batch"] for r in campaign_batches if r.get("campaign_batch")]
         ),
     }
-    return data
+
+
+def build_filters(
+    query,
+    name: Optional[List[str]] = None,
+    city: Optional[List[str]] = None,
+    province: Optional[List[str]] = None,
+    sub_type: Optional[List[str]] = None,
+    email_status: Optional[List[ClinicStatus]] = None,
+    campaign_batch: Optional[List[str]] = None,
+):
+    """Apply AND filters properly"""
+    if name:
+        for n in name:
+            query = query.ilike("clinic_name", f"%{n}%")
+    if city:
+        for c in city:
+            query = query.ilike("city", f"%{c}%")
+    if province:
+        for p in province:
+            query = query.ilike("province", f"%{p}%")
+    if sub_type:
+        for st in sub_type:
+            query = query.ilike("clinic_sub_type", f"%{st}%")
+    if email_status:
+        query = query.in_("email_status", [s.value for s in email_status])
+    if campaign_batch:
+        for cb in campaign_batch:
+            query = query.ilike("smartlead.campaign_batch", f"%{cb}%")
+    return query
 
 
 def get_all_clinics_from_db(
@@ -87,53 +117,43 @@ def get_all_clinics_from_db(
     sort_order: str = "desc",
     campaign_batch: Optional[List[str]] = None,
 ) -> List[Clinic]:
-    query = (
-        supabase.table("leads")
-        .select(
-            """
+    # --- Fetch all filtered records first (for correct global sorting) ---
+    query = supabase.table("leads").select(
+        """
         id, clinic_name, clinic_sub_type, city, province, email, website_url, website_desc,
         total_reviews, average_rating, email_status,
         lead_scores(score, top_features),
         smartlead(subject_line_1,email_body_1,subject_line_2,email_body_2,subject_line_3,email_body_3,campaign_batch)
         """
-        )
-        .range(offset, offset + limit - 1)
     )
 
-    if name:
-        query = query.or_(*[f"clinic_name.ilike.*{n}*" for n in name])
-    if city:
-        query = query.or_(*[f"city.ilike.*{c}*" for c in city])
-    if province:
-        query = query.or_(*[f"province.ilike.*{p}*" for p in province])
-    if sub_type:
-        for st in sub_type:
-            query = query.ilike("clinic_sub_type", f"%{st}%")
-    if email_status:
-        query = query.in_("email_status", [s.value for s in email_status])
-    if campaign_batch:
-        query = query.or_(
-            *[f"smartlead.campaign_batch.ilike.*{cb}*" for cb in campaign_batch]
-        )
+    query = build_filters(
+        query, name, city, province, sub_type, email_status, campaign_batch
+    )
+    clinics_data = query.execute().data or []
 
-    if sort_by == "email_status":
-        clinics = query.execute().data or []
-        clinics.sort(
-            key=lambda c: STATUS_PRIORITY.get(ClinicStatus(c.get("email_status")), 0),
-            reverse=(sort_order != "asc"),
-        )
-    else:
-        field = None
-        if sort_by == "lead_score":
-            field = "lead_scores.score"
-        elif sort_by == "average_rating":
-            field = "average_rating"
-        if field:
-            query = query.order(field, desc=(sort_order.lower() != "asc"))
-        clinics = query.execute().data or []
+    # --- Sort globally ---
+    def get_lead_score(c):
+        scores = c.get("lead_scores") or []
+        return scores[0].get("score") if scores else 0
 
+    def get_email_status_priority(c):
+        return STATUS_PRIORITY.get(ClinicStatus(c.get("email_status")), 0)
+
+    reverse = sort_order.lower() != "asc"
+    if sort_by == "lead_score" or sort_by is None:
+        clinics_data.sort(key=get_lead_score, reverse=reverse)
+    elif sort_by == "average_rating":
+        clinics_data.sort(key=lambda c: c.get("average_rating") or 0, reverse=reverse)
+    elif sort_by == "email_status":
+        clinics_data.sort(key=get_email_status_priority, reverse=reverse)
+
+    # --- Paginate manually ---
+    paginated_data = clinics_data[offset : offset + limit]
+
+    # --- Map to Clinic objects ---
     result = []
-    for row in clinics:
+    for row in paginated_data:
         lead_scores_list = row.get("lead_scores") or []
         lead_score_data = lead_scores_list[0] if lead_scores_list else {}
 
@@ -189,22 +209,9 @@ def get_total_filtered_clinics_count(
     campaign_batch: Optional[List[str]] = None,
 ) -> int:
     query = supabase.table("leads").select("id", count="exact")
-    if name:
-        query = query.or_(*[f"clinic_name.ilike.*{n}*" for n in name])
-    if city:
-        query = query.or_(*[f"city.ilike.*{c}*" for c in city])
-    if province:
-        query = query.or_(*[f"province.ilike.*{p}*" for p in province])
-    if sub_type:
-        for st in sub_type:
-            query = query.ilike("clinic_sub_type", f"%{st}%")
-    if email_status:
-        query = query.in_("email_status", [s.value for s in email_status])
-    if campaign_batch:
-        query = query.or_(
-            *[f"smartlead.campaign_batch.ilike.*{cb}*" for cb in campaign_batch]
-        )
-
+    query = build_filters(
+        query, name, city, province, sub_type, email_status, campaign_batch
+    )
     resp = query.execute()
     return resp.count or 0
 
@@ -217,7 +224,6 @@ def generate_dashboard(req: DashboardRequest):
     city = parse_comma_separated(req.city)
     province = parse_comma_separated(req.province)
     campaign_batch = parse_comma_separated(req.campaign_batch)
-
     email_status = parse_comma_separated(req.email_status)
     email_status = [ClinicStatus(s) for s in email_status] if email_status else None
 

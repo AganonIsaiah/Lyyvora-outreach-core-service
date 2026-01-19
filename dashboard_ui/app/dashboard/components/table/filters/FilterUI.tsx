@@ -52,7 +52,7 @@ export default function FilterUI({
 
   useEffect(() => {
     setFilteredValues(
-      values.filter((v) => v.toLowerCase().includes(search.toLowerCase()))
+      values.filter((v) => v.toLowerCase().includes(search.toLowerCase())),
     );
   }, [search, values]);
 
@@ -86,10 +86,10 @@ export default function FilterUI({
 
   const buttonLabel =
     type === "sort"
-      ? sortValue ?? "Sort by..."
+      ? (sortValue ?? "Sort by...")
       : selected && selected.length
-      ? `${selected.length} selected`
-      : `Select ${label.toLowerCase()}...`;
+        ? `${selected.length} selected`
+        : `Select ${label.toLowerCase()}...`;
 
   return (
     <div ref={ref} className="relative">
@@ -128,6 +128,8 @@ export default function FilterUI({
 
           {type === "select" && (
             <input
+              id={`search-${label.toLowerCase()}`}
+              name={`search-${label.toLowerCase()}`}
               className="w-full px-2 py-1 border-b border-gray-500 focus:outline-none text-sm"
               placeholder="Search..."
               value={search}
@@ -159,7 +161,13 @@ export default function FilterUI({
                   >
                     <span className="flex items-center gap-2 w-full">
                       {type === "select" && (
-                        <input type="checkbox" readOnly checked={isSelected} />
+                        <input
+                          type="checkbox"
+                          readOnly
+                          checked={isSelected}
+                          name={`${label.toLowerCase()}-option`}
+                          id={`${label.toLowerCase()}-${v.replace(/\s+/g, "-")}`}
+                        />
                       )}
                       <p className="whitespace-normal wrap-break-words break-all w-full">
                         {v}
