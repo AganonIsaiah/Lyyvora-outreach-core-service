@@ -24,6 +24,15 @@ export default function ClinicDetailUI({ clinicId }: Props) {
     return value && value.toString().trim() !== "" ? value : "N/A";
   };
 
+  const formatPhoneNumber = (phone?: string) => {
+    if (!phone) return "N/A";
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    return digits;
+  };
+
   const formatTopFeatures = (featuresStr: string) => {
     if (!featuresStr || featuresStr === "[]") return ["N/A"];
     return featuresStr
@@ -49,7 +58,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
         </button>
       </div>
 
-      <div className="w-full max-w-3xl m-4 flex flex-col gap-6 mt-10">
+      <div className="w-full max-w-3xl m-4 flex flex-col gap-6 mt-6">
         <div className="bg-white shadow rounded-lg p-6 flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:gap-6">
             <div className="flex-1">
@@ -104,16 +113,20 @@ export default function ClinicDetailUI({ clinicId }: Props) {
                   {displayValue(clinic.email_status)}
                 </span>
               </p>
+              <p>
+                <span className="font-semibold">Phone:</span>{" "}
+                {formatPhoneNumber(clinic.phone)}
+              </p>
             </div>
           </div>
 
           <div>
             <p className="font-semibold mb-1">Top Features:</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-x-4 gap-y-3">
               {topFeatures.map((feature, i) => (
                 <span
                   key={i}
-                  className="bg-indigo-100 text-indigo-800 text-xs font-medium px-4 py-2 rounded-full"
+                  className="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-2 rounded-full"
                 >
                   {feature}
                 </span>
