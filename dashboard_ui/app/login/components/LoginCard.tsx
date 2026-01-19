@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useLogin } from "@/hooks/useLogin";
 
 export default function LoginCard() {
-  const [username, setUsername] = useState("Lyyvora427");
-  const [password, setPassword] = useState("tbbRiipen28");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const { handleLogin, loading, error } = useLogin();
 
   const handleSubmit = (e: React.FormEvent) => {
