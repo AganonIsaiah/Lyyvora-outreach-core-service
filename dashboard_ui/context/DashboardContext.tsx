@@ -25,6 +25,7 @@ interface DashboardContextProps {
   ) => void;
   filtersConfig: Filter[];
   loading: boolean;
+  loadingPage: boolean;
   error: string | null;
   campaignStatus: CampaignStatus;
   setCampaignStatus: (
@@ -50,6 +51,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<FilterState>({});
   const [filtersConfig, setFiltersConfig] = useState<Filter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [campaignStatus, setCampaignStatus] = useState<CampaignStatus>(
     {} as CampaignStatus
@@ -62,7 +64,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [filteredCount, setFilteredCount] = useState(0);
   const [notGeneratedEmailsCount, setNotGeneratedEmailsCount] = useState(0);
 
-
   useEffect(() => {
     setLoading(true);
 
@@ -74,14 +75,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setCampaignStatus(data.campaign_status);
         setMetrics(data.metrics);
         setShowExport(data.show_export);
-        setNotGeneratedEmailsCount(data.not_generated_emails_count)
+        setNotGeneratedEmailsCount(data.not_generated_emails_count);
         setTotal(data.total_clinics);
-        setFilteredCount(
-          data.filtered_clinics_count
-        );
+        setFilteredCount(data.filtered_clinics_count);
       })
       .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setLoadingPage(false); 
+      });
   }, [page, filters]);
 
   useEffect(() => {
@@ -96,11 +98,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setFilters,
         filtersConfig,
         loading,
+        loadingPage,
         error,
         campaignStatus,
         setCampaignStatus,
         metrics,
-
         page,
         limit,
         total,
@@ -108,7 +110,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         totalPages: Math.ceil(filteredCount / limit),
         setPage,
         showExport,
-        notGeneratedEmailsCount
+        notGeneratedEmailsCount,
       }}
     >
       {children}

@@ -62,7 +62,7 @@ export const useGenerateOutreach = () => {
       if (!response.ok) throw new Error("Failed to start outreach job");
 
       const data = await response.json();
-      const wsUrl = `${data.ws_url}?token=${data.token}`;
+      const wsUrl = `${WS_URL}/ws/outreach/${data.job_id}?token=${data.token}`;
 
       if (wsRef.current) wsRef.current.close();
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { CLINIC_STATUS_COLOR } from "@/lib/constants";
 import useClinicDetail from "@/hooks/useClinicDetail";
+import Loading from "../loading";
 
 interface Props {
   clinicId: string;
@@ -14,7 +15,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
 
   const redirectToDashboard = () => router.push("/dashboard");
 
-  if (loading) return <div>Loading clinic...</div>;
+  if (loading) return <Loading />
   if (error) return <div className="text-red-500">Error: {error}</div>;
   if (!clinic) return <div>Clinic not found</div>;
 
