@@ -6,14 +6,15 @@ import { useGenerateOutreach } from "@/hooks/useGenerateOutreach";
 
 export default function CampaignOutreach() {
   const { showExport, notGeneratedEmailsCount } = useDashboardContext();
+
   const {
     wsClinicsGenerated,
-    loading,
     handleGenerateOutreach,
     updateStatus,
     max_word_limit,
     number_of_clinics,
     prompt,
+    loading,
   } = useGenerateOutreach();
 
   const percentage =
@@ -58,11 +59,14 @@ export default function CampaignOutreach() {
               className="input-outreach"
               min={1}
               value={max_word_limit ?? 0}
-              onChange={(e) => {
-                const value = e.target.value;
-                const num = value === "" ? 0 : parseInt(value);
-                updateStatus("max_word_limit", isNaN(num) ? 1 : num);
-              }}
+              onChange={(e) =>
+                updateStatus(
+                  "max_word_limit",
+                  isNaN(parseInt(e.target.value))
+                    ? 0
+                    : parseInt(e.target.value),
+                )
+              }
             />
           </span>
 
@@ -77,15 +81,24 @@ export default function CampaignOutreach() {
               value={number_of_clinics ?? 0}
               min={1}
               onChange={(e) => {
-                const value = e.target.value;
-                const num = value === "" ? 0 : parseInt(value);
-                updateStatus("number_of_clinics", isNaN(num) ? 1 : num);
+                let value = parseInt(e.target.value);
+                if (isNaN(value)) value = 0;
+
+                if (notGeneratedEmailsCount != null) {
+                  value = Math.min(value, notGeneratedEmailsCount);
+                }
+
+                updateStatus("number_of_clinics", value);
               }}
             />
           </span>
 
           <button
-            className="bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8! cursor-pointer hover:bg-indigo-600! transition-all duration-200"
+            className={`bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8! transition-all duration-200 ${
+              loading
+                ? "opacity-60 cursor-not-allowed"
+                : "hover:bg-indigo-600! cursor-pointer"
+            }`}
             onClick={handleGenerateOutreach}
             disabled={loading}
           >
