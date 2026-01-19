@@ -84,24 +84,31 @@ def build_filters(
     email_status: Optional[List[ClinicStatus]] = None,
     campaign_batch: Optional[List[str]] = None,
 ):
-    """Apply AND filters properly"""
+    """Apply filters to Supabase query"""
+    # OR filters for name, city, sub_type
+    or_clauses = []
+
     if name:
-        for n in name:
-            query = query.ilike("clinic_name", f"%{n}%")
+        or_clauses.extend([f"clinic_name.ilike.%{n}%" for n in name])
     if city:
-        for c in city:
-            query = query.ilike("city", f"%{c}%")
+        or_clauses.extend([f"city.ilike.%{c}%" for c in city])
+    if sub_type:
+        or_clauses.extend([f"clinic_sub_type.ilike.%{st}%" for st in sub_type])
+
+    if or_clauses:
+        # Supabase expects 'or' as comma-separated string of conditions
+        query = query.or_(",".join(or_clauses))
+
+    # AND filters
     if province:
         for p in province:
             query = query.ilike("province", f"%{p}%")
-    if sub_type:
-        for st in sub_type:
-            query = query.ilike("clinic_sub_type", f"%{st}%")
     if email_status:
         query = query.in_("email_status", [s.value for s in email_status])
-    if campaign_batch:
-        for cb in campaign_batch:
-            query = query.ilike("smartlead.campaign_batch", f"%{cb}%")
+    if campaign_batch and len(campaign_batch) > 0:
+        # Only the first value counts for campaign_batch
+        query = query.eq("smartlead.campaign_batch", campaign_batch[0])
+
     return query
 
 
@@ -120,10 +127,27 @@ def get_all_clinics_from_db(
     # --- Fetch all filtered records first (for correct global sorting) ---
     query = supabase.table("leads").select(
         """
-        id, clinic_name, clinic_sub_type, city, province, email, website_url, website_desc,
-        total_reviews, average_rating, email_status,
+        id,
+        clinic_name,
+        clinic_sub_type,
+        city,
+        province,
+        email,
+        website_url,
+        website_desc,
+        total_reviews,
+        average_rating,
+        email_status,
         lead_scores(score, top_features),
-        smartlead(subject_line_1,email_body_1,subject_line_2,email_body_2,subject_line_3,email_body_3,campaign_batch)
+        "smartlead"!left(
+            campaign_batch,
+            subject_line_1,
+            email_body_1,
+            subject_line_2,
+            email_body_2,
+            subject_line_3,
+            email_body_3
+        )
         """
     )
 
