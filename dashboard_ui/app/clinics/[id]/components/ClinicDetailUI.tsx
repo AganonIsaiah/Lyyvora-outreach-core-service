@@ -1,47 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-import { Clinic, ClinicEmails } from "@/lib/types";
 import { CLINIC_STATUS_COLOR } from "@/lib/constants";
+import useClinicDetail from "@/hooks/useClinicDetail";
 
 interface Props {
   clinicId: string;
 }
 
-const BASE_URL = "http://localhost:8000";
-
 export default function ClinicDetailUI({ clinicId }: Props) {
-  const [clinic, setClinic] = useState<Clinic | null>(null);
-  const [emails, setEmails] = useState<ClinicEmails[]>([]);
-
+  const { clinic, emails, loading, error } = useClinicDetail(clinicId);
   const router = useRouter();
 
-  const redirectToDashboard = () => {
-    router.push("/dashboard");
-  };
+  const redirectToDashboard = () => router.push("/dashboard");
 
-  useEffect(() => {
-    async function fetchClinic() {
-      try {
-        const res = await fetch(`${BASE_URL}/clinics/${clinicId}`);
-        if (!res.ok) throw new Error("Clinic not found");
-        const data = await res.json();
-        setClinic(data);
-        setEmails(data.emails_for_outreach || []);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    fetchClinic();
-  }, [clinicId]);
-
-  if (!clinic) return <div>Loading clinic...</div>;
+  if (loading) return <div>Loading clinic...</div>;
+  if (error) return <div className="text-red-500">Error: {error}</div>;
+  if (!clinic) return <div>Clinic not found</div>;
 
   const displayValue = (value: any) => {
-    if (Array.isArray(value))
-      return value.length > 0 ? value.join(", ") : "N/A";
+    if (Array.isArray(value)) return value.length ? value.join(", ") : "N/A";
     if (typeof value === "number") return value > 0 ? value : "N/A";
     return value && value.toString().trim() !== "" ? value : "N/A";
   };
@@ -57,18 +35,21 @@ export default function ClinicDetailUI({ clinicId }: Props) {
   const topFeatures = formatTopFeatures(clinic.top_features);
 
   return (
-    <div className="w-full min-h-screen  bg-gray-50 flex flex-col items-center">
-      <div className="flex justify-between items-center separator w-full! bg-white px-10!">
+    <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center">
+      <div className="flex justify-evenly items-center separator w-full bg-white">
         <h1 className="text-3xl font-bold text-gray-800">
           {displayValue(clinic.name) || "Clinic Name"}
         </h1>
 
         <button
-        className="bg-slate-200 text-slate-600 font-semibold px-2 py-1.5 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:bg-slate-300"
-        onClick={redirectToDashboard}
-        >Dashboard</button>
+          className="text-sm! bg-slate-200 text-slate-600 font-semibold px-2 py-1 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:bg-slate-300"
+          onClick={redirectToDashboard}
+        >
+          Dashboard
+        </button>
       </div>
-      <div className="w-full max-w-3xl m-4 flex flex-col gap-6 mt-10!">
+
+      <div className="w-full max-w-3xl m-4 flex flex-col gap-6 mt-10">
         <div className="bg-white shadow rounded-lg p-6 flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:gap-6">
             <div className="flex-1">
@@ -132,7 +113,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
               {topFeatures.map((feature, i) => (
                 <span
                   key={i}
-                  className="bg-indigo-100 text-indigo-800 text-xs font-medium px-4! py-2! rounded-full"
+                  className="bg-indigo-100 text-indigo-800 text-xs font-medium px-4 py-2 rounded-full"
                 >
                   {feature}
                 </span>

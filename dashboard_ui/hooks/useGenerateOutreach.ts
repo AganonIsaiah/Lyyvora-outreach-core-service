@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useDashboardContext } from "@/context/DashboardContext";
 
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
+const WS_URL = `${process.env.NEXT_PUBLIC_WS_URL}`;
+
 export const useGenerateOutreach = () => {
   const {
     campaignStatus,
@@ -45,7 +48,7 @@ export const useGenerateOutreach = () => {
     alert("Outreach generation started!");
 
     try {
-      const response = await fetch("http://localhost:8000/generate-outreach", {
+      const response = await fetch(`${BASE_URL}/generate-outreach`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -59,7 +62,7 @@ export const useGenerateOutreach = () => {
       if (!response.ok) throw new Error("Failed to start outreach job");
 
       const data = await response.json();
-      const wsUrl = `ws://localhost:8000${data.ws_url}?token=${data.token}`;
+      const wsUrl = `${data.ws_url}?token=${data.token}`;
 
       if (wsRef.current) wsRef.current.close();
 

@@ -68,7 +68,7 @@ export default function ImportCard() {
           className="bg-blue-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-blue-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loadingReplace
-            ? "Replacing..."
+            ? "Importing..."
             : showExport
             ? "Replace CSV"
             : "Import CSV"}

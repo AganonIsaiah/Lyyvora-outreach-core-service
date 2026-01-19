@@ -3,16 +3,13 @@ import { DashboardProvider } from "@/context/DashboardContext";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 
-interface ClinicDetailPageProps {
-  params: { id: string | string[] };
-}
 
-export default async function ClinicDetailPage({ params }: ClinicDetailPageProps) {
+export default async function ClinicDetailPage({ params }: { params: Promise<{ id: string }>}) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const id = params.id;
-  if (!id || Array.isArray(id)) return <div>Invalid clinic ID</div>;
+  const { id } = await params;
+  if (!id ) return <div>Invalid clinic ID</div>;
 
   return (
     <DashboardProvider>
