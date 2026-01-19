@@ -59,7 +59,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [showExport, setShowExport] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit] = useState(25);
+  const [limit] = useState(50);
   const [total, setTotal] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
   const [notGeneratedEmailsCount, setNotGeneratedEmailsCount] = useState(0);

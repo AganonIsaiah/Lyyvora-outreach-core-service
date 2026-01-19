@@ -166,12 +166,16 @@ export default function ClinicsTable() {
             Page <span className="font-semibold">{page}</span> of{" "}
             <span className="font-semibold">{totalPages}</span>
             <span className="ml-4">
-              Total Records{" "}
+              Total Records:{" "}
               <span className="font-semibold">{totalClinics}</span>
             </span>
           </p>
 
-          <div className="flex gap-4">
+          <div className="flex items-center gap-4">
+            <span className="mr-2">
+              Current Records:{" "}
+              <span className="font-semibold">{clinics.length}</span>
+            </span>
             <button
               disabled={page === 1 || loading}
               onClick={() => setPage(page - 1)}
