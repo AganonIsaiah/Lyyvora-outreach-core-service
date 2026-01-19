@@ -11,11 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy your code
-COPY core core
-COPY fastapi_service fastapi_service
-COPY shared shared
-COPY datasets datasets
-COPY uploads uploads
+COPY . .
 
 ENV PYTHONPATH=/app
 

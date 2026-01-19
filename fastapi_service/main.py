@@ -34,13 +34,14 @@ from .services.auth_service import (
 )
 
 from configs.database import supabase
+from configs.configs import FRONTEND_URL
 from .models.dashboard_models import DashboardRequest, DashboardResponse
 
 app = FastAPI(title="Lyyvora Outreach API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -78,7 +79,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         value=token,
         httponly=True,
         samesite="lax",
-        secure=False,
+        secure=True,
         max_age=60 * 60 * 8,
     )
 
@@ -201,7 +202,11 @@ def generate_outreach(
         run_outreach_job, job_id, email_batch_size, prompt, email_word_limit
     )
 
-    return {"job_id": job_id, "ws_url": f"/ws/outreach/{job_id}", "token": token}
+    return {
+        "job_id": job_id,
+        "ws_url": f"wss://{FRONTEND_URL}/ws/outreach/{job_id}",
+        "token": token,
+    }
 
 
 @app.post("/import-csv")

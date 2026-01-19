@@ -2,6 +2,7 @@ import pandas as pd
 import re
 from urllib.parse import urlparse
 from datetime import datetime, timezone
+from fastapi import UploadFile
 
 from configs.logging_module import Logger
 from configs.types import ClinicStatus
