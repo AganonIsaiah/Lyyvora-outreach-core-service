@@ -150,10 +150,14 @@ def run_email_generation(
 
     clinics = (
         supabase.table("leads")
-        .select("*")
+        .select(
+            """
+            id, clinic_name, clinic_sub_type, city, province, email, website_url,
+            website_desc, total_reviews, average_rating, email_status,
+            lead_scores(score, top_features)
+            """
+        )
         .eq("email_status", ClinicStatus.NOT_GENERATED.value)
-        .order("id", desc=False)
-        .limit(EMAIL_BATCH_SIZE)
         .execute()
         .data
     )
@@ -162,22 +166,26 @@ def run_email_generation(
         logger.info("No clinics found for email generation")
         return
 
+    def get_lead_score(c):
+        scores = c.get("lead_scores") or []
+        return scores[0].get("score") if scores else 0
+
+    clinics.sort(key=lambda c: (get_lead_score(c), -c["id"]), reverse=True)
+    clinics = clinics[:EMAIL_BATCH_SIZE]
+
     campaign_batch = f"outreach_{time.strftime('%Y%m%d_%H%M%S')}"
     logger.start_batch(campaign_batch)
     batch_start = time.perf_counter()
 
     workers = min(MAX_WORKERS or 5, len(clinics))
-
     records_to_insert = []
     updated_clinic_ids = []
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = []
-        for clinic in clinics:
-            time.sleep(random.uniform(0.1, 0.3))
-            futures.append(
-                executor.submit(generate_email_safe, clinic, PROMPT, EMAIL_WORD_LIMIT)
-            )
+        futures = [
+            executor.submit(generate_email_safe, clinic, PROMPT, EMAIL_WORD_LIMIT)
+            for clinic in clinics
+        ]
 
         for future in as_completed(futures):
             clinic_info, email_text = future.result()
