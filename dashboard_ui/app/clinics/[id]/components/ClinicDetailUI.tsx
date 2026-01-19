@@ -15,9 +15,9 @@ export default function ClinicDetailUI({ clinicId }: Props) {
 
   const redirectToDashboard = () => router.push("/dashboard");
 
-  if (loading) return <Loading />
-  if (error) return <div className="text-red-500">Error: {error}</div>;
-  if (!clinic) return <div>Clinic not found</div>;
+  if (loading) return <Loading />;
+  else if (error) return <div className="text-red-500">Error: {error}</div>;
+  else if (!clinic) return <div>Clinic not found</div>;
 
   const displayValue = (value: any) => {
     if (Array.isArray(value)) return value.length ? value.join(", ") : "N/A";

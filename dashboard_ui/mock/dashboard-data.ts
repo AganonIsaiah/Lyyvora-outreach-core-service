@@ -114,7 +114,8 @@ export const mockClinicsData: Clinic[] = [
     lead_score: 91,
     notes: "New lead, no contact made yet.",
     emails_for_outreach: defaultEmails("Clinic Alpha"),
-    campaign_batch: "test batch"
+    campaign_batch: "test batch",
+    phone: "1234567890"
   },
 ]
 

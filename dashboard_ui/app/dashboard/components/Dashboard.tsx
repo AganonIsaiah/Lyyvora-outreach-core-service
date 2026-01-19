@@ -21,7 +21,7 @@ function DashboardContent() {
       <Header />
 
       <div className="w-full! flex justify-center">
-        <div className="m-1! p-4 flex flex-col gap-8 max-w-330!">
+        <div className="m-1! p-4 flex flex-col gap-8 max-w-360!">
           <div className="flex justify-between gap-10">
             <div className="flex flex-col gap-6">
               <PipelineMetrics />

@@ -79,7 +79,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         httponly=True,
         samesite="lax",
         secure=False,
-        max_age=60 * 60,
+        max_age=60 * 60 * 8,
     )
 
     return {"message": "Login successful"}

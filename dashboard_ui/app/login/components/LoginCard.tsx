@@ -18,7 +18,7 @@ export default function LoginCard() {
       onSubmit={handleSubmit}
       className="bg-white p-10 rounded-xl shadow-xl border border-gray-200 w-full max-w-sm"
     >
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Lyyvora Outreach Dashboard</h2>
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Outreach Dashboard</h2>
 
       {error && (
         <div className="bg-red-100 text-red-700 p-3 mb-4 rounded text-center font-medium">
