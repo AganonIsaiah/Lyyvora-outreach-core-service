@@ -2,100 +2,19 @@
 
 import { useDashboardContext } from "@/context/DashboardContext";
 import EmergencyIcon from "@mui/icons-material/Emergency";
-import { useState, useRef, useEffect } from "react";
+import { useGenerateOutreach } from "@/hooks/useGenerateOutreach";
 
 export default function CampaignOutreach() {
+  const { showExport, notGeneratedEmailsCount } = useDashboardContext();
   const {
-    campaignStatus,
-    setCampaignStatus,
-    clinics,
-    showExport,
-    notGeneratedEmailsCount,
-    total
-  } = useDashboardContext();
-  const [wsClinicsGenerated, setWsClinicsGenerated] = useState(0);
-  const wsRef = useRef<WebSocket | null>(null);
-
-  const safeCampaignStatus = campaignStatus ?? {
-    max_word_limit: 120,
-    number_of_clinics: 5,
-    prompt: "",
-    total_clinics: 0,
-  };
-
-  const safeClinics = clinics ?? [];
-
-  const { max_word_limit, number_of_clinics, prompt } = safeCampaignStatus;
-
-  const updateStatus = (
-    key: keyof typeof safeCampaignStatus,
-    value: number | string
-  ) => {
-    if (!campaignStatus) return;
-    setCampaignStatus({ ...campaignStatus, [key]: value });
-  };
-
-  const handleGenerateOutreach = async () => {
-    if (notGeneratedEmailsCount - number_of_clinics < 0) {
-      alert("Number of clinics exceeds limit, outreach generation has failed!");
-      return;
-    }
-
-    setWsClinicsGenerated(0);
-    alert("Outreach generation started!");
-
-    try {
-      const response = await fetch("http://localhost:8000/generate-outreach", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email_batch_size: number_of_clinics,
-          prompt: prompt,
-          email_word_limit: max_word_limit,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to start outreach job");
-
-      const data = await response.json();
-      const wsUrl = `ws://localhost:8000${data.ws_url}`;
-
-      if (wsRef.current) wsRef.current.close();
-
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === "completed") {
-          alert("Outreach generation finished!");
-          window.location.reload();
-          return;
-        }
-        const increment = msg.contacted_clinics ?? 1;
-        setWsClinicsGenerated((prev) =>
-          Math.min(
-            prev + increment,
-            number_of_clinics,
-            notGeneratedEmailsCount ?? number_of_clinics
-          )
-        );
-      };
-
-      ws.onclose = () => console.log("WebSocket closed");
-      ws.onerror = (err) => console.error("WebSocket error:", err);
-    } catch (err: any) {
-      console.error(err.message);
-      alert("Failed to start outreach generation");
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-    };
-  }, []);
+    wsClinicsGenerated,
+    loading,
+    handleGenerateOutreach,
+    updateStatus,
+    max_word_limit,
+    number_of_clinics,
+    prompt,
+  } = useGenerateOutreach();
 
   const percentage =
     number_of_clinics > 0 && notGeneratedEmailsCount > 0
@@ -103,7 +22,7 @@ export default function CampaignOutreach() {
           (wsClinicsGenerated /
             Math.min(number_of_clinics, notGeneratedEmailsCount)) *
             100,
-          100
+          100,
         )
       : 0;
 
@@ -139,12 +58,11 @@ export default function CampaignOutreach() {
               className="input-outreach"
               min={1}
               value={max_word_limit ?? 0}
-              onChange={(e) =>
-                updateStatus(
-                  "max_word_limit",
-                  isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value)
-                )
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                const num = value === "" ? 0 : parseInt(value);
+                updateStatus("max_word_limit", isNaN(num) ? 1 : num);
+              }}
             />
           </span>
 
@@ -159,14 +77,9 @@ export default function CampaignOutreach() {
               value={number_of_clinics ?? 0}
               min={1}
               onChange={(e) => {
-                let value = parseInt(e.target.value);
-                if (isNaN(value)) value = 0;
-
-                if (notGeneratedEmailsCount != null) {
-                  value = Math.min(value, notGeneratedEmailsCount);
-                }
-
-                updateStatus("number_of_clinics", value);
+                const value = e.target.value;
+                const num = value === "" ? 0 : parseInt(value);
+                updateStatus("number_of_clinics", isNaN(num) ? 1 : num);
               }}
             />
           </span>
@@ -174,8 +87,9 @@ export default function CampaignOutreach() {
           <button
             className="bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8! cursor-pointer hover:bg-indigo-600! transition-all duration-200"
             onClick={handleGenerateOutreach}
+            disabled={loading}
           >
-            Generate Outreach
+            {loading ? "Generating..." : "Generate Outreach"}
           </button>
         </div>
 
@@ -187,12 +101,7 @@ export default function CampaignOutreach() {
             id="prompt"
             className="resize-none! input-outreach border w-full! min-h-85! border-gray-300 rounded px-2 py-1"
             value={prompt ?? ""}
-            onChange={(e) =>
-              updateStatus(
-                "prompt",
-                e.target.value
-              )
-            }
+            onChange={(e) => updateStatus("prompt", e.target.value)}
           />
         </div>
       </div>

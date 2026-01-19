@@ -11,12 +11,9 @@ from fastapi import (
     Depends,
     Cookie,
     Response,
+    Request,
 )
-from fastapi.security import (
-    OAuth2PasswordRequestForm,
-    HTTPBearer,
-    HTTPAuthorizationCredentials,
-)
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from typing import List, Optional, Dict, Any
@@ -43,7 +40,7 @@ app = FastAPI(title="Lyyvora Outreach API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,6 +61,11 @@ def home():
     return {"message": "Welcome"}
 
 
+@app.get("/me")
+def me(user: str = Depends(get_current_user)):
+    return {"username": user}
+
+
 @app.post("/login")
 def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
     if not authenticate_user(form_data.username, form_data.password):
@@ -76,7 +78,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         value=token,
         httponly=True,
         samesite="lax",
-        secure=True,
+        secure=False,
         max_age=60 * 60,
     )
 
@@ -183,6 +185,7 @@ async def outreach_ws(websocket: WebSocket, job_id: str):
 
 @app.post("/generate-outreach")
 def generate_outreach(
+    request: Request,
     background_tasks: BackgroundTasks,
     payload: dict = Body(...),
     user: str = Depends(get_current_user),
@@ -192,12 +195,13 @@ def generate_outreach(
     email_word_limit = payload.get("email_word_limit", 120)
 
     job_id = str(uuid.uuid4())
+    token = request.cookies.get("access_token")
 
     background_tasks.add_task(
         run_outreach_job, job_id, email_batch_size, prompt, email_word_limit
     )
 
-    return {"job_id": job_id, "ws_url": f"/ws/outreach/{job_id}"}
+    return {"job_id": job_id, "ws_url": f"/ws/outreach/{job_id}", "token": token}
 
 
 @app.post("/import-csv")

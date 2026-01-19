@@ -64,13 +64,13 @@ def get_all_filter_values():
                 type_set.add(subtype.strip())
 
     data = {
-        "name": [r["clinic_name"] for r in names if r.get("clinic_name")],
-        "city": [r["city"] for r in cities if r.get("city")],
-        "province": [r["province"] for r in provinces if r.get("province")],
-        "type": sorted(type_set),
-        "campaign_batch": [
-            r["campaign_batch"] for r in campaign_batches if r.get("campaign_batch")
-        ],
+        "name": set([r["clinic_name"] for r in names if r.get("clinic_name")]),
+        "city": set([r["city"] for r in cities if r.get("city")]),
+        "province": set([r["province"] for r in provinces if r.get("province")]),
+        "type": set(type_set),
+        "campaign_batch": set(
+            [r["campaign_batch"] for r in campaign_batches if r.get("campaign_batch")]
+        ),
     }
     return data
 

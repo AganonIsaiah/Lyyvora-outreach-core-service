@@ -6,7 +6,7 @@ import SelectedFilters from "./SelectedFilters";
 import { FilterState } from "@/lib/types";
 
 export default function ClinicsFilters() {
-  const { filters, setFilters, filtersConfig, clinics, showExport } = useDashboardContext();
+  const { filters, setFilters, filtersConfig, showExport } = useDashboardContext();
 
   if (!showExport) return;
 

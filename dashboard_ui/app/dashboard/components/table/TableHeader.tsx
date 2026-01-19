@@ -1,43 +1,11 @@
 "use client";
 
 import { useDashboardContext } from "@/context/DashboardContext";
+import { useExportSmartlead } from "@/hooks/useExportSmartlead";
 
 export default function TableHeader() {
-  const { showExport, filters } = useDashboardContext();
-
-  const handleExport = async () => {
-    try {
-      let url = "http://localhost:8000/export-smartlead-csv";
-
-      const selectedBatch = filters?.campaign_batch?.[0];
-      if (selectedBatch) {
-        const params = new URLSearchParams({
-          campaign_batch: selectedBatch,
-        });
-        url += `?${params.toString()}`;
-      }
-
-      const response = await fetch(url, { method: "GET" });
-
-      if (!response.ok) throw new Error("Failed to export CSV");
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = selectedBatch
-        ? `smartlead_${selectedBatch}.csv`
-        : "smartlead_ready.csv";
-
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to export data");
-    }
-  };
+  const { showExport } = useDashboardContext();
+  const { exportCSV, loading } = useExportSmartlead();
 
   return (
     <h1 className="relative rounded-t-lg shadow-sm border border-gray-200 w-full flex items-center px-8 h-14">
@@ -47,10 +15,13 @@ export default function TableHeader() {
 
       {showExport && (
         <button
-          onClick={handleExport}
-          className="ml-auto text-sm bg-amber-500 text-white px-2 py-1.5 rounded hover:bg-amber-600 cursor-pointer transition-all duration-200"
+          onClick={exportCSV}
+          disabled={loading}
+          className={`ml-auto text-sm bg-amber-500 text-white px-2 py-1.5 rounded hover:bg-amber-600 cursor-pointer transition-all duration-200 ${
+            loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
-          Export Smartlead CSV
+          {loading ? "Loading..." : "Export Smartlead CSV"}
         </button>
       )}
     </h1>

@@ -18,6 +18,7 @@ export default function DropTableCard() {
     try {
       const response = await fetch("http://localhost:8000/drop-tables", {
         method: "POST",
+        credentials: "include",
       });
 
       if (!response.ok) {

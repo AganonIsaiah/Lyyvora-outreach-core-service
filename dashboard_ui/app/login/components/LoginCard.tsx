@@ -1,44 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useLogin } from "@/hooks/useLogin";
 
 export default function LoginCard() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [username, setUsername] = useState("Lyyvora427");
+  const [password, setPassword] = useState("tbbRiipen28");
+  const { handleLogin, loading, error } = useLogin();
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("http://localhost:8000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ username, password }),
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Invalid credentials");
-
-      router.push("/dashboard"); // redirect on success
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); 
+    handleLogin(username, password); 
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white p-10 rounded-xl shadow-xl w-full max-w-sm"
+      className="bg-white p-10 rounded-xl shadow-xl border border-gray-200 w-full max-w-sm"
     >
-      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Lyyvora Outreach Dashboard</h2>
 
       {error && (
         <div className="bg-red-100 text-red-700 p-3 mb-4 rounded text-center font-medium">
@@ -73,7 +53,7 @@ export default function LoginCard() {
       <button
         type="submit"
         disabled={loading}
-        className={`w-full bg-blue-600 text-white p-3 rounded-lg font-semibold transition ${
+        className={`cursor-pointer w-full bg-blue-600 text-white p-3 rounded-lg font-semibold transition ${
           loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
         }`}
       >

@@ -2,7 +2,7 @@ import { DashboardResponse, FilterState } from "@/lib/types";
 import { mockDashboardResponse } from "@/mock/dashboard-data";
 
 const MOCK_DATA = false;
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 
 export const dashboardService = {
   async fetchDashboardData(

@@ -52,6 +52,7 @@ export default function ImportCard() {
       const res = await fetch(`${BASE_URL}${endpoint}`, {
         method: "POST",
         body: formData,
+        credentials: "include"
       });
 
       if (!res.ok) throw new Error(`${mode} CSV failed`);

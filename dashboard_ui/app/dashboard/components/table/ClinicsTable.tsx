@@ -17,7 +17,6 @@ export default function ClinicsTable() {
   const totalPages = dashboard?.totalPages ?? 1;
   const setPage = dashboard?.setPage ?? (() => {});
   const loading = dashboard?.loading ?? false;
-  const currentClinicCount = dashboard?.filteredCount ?? 0;
   const totalClinics = dashboard?.total ?? 0;
 
   if (!dashboard.showExport)
@@ -42,76 +41,121 @@ export default function ClinicsTable() {
           <table className="min-w-full divide-y divide-gray-200 w-full table-fixed">
             <thead className="bg-gray-100 sticky top-0 z-10">
               <tr>
-                <th className="w-12">ID</th>
-                <th className="w-35">Name</th>
+                <th className="w-12 pr-1!">ID</th>
+                <th className="w-34">Name</th>
                 <th className="w-18">Lead Score</th>
                 <th className="w-48">Type</th>
-                <th className="w-20">City</th>
+                <th className="w-22">City</th>
                 <th className="w-20">Province</th>
                 <th className="w-32">Email Status</th>
-                <th className="w-50">Campaign Batch ID</th>
+                <th className="w-48">Campaign Batch ID</th>
                 <th className="w-20">Average Rating</th>
                 <th className="w-46">Notes</th>
                 <th className="w-20">Expand</th>
               </tr>
             </thead>
-            <tbody>
-              {clinics.map((c) => (
-                <tr key={c.id} className="border-b border-gray-200 h-12">
-                  <td>{c.id}</td>
-                  <td className="truncate">
-                    <Tooltip title={c.name}>
-                      <span className="inline-block truncate w-full">
-                        {c.name}
-                      </span>
-                    </Tooltip>
-                  </td>
-                  <td>{c.lead_score}</td>
-                  <td className="truncate">
-                    <Tooltip title={c.type.join(", ")}>
-                      <span className="inline-block truncate w-full">
-                        {c.type.join(", ")}
-                      </span>
-                    </Tooltip>
-                  </td>
-                  <td>{c.city}</td>
-                  <td>{c.province}</td>
-                  <td>
-                    <span
-                      className={`whitespace-nowrap font-semibold px-2 py-1 rounded-xl text-xs ${
-                        CLINIC_STATUS_COLOR[c.email_status]
-                      }`}
-                    >
-                      {c.email_status}
-                    </span>
-                  </td>
 
-                  <td>{c.campaign_batch || <HorizontalRuleIcon className="text-gray-500 text-sm" />}</td>
-
-                  <td>{c.average_rating}</td>
-                  <td className="truncate">
-                    <Tooltip title={c.notes || ""}>
-                      <span className="inline-block truncate w-full">
-                        {c.notes || (
-                          <HorizontalRuleIcon className="text-gray-500 text-sm" />
-                        )}
+            {loading ? (
+              <tbody>
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-200 h-12">
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-6 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-12 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-24 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-16 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-16 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-20 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-24 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-12 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-20 animate-pulse" />
+                    </td>
+                    <td>
+                      <div className="h-4 bg-gray-200 rounded w-6 animate-pulse" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            ) : (
+              <tbody>
+                {clinics.map((c) => (
+                  <tr key={c.id} className="border-b border-gray-200 h-12">
+                    <td>{c.id}</td>
+                    <td className="truncate">
+                      <Tooltip title={c.name}>
+                        <span className="inline-block truncate w-full">
+                          {c.name}
+                        </span>
+                      </Tooltip>
+                    </td>
+                    <td>{c.lead_score}</td>
+                    <td className="truncate">
+                      <Tooltip title={c.type.join(", ")}>
+                        <span className="inline-block truncate w-full">
+                          {c.type.join(", ")}
+                        </span>
+                      </Tooltip>
+                    </td>
+                    <td>{c.city}</td>
+                    <td>{c.province}</td>
+                    <td>
+                      <span
+                        className={`whitespace-nowrap font-semibold px-2 py-1 rounded-xl text-xs ${
+                          CLINIC_STATUS_COLOR[c.email_status]
+                        }`}
+                      >
+                        {c.email_status}
                       </span>
-                    </Tooltip>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => router.push(`/clinics/${c.id}`)}
-                      className="cursor-pointer"
-                    >
-                      <ZoomOutMapIcon
-                        fontSize="small"
-                        className="text-gray-500 hover:text-black"
-                      />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                    </td>
+                    <td>
+                      {c.campaign_batch || (
+                        <HorizontalRuleIcon className="text-gray-500 text-sm" />
+                      )}
+                    </td>
+                    <td>{c.average_rating}</td>
+                    <td className="truncate">
+                      <Tooltip title={c.notes || ""}>
+                        <span className="inline-block truncate w-full">
+                          {c.notes || (
+                            <HorizontalRuleIcon className="text-gray-500 text-sm" />
+                          )}
+                        </span>
+                      </Tooltip>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => router.push(`/clinics/${c.id}`)}
+                        className="cursor-pointer"
+                      >
+                        <ZoomOutMapIcon
+                          fontSize="small"
+                          className="text-gray-500 hover:text-black"
+                        />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            )}
           </table>
         )}
       </div>
