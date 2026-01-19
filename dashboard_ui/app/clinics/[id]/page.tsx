@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 export default async function ClinicDetailPage({ params }: { params: Promise<{ id: string }>}) {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  // if (!user) redirect("/login");
 
   const { id } = await params;
   if (!id ) return <div>Invalid clinic ID</div>;
