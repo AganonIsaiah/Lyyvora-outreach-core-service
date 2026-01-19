@@ -244,8 +244,4 @@ def get_dashboard(
         result = generate_dashboard(req)
         return result
     except Exception as e:
-        import traceback
-
-        print("Full error traceback:")
-        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")

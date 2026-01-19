@@ -10,11 +10,8 @@ def drop_all_tables_supabase():
     for table in TABLES_TO_TRUNCATE:
         try:
             resp = supabase.table(table).delete().neq("id", 0).execute()
-            print(f"Cleared table: {table}")
         except Exception as e:
             raise Exception(f"Error clearing {table}: {str(e)}")
-
-    print("All tables cleared successfully.")
 
 
 def process_uploaded_csv(file: UploadFile) -> dict:

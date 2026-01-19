@@ -1,19 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
 import EmergencyIcon from "@mui/icons-material/Emergency";
 
 import { useDashboardContext } from "@/context/DashboardContext";
 import { IMPORT_COLUMNS } from "@/lib/constants";
-
-const BASE_URL = "http://localhost:8000";
+import { useImportCsv } from "@/hooks/useImportCsv";
 
 export default function ImportCard() {
   const importColumns = IMPORT_COLUMNS;
   const { showExport } = useDashboardContext();
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [uploadMode, setUploadMode] = useState<"import" | "append">("import");
+  const {
+    fileInputRef,
+    loadingReplace,
+    loadingAppend,
+    openFilePicker,
+    handleFileChange,
+  } = useImportCsv();
 
   function ColumnChips({ columns }: { columns: string[] }) {
     return (
@@ -29,46 +32,6 @@ export default function ImportCard() {
         ))}
       </div>
     );
-  }
-
-  function openFilePicker(mode: "import" | "append") {
-    setUploadMode(mode);
-    fileInputRef.current?.click();
-  }
-
-  async function handleFileChange(
-    e: React.ChangeEvent<HTMLInputElement>,
-    mode: "import" | "append"
-  ) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const endpoint = mode === "append" ? "/append-leads" : "/import-csv";
-
-      const res = await fetch(`${BASE_URL}${endpoint}`, {
-        method: "POST",
-        body: formData,
-        credentials: "include"
-      });
-
-      if (!res.ok) throw new Error(`${mode} CSV failed`);
-
-      alert(
-        mode === "append"
-          ? "CSV appended successfully"
-          : "CSV imported successfully"
-      );
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert(`Failed to ${mode} CSV`);
-    } finally {
-      e.target.value = "";
-    }
   }
 
   return (
@@ -95,23 +58,29 @@ export default function ImportCard() {
         type="file"
         accept=".csv"
         hidden
-        onChange={(e) => handleFileChange(e, uploadMode)}
+        onChange={handleFileChange}
       />
 
       <div className="flex gap-4">
         <button
+          disabled={loadingReplace || loadingAppend}
           onClick={() => openFilePicker("import")}
-          className={`bg-blue-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-blue-600 transition-all duration-200`}
+          className="bg-blue-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-blue-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {showExport ? "Replace CSV" : "Import CSV"}
+          {loadingReplace
+            ? "Replacing..."
+            : showExport
+            ? "Replace CSV"
+            : "Import CSV"}
         </button>
 
         {showExport && (
           <button
+            disabled={loadingReplace || loadingAppend}
             onClick={() => openFilePicker("append")}
-            className={`bg-lime-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-lime-600 transition-all duration-200`}
+            className="bg-lime-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-lime-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Append to CSV
+            {loadingAppend ? "Appending..." : "Append to CSV"}
           </button>
         )}
       </div>

@@ -169,10 +169,6 @@ def run_rules_baseline():
     logger.info(f"Runtime: {elapsed:.2f}s")
     logger.info(f"Model: {MODEL_VERSION}")
 
-    # print(
-    #     f"Rules baseline complete | scored={scored}, skipped={skipped}, failed={failed}, time={elapsed:.2f}s"
-    # )
-
 
 if __name__ == "__main__":
     run_rules_baseline()
