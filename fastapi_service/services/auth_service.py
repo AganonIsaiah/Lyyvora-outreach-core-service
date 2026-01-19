@@ -1,12 +1,11 @@
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+from configs.database import supabase
+import os
 
-API_USERNAME = os.getenv("API_USERNAME")
-API_PASSWORD_HASH = os.getenv("API_PASSWORD_HASH")
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", 60))
@@ -19,7 +18,19 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def authenticate_user(username: str, password: str) -> bool:
-    return username == API_USERNAME and verify_password(password, API_PASSWORD_HASH)
+    res = (
+        supabase.table("auth")
+        .select("id, name, password")
+        .eq("name", username)
+        .limit(1)
+        .execute()
+    )
+
+    if not res.data:
+        return False
+
+    user = res.data[0]
+    return verify_password(password, user["password"])
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

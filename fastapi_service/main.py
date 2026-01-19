@@ -41,7 +41,7 @@ app = FastAPI(title="Lyyvora Outreach API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=[FRONTEND_URL, "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,11 +62,6 @@ def home():
     return {"message": "Welcome"}
 
 
-@app.get("/me")
-def me(user: str = Depends(get_current_user)):
-    return {"username": user}
-
-
 @app.post("/login")
 def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
     if not authenticate_user(form_data.username, form_data.password):
@@ -74,12 +69,14 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
 
     token = create_access_token({"sub": form_data.username})
 
+    is_local = FRONTEND_URL.startswith("http://localhost")
+
     response.set_cookie(
         key="access_token",
         value=token,
         httponly=True,
-        samesite="none",
-        secure=True,
+        samesite="lax" if is_local else "none",
+        secure=not is_local,
         max_age=60 * 60 * 8,
     )
 
