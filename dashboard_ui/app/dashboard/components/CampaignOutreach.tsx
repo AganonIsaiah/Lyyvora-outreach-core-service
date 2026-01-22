@@ -39,8 +39,8 @@ export default function CampaignOutreach() {
     <div className="flex flex-col justify-center gap-4 h-full! w-full! card-section">
       <div className="flex justify-between gap-10">
         <div className="flex flex-col items-center justify-evenly">
-          <span className="flex justify-between items-center">
-            <span className="flex flex-col gap-0.25">
+          <span className="flex justify-evenly items-center">
+            <span className="flex flex-col gap-0.25 mb-4!">
               <h2>Outreach Generator</h2>
               <p className="text-slate-400 text-xs flex gap-1 items-center">
                 <EmergencyIcon className="text-[10px]!" />

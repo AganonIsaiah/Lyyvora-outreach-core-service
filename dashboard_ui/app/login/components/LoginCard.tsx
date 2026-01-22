@@ -10,11 +10,12 @@ export default function LoginCard() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); 
-    handleLogin(username, password); 
+    handleLogin(username.trim(), password.trim()); 
   };
 
   return (
     <form
+      id="login-form"
       onSubmit={handleSubmit}
       className="bg-white p-10 rounded-xl shadow-xl border border-gray-200 w-full max-w-sm"
     >
@@ -27,9 +28,12 @@ export default function LoginCard() {
       )}
 
       <div className="mb-4">
-        <label className="block mb-2 font-medium text-gray-700">Username</label>
+        <label 
+        id="username"
+        className="block mb-2 font-medium text-gray-700">Username</label>
         <input
           type="text"
+          id="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="Enter your username"
@@ -39,8 +43,11 @@ export default function LoginCard() {
       </div>
 
       <div className="mb-6">
-        <label className="block mb-2 font-medium text-gray-700">Password</label>
+        <label 
+        id="password"
+        className="block mb-2 font-medium text-gray-700">Password</label>
         <input
+        id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

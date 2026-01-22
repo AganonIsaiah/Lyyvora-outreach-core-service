@@ -5,7 +5,7 @@ import {
   ClinicEmails,
   Metric,
   DashboardResponse,
-  CampaignStatus
+  CampaignStatus,
 } from "@/lib/types";
 
 const defaultPrompt = `ROLE
@@ -91,7 +91,7 @@ const defaultEmails = (clinicName: string): ClinicEmails[] => [
 const getUniqueValues = (clinics: Clinic[], key: keyof Clinic) => {
   const values = clinics
     .map((c) => c[key])
-    .flat() 
+    .flat()
     .filter(Boolean);
   return Array.from(new Set(values)) as string[];
 };
@@ -99,7 +99,7 @@ const getUniqueValues = (clinics: Clinic[], key: keyof Clinic) => {
 const getStatusValues = () => Object.values(ClinicStatus);
 
 export const mockClinicsData: Clinic[] = [
-    {
+  {
     id: 0,
     name: "Aganon's Clinic",
     email: "info@mock.com",
@@ -115,12 +115,48 @@ export const mockClinicsData: Clinic[] = [
     notes: "New lead, no contact made yet.",
     emails_for_outreach: defaultEmails("Clinic Alpha"),
     campaign_batch: "test batch",
-    phone: "1234567890"
+    phone: "1234567890",
   },
-]
+  {
+    id: 1,
+    name: "Aganon's Clinic",
+    email: "info@mock.com",
+    website_url: "https://clinicalpha.com",
+    top_features: "Advanced equipment, Certified specialists",
+    type: ["Spa"],
+    city: "Toronto",
+    province: "Ontario",
+    email_status: ClinicStatus.GENERATED,
+    total_reviews: 25,
+    average_rating: 4.7,
+    lead_score: 91,
+    notes: "New lead, no contact made yet.",
+    emails_for_outreach: defaultEmails("Clinic Alpha"),
+    campaign_batch: "test batch",
+    phone: "1234567890",
+  },
+  {
+    id: 2,
+    name: "Aganon's Clinic",
+    email: "info@mock.com",
+    website_url: "https://clinicalpha.com",
+    top_features: "Advanced equipment, Certified specialists",
+    type: ["Spa"],
+    city: "Toronto",
+    province: "Ontario",
+    email_status: ClinicStatus.EXPORTED,
+    total_reviews: 25,
+    average_rating: 4.7,
+    lead_score: 91,
+    notes: "New lead, no contact made yet.",
+    emails_for_outreach: defaultEmails("Clinic Alpha"),
+    campaign_batch: "test batch",
+    phone: "1234567890",
+  },
+];
 
 export const mockFilters: Filter[] = [
-   {
+  {
     key: "name",
     label: "Name",
     values: getUniqueValues(mockClinicsData, "name"),
@@ -187,7 +223,7 @@ export const mockMetrics: Metric[] = [
   {
     label: "Emails Sent Today",
     value: 10,
-    desc: "Daily limit reached"
+    desc: "Daily limit reached",
   },
   {
     label: "Active Campaigns",
@@ -207,8 +243,8 @@ export const mockCampaignStatus: CampaignStatus = {
   prompt: defaultPrompt,
   total_clinics: 592,
   max_word_limit: 120,
-  number_of_clinics: 89
-}
+  number_of_clinics: 89,
+};
 
 export const mockDashboardResponse: DashboardResponse = {
   clinics_data: mockClinicsData,
@@ -218,5 +254,5 @@ export const mockDashboardResponse: DashboardResponse = {
   show_export: true,
   total_clinics: 500,
   filtered_clinics_count: 200,
-  not_generated_emails_count: 120
-}
+  not_generated_emails_count: 120,
+};

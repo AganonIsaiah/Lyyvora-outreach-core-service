@@ -1,6 +1,7 @@
 export enum ClinicStatus {
   NOT_GENERATED = "Not Generated",
-  GENERATED = "Generated"
+  GENERATED = "Generated",
+  EXPORTED = "Exported"
 };
 
 export enum Routes {
