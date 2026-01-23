@@ -318,7 +318,7 @@ def generate_dashboard(req: DashboardRequest):
     ]
 
     campaign_status = CampaignStatus(
-        max_word_limit=120,
+        max_word_limit=300,
         number_of_clinics=10,
         prompt=prompt(),
         contacted_clinics=0,

@@ -87,17 +87,17 @@ export default function FilterUI({
       <p className="text-xs font-semibold mb-1">{label}</p>
 
       <button
-        className="cursor-pointer text-sm w-40 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+        className="cursor-pointer text-sm w-38 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
         onClick={() => setIsOpen((v) => !v)}
       >
-        <span className="text-gray-400 truncate text-xs font-semibold">
+        <span className="text-gray-400 w-full! truncate text-xs font-semibold">
           {buttonLabel}
         </span>
         {isOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
       </button>
 
       {isOpen && (
-        <div className="absolute z-20 mt-2 w-40 bg-white border border-gray-300 rounded-lg shadow overflow-x-hidden">
+        <div className="absolute z-20 mt-2 w-38 bg-white border border-gray-300 rounded-lg shadow overflow-x-hidden">
           <div className="rounded-t-lg text-xs font-semibold text-white flex items-center justify-between py-1.5 pl-3 pr-1.5 border-b border-gray-500">
             <button
               onClick={applyFilters}
