@@ -5,10 +5,10 @@ import { useDashboardContext } from "@/context/DashboardContext";
 
 export const useExportSmartlead = () => {
   const { filters } = useDashboardContext();
-  const [loading, setLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const exportCSV = async () => {
-    setLoading(true);
+    setExportLoading(true);
     try {
       let url = `${process.env.NEXT_PUBLIC_API_URL}/export-smartlead-csv`;
 
@@ -41,9 +41,9 @@ export const useExportSmartlead = () => {
       console.error(err);
       alert("Failed to export data");
     } finally {
-      setLoading(false);
+      setExportLoading(false);
     }
   };
 
-  return { exportCSV, loading };
+  return { exportCSV, exportLoading };
 };

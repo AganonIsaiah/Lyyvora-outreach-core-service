@@ -40,6 +40,7 @@ interface DashboardContextProps {
   totalPages: number;
   notGeneratedEmailsCount: number;
   setPage: (p: number) => void;
+  setLoading: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(
@@ -98,6 +99,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setFilters,
         filtersConfig,
         loading,
+        setLoading,
         loadingPage,
         error,
         campaignStatus,

@@ -11,7 +11,7 @@ import { FilterState } from "@/lib/types";
 export default function ClinicsFilters() {
   const { filters, setFilters, filtersConfig, showExport } =
     useDashboardContext();
-  const { exportCSV, loading } = useExportSmartlead();
+  const { exportCSV, exportLoading } = useExportSmartlead();
 
   if (!showExport) return;
 
@@ -76,10 +76,10 @@ export default function ClinicsFilters() {
           {showExport && (
             <button
               onClick={exportCSV}
-              disabled={loading || !hasCampaignBatch}
+              disabled={exportLoading || !hasCampaignBatch}
               className={`mt-3 font-semibold text-sm bg-amber-500 text-white px-2 py-1.5 rounded hover:bg-amber-600 cursor-pointer transition-all duration-200 
                ${
-                 loading || !hasCampaignBatch
+                 exportLoading || !hasCampaignBatch
                    ? "opacity-50 cursor-not-allowed! hover:bg-amber-500!"
                    : "hover:bg-amber-600 cursor-pointer"
                }
@@ -88,7 +88,7 @@ export default function ClinicsFilters() {
             >
               {!hasCampaignBatch
                 ? "Choose batch id to enable export"
-                : loading
+                : exportLoading
                   ? "Loading..."
                   : "Export Smartlead CSV"}
             </button>
