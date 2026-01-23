@@ -49,18 +49,27 @@ def get_clinic_by_id(clinic_id: int) -> Dict[str, Any]:
     try:
         resp_ls = (
             supabase.table("lead_scores")
-            .select("top_features")
+            .select("top_features", "score")
             .eq("leads_id", clinic_id)
             .maybe_single()
             .execute()
         )
         lead_scores_row = resp_ls.data
-        if lead_scores_row and lead_scores_row.get("top_features"):
-            clinic["top_features"] = lead_scores_row["top_features"]
-        else:
-            clinic["top_features"] = "[]"
+
+        if lead_scores_row:
+            if lead_scores_row.get("top_features"):
+                clinic["top_features"] = lead_scores_row["top_features"]
+            else:
+                clinic["top_features"] = "[]"
+
+            if lead_scores_row.get("score"):
+                clinic["lead_score"] = lead_scores_row["score"]
+            else:
+                clinic["lead_score"] = 0
+
     except Exception as e:
         clinic["top_features"] = "[]"
+        clinic["lead_score"] = 0
 
     if isinstance(clinic.get("clinic_sub_type"), str):
         clinic["type"] = [s.strip() for s in clinic["clinic_sub_type"].split(",")]
@@ -68,7 +77,6 @@ def get_clinic_by_id(clinic_id: int) -> Dict[str, Any]:
         clinic["type"] = []
 
     clinic.setdefault("name", clinic.get("clinic_name") or "Clinic Name")
-    clinic.setdefault("lead_score", clinic.get("lead_score") or 0)
     clinic.setdefault("notes", clinic.get("website_desc") or "N/A")
     clinic.setdefault("email", clinic.get("email") or "N/A")
     clinic.setdefault("website_url", clinic.get("website_url") or "N/A")

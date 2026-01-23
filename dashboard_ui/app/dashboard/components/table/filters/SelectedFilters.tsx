@@ -1,7 +1,6 @@
 "use client";
 
 import { Filter } from "@/lib/types";
-import { useDashboardContext } from "@/context/DashboardContext";
 
 interface SelectedFiltersProps {
   filters: Record<string, string[]>;
@@ -16,7 +15,6 @@ export default function SelectedFilters({
   onRemove,
   onClearAll
 }: SelectedFiltersProps) {
-  const { showExport } = useDashboardContext();
 
   const activeFilters = Object.entries(filters).flatMap(([key, values]) =>
     values.map((value) => ({ key, value }))

@@ -303,33 +303,9 @@ def generate_dashboard(req: DashboardRequest):
 
     filters: list[Filter] = [
         Filter(
-            key="name",
-            label="Name",
-            values=sorted(filter_values["name"]),
-            type="select",
-        ),
-        Filter(
-            key="type",
-            label="Type",
-            values=sorted(filter_values["type"]),
-            type="select",
-        ),
-        Filter(
-            key="city",
-            label="City",
-            values=sorted(filter_values["city"]),
-            type="select",
-        ),
-        Filter(
             key="campaign_batch",
             label="Campaign Batch ID",
             values=sorted(filter_values["campaign_batch"], reverse=True),
-            type="select",
-        ),
-        Filter(
-            key="province",
-            label="Province",
-            values=sorted(filter_values["province"]),
             type="select",
         ),
         Filter(
@@ -337,15 +313,6 @@ def generate_dashboard(req: DashboardRequest):
             label="Email Status",
             values=[s.value for s in ClinicStatus],
             type="select",
-        ),
-        Filter(
-            key="lead_score", label="Lead Score", values=["Asc", "Desc"], type="sort"
-        ),
-        Filter(
-            key="average_rating",
-            label="Average Rating",
-            values=["Asc", "Desc"],
-            type="sort",
         ),
     ]
 
