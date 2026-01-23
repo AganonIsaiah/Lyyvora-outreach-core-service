@@ -123,14 +123,22 @@ def export_smartlead_csv(
             query = query.eq("campaign_batch", campaign_batch)
 
         resp = query.execute()
+        rows = resp.data
 
-        if isinstance(resp.data, dict) and "code" in resp.data:
-            raise HTTPException(
-                status_code=500,
-                detail=resp.data.get("message", "Unknown Supabase error"),
+        if campaign_batch:
+            lead_ids_resp = (
+                supabase.table("smartlead")
+                .select("leads_id")
+                .eq("campaign_batch", campaign_batch)
+                .execute()
             )
 
-        rows = resp.data
+            lead_ids = [r["leads_id"] for r in lead_ids_resp.data or []]
+
+            if lead_ids:
+                supabase.table("leads").update({"email_status": "Exported"}).in_(
+                    "id", lead_ids
+                ).execute()
 
         def row_generator(rows, header):
             output = StringIO()

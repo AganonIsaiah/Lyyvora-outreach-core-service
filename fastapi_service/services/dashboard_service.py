@@ -14,7 +14,8 @@ from configs.database import supabase
 from datetime import datetime
 
 STATUS_PRIORITY = {
-    ClinicStatus.GENERATED: 2,
+    ClinicStatus.GENERATED: 3,
+    ClinicStatus.EXPORTED: 2,
     ClinicStatus.NOT_GENERATED: 1,
 }
 
