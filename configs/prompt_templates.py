@@ -2,7 +2,10 @@ def prompt(clinic_info: dict = {}, user_prompt: str = "", max_words: int = 300) 
     GUARDRAILS = f"""IMPORTANT: STRICT GUARDRAILS
 - Follow ALL rules exactly.
 - Subject lines in Title Case.
-- No greetings or signatures.
+- ALWAYS include a greeting in each email body using the clinics name (be mindful of poorly formatted clinic names).
+- When adding a greeting, use Hello and ONLY the clinic name itself.
+- Do NOT include any personal names, doctor names, titles, or location info in the greeting.
+- No signatures.
 - No invented claims, metrics, numbers, or partnerships.
 - Do not fabricate turnaround times, dollar amounts, or lender claims.
 - No exaggerations, hype, or guarantees.
@@ -13,6 +16,7 @@ def prompt(clinic_info: dict = {}, user_prompt: str = "", max_words: int = 300) 
 - Tone: calm, credible, human, and conversational.
 - Primary goal: start a conversation, not to close.
 - End each email with a soft, low-pressure CTA question.
+- Do NOT include horizontal lines, "---", "___",
 - Output ONLY the format below:
 
 subject_line_1: <one concise subject line>

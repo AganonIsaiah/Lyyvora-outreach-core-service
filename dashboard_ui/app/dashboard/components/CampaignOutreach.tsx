@@ -50,29 +50,28 @@ export default function CampaignOutreach() {
           </span>
 
           <span className="flex flex-col">
-            <label htmlFor="max-word-limit" className="label-outreach">
-              Max Word Limit
+            <label htmlFor="max-word-limit" className="label-outreach w-30!">
+              Max Word Limit (Max 500)
             </label>
             <input
               type="number"
               id="max-word-limit"
               className="input-outreach"
               min={1}
+              max={500}
               value={max_word_limit ?? 0}
-              onChange={(e) =>
-                updateStatus(
-                  "max_word_limit",
-                  isNaN(parseInt(e.target.value))
-                    ? 0
-                    : parseInt(e.target.value),
-                )
-              }
+              onChange={(e) => {
+                let value = parseInt(e.target.value);
+                if (isNaN(value)) value = 0;
+                value = Math.min(Math.max(value, 1), 500);
+                updateStatus("max_word_limit", value);
+              }}
             />
           </span>
 
           <span className="flex flex-col">
-            <label htmlFor="number-of-clinics" className="label-outreach">
-              Number of Clinics
+            <label htmlFor="number-of-clinics" className="label-outreach w-30!">
+              Number of Clinics (Max 200)
             </label>
             <input
               type="number"
@@ -85,7 +84,7 @@ export default function CampaignOutreach() {
                 if (isNaN(value)) value = 0;
 
                 if (notGeneratedEmailsCount != null) {
-                  value = Math.min(value, notGeneratedEmailsCount);
+                  value = Math.min(value, notGeneratedEmailsCount, 200);
                 }
 
                 updateStatus("number_of_clinics", value);

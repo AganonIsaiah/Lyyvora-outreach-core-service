@@ -1,9 +1,9 @@
 from openai import OpenAI
-import os
 from dotenv import load_dotenv
 import time
 from datetime import datetime
 import re
+import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from configs.logging_module import Logger
@@ -65,9 +65,7 @@ def generate_email(
         except Exception as e:
             error_msg = str(e)
             if "rate_limit" in error_msg.lower() or "429" in error_msg:
-                wait_time = (2**attempt) + (
-                    0.5 * (1 + random.random())
-                )  # Exponential backoff
+                wait_time = (2**attempt) + (0.5 * (1 + random.random()))
                 logger.warning(
                     f"Rate limit for {clinic_name}, retrying in {wait_time:.2f}s (attempt {attempt}/{retry_count})"
                 )
@@ -87,10 +85,6 @@ def generate_email(
 
 def add_signature(email_body: str) -> str:
     return f"{email_body.rstrip()}\n\n{EMAIL_SIGNATURE.strip()}"
-
-
-def add_greeting(email_body: str, clinic_name: str) -> str:
-    return f"Hello {clinic_name},\n\n{email_body.rstrip()}"
 
 
 def parse_email(email_text: str):
@@ -218,15 +212,9 @@ def run_email_generation(
                     )
                     continue
 
-                email_body_1 = add_greeting(
-                    add_signature(parsed[3]), clinic_info["clinic_name"]
-                )
-                email_body_2 = add_greeting(
-                    add_signature(parsed[4]), clinic_info["clinic_name"]
-                )
-                email_body_3 = add_greeting(
-                    add_signature(parsed[5]), clinic_info["clinic_name"]
-                )
+                email_body_1 = add_signature(parsed[3])
+                email_body_2 = add_signature(parsed[4])
+                email_body_3 = add_signature(parsed[5])
 
                 record = {
                     "leads_id": clinic_info["id"],
@@ -270,7 +258,7 @@ def run_email_generation(
     )
 
     logger.info(
-        f"✅ Generated {len(all_records)} emails in {batch_elapsed:.2f}s "
+        f"Generated {len(all_records)} emails in {batch_elapsed:.2f}s "
         f"(~{batch_elapsed/max(len(all_records), 1):.2f}s per email with parallelization)"
     )
 
