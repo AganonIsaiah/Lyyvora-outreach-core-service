@@ -1,18 +1,18 @@
-from ollama import Client
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
 import time
 from datetime import datetime
 import re
-import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from configs.logging_module import Logger
 from configs.types import ClinicStatus
 from configs.prompt_templates import prompt
 from configs.database import supabase
+from configs.configs import OPENAI_API_KEY
 
-OLLAMA_MODEL = "deepseek-v3.1:671b-cloud"
+MODEL = "gpt-4o-mini"
 
 EMAIL_SIGNATURE = """
 Best regards,
@@ -25,52 +25,60 @@ https://lyyvora.com/
 load_dotenv()
 
 logger = Logger(log_file="outreach_generator.log")
-client = Client(
-    host="https://ollama.com",
-    headers={"Authorization": f"Bearer {os.environ.get('OLLAMA_API')}"},
-)
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 BATCH_SIZE = 50
-MAX_WORKERS = 5  # keep 3-5 to avoid 429s
+MAX_WORKERS = 10
 
 
 def generate_email(
     clinic_info: dict, user_prompt: str | None = None, max_words: int = 120
 ) -> str:
+    """Generate email using OpenAI API"""
     clinic_name = clinic_info.get("clinic_name", "N/A")
     start_time = time.perf_counter()
-    messages = [
-        {
-            "role": "user",
-            "content": prompt(
-                clinic_info=clinic_info, user_prompt=user_prompt, max_words=max_words
-            ),
-        }
-    ]
+
+    prompt_content = prompt(
+        clinic_info=clinic_info, user_prompt=user_prompt, max_words=max_words
+    )
 
     retry_count = 3
+    email_text = ""
+
     for attempt in range(1, retry_count + 1):
         try:
-            response = client.chat(OLLAMA_MODEL, messages=messages)
-            email_text = response.message.content
+            response = client.chat.completions.create(
+                model=MODEL,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert email copywriter specializing in B2B outreach for healthcare clinics.",
+                    },
+                    {"role": "user", "content": prompt_content},
+                ],
+                temperature=0.7,
+                max_tokens=1000,
+            )
+            email_text = response.choices[0].message.content
             if email_text:
                 break
         except Exception as e:
-            if "429" in str(e):
-                wait_time = 1 + random.random()
+            error_msg = str(e)
+            if "rate_limit" in error_msg.lower() or "429" in error_msg:
+                wait_time = (2**attempt) + (
+                    0.5 * (1 + random.random())
+                )  # Exponential backoff
                 logger.warning(
-                    f"429 rate limit for {clinic_name}, retrying in {wait_time:.2f}s (attempt {attempt}/{retry_count})"
+                    f"Rate limit for {clinic_name}, retrying in {wait_time:.2f}s (attempt {attempt}/{retry_count})"
                 )
                 time.sleep(wait_time)
             else:
-                logger.error(f"Ollama API error for {clinic_name}: {e}")
-                email_text = ""
+                logger.error(f"OpenAI API error for {clinic_name}: {e}")
                 break
     else:
         logger.error(
             f"Failed to generate email for {clinic_name} after {retry_count} attempts"
         )
-        email_text = ""
 
     elapsed = time.perf_counter() - start_time
     logger.end_item(clinic_name, duration=elapsed)
@@ -142,7 +150,7 @@ def run_email_generation(
     EMAIL_BATCH_SIZE: int = 10,
     PROMPT: str | None = None,
     EMAIL_WORD_LIMIT: int = 120,
-    MAX_WORKERS: int | None = 5,
+    MAX_WORKERS: int | None = None,
     progress_callback=None,
 ):
     if EMAIL_BATCH_SIZE < 1:
@@ -179,73 +187,78 @@ def run_email_generation(
     logger.start_batch(campaign_batch)
     batch_start = time.perf_counter()
 
-    workers = min(MAX_WORKERS or 5, len(clinics))
-    records_to_insert = []
+    workers = MAX_WORKERS if MAX_WORKERS else EMAIL_BATCH_SIZE
+    all_records = []
     updated_clinic_ids = []
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = [
-            executor.submit(generate_email_safe, clinic, PROMPT, EMAIL_WORD_LIMIT)
+        futures = {
+            executor.submit(
+                generate_email_safe, clinic, PROMPT, EMAIL_WORD_LIMIT
+            ): clinic
             for clinic in clinics
-        ]
+        }
 
         for future in as_completed(futures):
-            clinic_info, email_text = future.result()
-
-            parsed = parse_email(email_text)
-            if parsed is None:
-                logger.warning(
-                    f"Parsing failed for {clinic_info['clinic_name']}, retrying once..."
-                )
-                _, email_text = generate_email_safe(
-                    clinic_info, PROMPT, EMAIL_WORD_LIMIT
-                )
+            try:
+                clinic_info, email_text = future.result()
                 parsed = parse_email(email_text)
+                if parsed is None:
+                    logger.warning(
+                        f"Parsing failed for {clinic_info['clinic_name']}, retrying once..."
+                    )
+                    _, email_text = generate_email_safe(
+                        clinic_info, PROMPT, EMAIL_WORD_LIMIT
+                    )
+                    parsed = parse_email(email_text)
 
-            if parsed is None:
-                logger.error(
-                    f"Failed to parse email for {clinic_info['clinic_name']}. Skipping."
+                if parsed is None:
+                    logger.error(
+                        f"Failed to parse email for {clinic_info['clinic_name']}. Skipping."
+                    )
+                    continue
+
+                email_body_1 = add_greeting(
+                    add_signature(parsed[3]), clinic_info["clinic_name"]
                 )
-                continue
+                email_body_2 = add_greeting(
+                    add_signature(parsed[4]), clinic_info["clinic_name"]
+                )
+                email_body_3 = add_greeting(
+                    add_signature(parsed[5]), clinic_info["clinic_name"]
+                )
 
-            email_body_1 = add_greeting(
-                add_signature(parsed[3]), clinic_info["clinic_name"]
-            )
-            email_body_2 = add_greeting(
-                add_signature(parsed[4]), clinic_info["clinic_name"]
-            )
-            email_body_3 = add_greeting(
-                add_signature(parsed[5]), clinic_info["clinic_name"]
-            )
+                record = {
+                    "leads_id": clinic_info["id"],
+                    "clinic_name": clinic_info["clinic_name"],
+                    "email": clinic_info["email"],
+                    "subject_line_1": parsed[0],
+                    "email_body_1": email_body_1,
+                    "subject_line_2": parsed[1],
+                    "email_body_2": email_body_2,
+                    "subject_line_3": parsed[2],
+                    "email_body_3": email_body_3,
+                    "clinic_type": clinic_info.get("clinic_sub_type"),
+                    "city": clinic_info.get("city"),
+                    "province": clinic_info.get("province"),
+                    "campaign_batch": campaign_batch,
+                }
 
-            record = {
-                "leads_id": clinic_info["id"],
-                "clinic_name": clinic_info["clinic_name"],
-                "email": clinic_info["email"],
-                "subject_line_1": parsed[0],
-                "email_body_1": email_body_1,
-                "subject_line_2": parsed[1],
-                "email_body_2": email_body_2,
-                "subject_line_3": parsed[2],
-                "email_body_3": email_body_3,
-                "clinic_type": clinic_info.get("clinic_sub_type"),
-                "city": clinic_info.get("city"),
-                "province": clinic_info.get("province"),
-                "campaign_batch": campaign_batch,
-            }
+                all_records.append(record)
+                updated_clinic_ids.append(clinic_info["id"])
 
-            records_to_insert.append(record)
-            updated_clinic_ids.append(clinic_info["id"])
+                if progress_callback:
+                    progress_callback()
 
-            if progress_callback:
-                progress_callback()
+            except Exception as e:
+                clinic = futures[future]
+                logger.error(
+                    f"Error processing {clinic.get('clinic_name', 'unknown')}: {e}"
+                )
 
-            if len(records_to_insert) >= BATCH_SIZE:
-                batch_save_to_supabase(records_to_insert)
-                records_to_insert = []
-
-    if records_to_insert:
-        batch_save_to_supabase(records_to_insert)
+    for i in range(0, len(all_records), BATCH_SIZE):
+        chunk = all_records[i : i + BATCH_SIZE]
+        batch_save_to_supabase(chunk)
 
     set_clinic_status_queued(updated_clinic_ids)
 
@@ -253,7 +266,12 @@ def run_email_generation(
     logger.end_batch(
         campaign_batch,
         duration=batch_elapsed,
-        avg_per_item=batch_elapsed / max(EMAIL_BATCH_SIZE, 1),
+        avg_per_item=batch_elapsed / max(len(updated_clinic_ids), 1),
+    )
+
+    logger.info(
+        f"✅ Generated {len(all_records)} emails in {batch_elapsed:.2f}s "
+        f"(~{batch_elapsed/max(len(all_records), 1):.2f}s per email with parallelization)"
     )
 
 
