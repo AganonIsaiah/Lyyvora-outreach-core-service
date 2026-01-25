@@ -47,7 +47,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center">
       <div className="w-full px-8! m-4 flex gap-6 mt-6">
-        <div className="max-w-1/2! bg-white shadow rounded-lg p-6 flex flex-col gap-4 h-full!">
+        <div className="w-1/2! bg-white shadow rounded-lg p-6 flex flex-col gap-4 h-full!">
           <div className="flex justify-between items-center border-b border-gray-200 pb-3">
             <h1 className="text-3xl font-bold text-gray-800">
               {displayValue(clinic.name) || "Clinic Name"}
@@ -103,10 +103,10 @@ export default function ClinicDetailUI({ clinicId }: Props) {
                 <span className="font-semibold">Lead Score:</span>{" "}
                 {displayValue(clinic.lead_score)}
               </p>
-              <p>
+              <p className="flex items-center gap-2">
                 <span className="font-semibold">Status:</span>{" "}
                 <span
-                  className={`whitespace-nowrap font-semibold px-2 py-1 rounded-xl text-xs ${
+                  className={`whitespace-nowrap font-semibold px-2 py-0.5 rounded-xl text-xs! ${
                     CLINIC_STATUS_COLOR[clinic.email_status]
                   }`}
                 >
@@ -140,31 +140,34 @@ export default function ClinicDetailUI({ clinicId }: Props) {
           </div>
         </div>
 
-        <div className="max-w-1/2! bg-white! shadow rounded-lg p-6">
+        <div className="w-1/2! bg-white! shadow rounded-lg p-6">
+          <p className="font-semibold mb-2">Emails for Outreach:</p>
+          
+          {emails.length <= 0 && (
+            <div className="p-1 text-gray-500 font-semibold text-sm!"> No emails have been generated for this clinic yet.</div>
+          )}
+
           {emails.length > 0 && (
-            <div>
-              <p className="font-semibold mb-2">Emails for Outreach:</p>
-              <div className="flex flex-col gap-4">
-                {emails.map((email, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-gray-50 border border-gray-200 rounded-lg p-2"
-                  >
-                    <p className="text-xs font-medium mb-1">
-                      <span className="font-semibold">Type:</span>{" "}
-                      {displayValue(email.type)}
-                    </p>
-                    <p className="text-xs mb-1">
-                      <span className="font-semibold">Subject:</span>{" "}
-                      {displayValue(email.subject_line)}
-                    </p>
-                    <p className="text-xs whitespace-pre-wrap">
-                      <span className="font-semibold">Body:</span>{" "}
-                      {email.email_body}
-                    </p>
-                  </div>
-                ))}
-              </div>
+            <div className="flex flex-col gap-4">
+              {emails.map((email, idx) => (
+                <div
+                  key={idx}
+                  className="bg-gray-50 border border-gray-200 rounded-lg p-2"
+                >
+                  <p className="text-xs font-medium mb-1">
+                    <span className="font-semibold">Type:</span>{" "}
+                    {displayValue(email.type)}
+                  </p>
+                  <p className="text-xs mb-1">
+                    <span className="font-semibold">Subject:</span>{" "}
+                    {displayValue(email.subject_line)}
+                  </p>
+                  <p className="text-xs whitespace-pre-wrap">
+                    <span className="font-semibold">Body:</span>{" "}
+                    {email.email_body}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
         </div>
