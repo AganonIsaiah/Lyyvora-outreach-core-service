@@ -1,4 +1,13 @@
 from core.lead_scoring_model.rules_based_baseline import rules_based_score
+import pytest
+from unittest.mock import patch, MagicMock
+
+
+@pytest.fixture(autouse=True)
+def mock_supabase_client():
+    with patch("configs.database.create_client") as mock_client:
+        mock_client.return_value = MagicMock()
+        yield
 
 
 def test_only_valid_phone():
