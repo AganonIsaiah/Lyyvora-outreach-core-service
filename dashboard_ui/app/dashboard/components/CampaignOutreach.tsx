@@ -51,19 +51,17 @@ export default function CampaignOutreach() {
 
           <span className="flex flex-col">
             <label htmlFor="max-word-limit" className="label-outreach w-30!">
-              Max Word Limit (Max 500)
+              Email Word Limit (Max 200)
             </label>
             <input
               type="number"
               id="max-word-limit"
               className="input-outreach"
-              min={1}
-              max={500}
+              max={200}
               value={max_word_limit ?? 0}
               onChange={(e) => {
                 let value = parseInt(e.target.value);
-                if (isNaN(value)) value = 0;
-                value = Math.min(Math.max(value, 1), 500);
+                value = Math.min(Math.max(value, 1), 200);
                 updateStatus("max_word_limit", value);
               }}
             />
@@ -78,11 +76,9 @@ export default function CampaignOutreach() {
               id="number-of-clinics"
               className="input-outreach"
               value={number_of_clinics ?? 0}
-              min={1}
               onChange={(e) => {
                 let value = parseInt(e.target.value);
-                if (isNaN(value)) value = 0;
-
+              
                 if (notGeneratedEmailsCount != null) {
                   value = Math.min(value, notGeneratedEmailsCount, 150);
                 }
@@ -94,12 +90,12 @@ export default function CampaignOutreach() {
 
           <button
             className={`bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8! transition-all duration-200 ${
-              loading
+              loading || !max_word_limit || !number_of_clinics
                 ? "opacity-60 cursor-not-allowed"
                 : "hover:bg-indigo-600! cursor-pointer"
             }`}
             onClick={handleGenerateOutreach}
-            disabled={loading}
+            disabled={loading || !max_word_limit || !number_of_clinics}
           >
             {loading ? "Generating..." : "Generate Outreach"}
           </button>
@@ -127,7 +123,7 @@ export default function CampaignOutreach() {
           ></div>
         </div>
         <span className="text-xs text-gray-500">
-          {wsClinicsGenerated} of {number_of_clinics} clinics contacted (
+          {wsClinicsGenerated} of {number_of_clinics || 0} emails generated (
           {Math.round(percentage)}%)
         </span>
       </div>

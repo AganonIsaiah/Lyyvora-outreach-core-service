@@ -28,22 +28,21 @@ logger = Logger(log_file="outreach_generator.log")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 BATCH_SIZE = 50
-MAX_WORKERS = 10
+MAX_WORKERS = 7
 
 
 def generate_email(
-    clinic_info: dict, user_prompt: str | None = None, max_words: int = 120
+    clinic_info: dict, user_prompt: str | None = None, max_words: int = 90
 ) -> str:
     """Generate email using OpenAI API"""
     clinic_name = clinic_info.get("clinic_name", "N/A")
     start_time = time.perf_counter()
 
-    prompt_content = prompt(
-        clinic_info=clinic_info, user_prompt=user_prompt, max_words=max_words
-    )
+    prompt_content = prompt(clinic_info=clinic_info, user_prompt=user_prompt)
 
     retry_count = 3
     email_text = ""
+    max_tokens = 1000
 
     for attempt in range(1, retry_count + 1):
         try:
@@ -52,12 +51,12 @@ def generate_email(
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert email copywriter specializing in B2B outreach for healthcare clinics.",
+                        "content": f"Stay within this word limit f{max_words} when generating the emails. You are an expert email copywriter specializing in B2B outreach for healthcare clinics.",
                     },
                     {"role": "user", "content": prompt_content},
                 ],
                 temperature=0.7,
-                max_tokens=1000,
+                max_tokens=max_tokens,
             )
             email_text = response.choices[0].message.content
             if email_text:
