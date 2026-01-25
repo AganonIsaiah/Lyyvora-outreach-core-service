@@ -5,15 +5,7 @@ from core.lead_data_pipeline.lead_data_pipeline import (
     clean_website,
     normalize_province,
 )
-import pytest
-from unittest.mock import patch, MagicMock
-
-
-@pytest.fixture(autouse=True)
-def mock_supabase_client():
-    with patch("configs.database.create_client") as mock_client:
-        mock_client.return_value = MagicMock()
-        yield
+from configs.database import supabase
 
 
 def test_clean_text_basic():
