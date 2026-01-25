@@ -16,6 +16,7 @@ export const useGenerateOutreach = () => {
   const [wsClinicsGenerated, setWsClinicsGenerated] = useState(0);
   const [loading, setLoading] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const startTimeRef = useRef<number | null>(null);
 
   const safeCampaignStatus = campaignStatus ?? {
     max_word_limit: 120,
@@ -46,6 +47,7 @@ export const useGenerateOutreach = () => {
     setWsClinicsGenerated(0);
     setLoading(true);
     alert("Outreach generation started!");
+    startTimeRef.current = performance.now();
 
     try {
       const response = await fetch(`${BASE_URL}/generate-outreach`, {
@@ -73,7 +75,17 @@ export const useGenerateOutreach = () => {
         const msg = JSON.parse(event.data);
 
         if (msg.type === "completed") {
-          alert("Outreach generation finished!");
+          if (startTimeRef.current) {
+            const seconds =
+              (performance.now() - startTimeRef.current) / 1000;
+
+            alert(
+              `Outreach generation finished in ${seconds.toFixed(2)} seconds!`
+            );
+          } else {
+            alert("Outreach generation finished!");
+          }
+
           setLoading(false);
           window.location.reload();
           return;

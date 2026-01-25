@@ -129,7 +129,7 @@ export default function ClinicsTable() {
 
           <div className="flex items-center gap-4">
             <span className="mr-2">
-              Current Records: <span className="font-semibold">{clinics.length}</span>
+              Current Records Displayed: <span className="font-semibold">{clinics.length}</span>
             </span>
             <button
               disabled={page === 1 || loading}

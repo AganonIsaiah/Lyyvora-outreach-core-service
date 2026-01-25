@@ -40,7 +40,7 @@ export default function CampaignOutreach() {
       <div className="flex justify-between gap-10">
         <div className="flex flex-col items-center justify-evenly">
           <span className="flex justify-evenly items-center">
-            <span className="flex flex-col gap-0.25 mb-4!">
+            <span className="flex flex-col gap-px mb-4!">
               <h2>Outreach Generator</h2>
               <p className="text-slate-400 text-xs flex gap-1 items-center">
                 <EmergencyIcon className="text-[10px]!" />
@@ -71,7 +71,7 @@ export default function CampaignOutreach() {
 
           <span className="flex flex-col">
             <label htmlFor="number-of-clinics" className="label-outreach w-30!">
-              Number of Clinics (Max 200)
+              Number of Clinics (Max 150)
             </label>
             <input
               type="number"
@@ -84,7 +84,7 @@ export default function CampaignOutreach() {
                 if (isNaN(value)) value = 0;
 
                 if (notGeneratedEmailsCount != null) {
-                  value = Math.min(value, notGeneratedEmailsCount, 200);
+                  value = Math.min(value, notGeneratedEmailsCount, 150);
                 }
 
                 updateStatus("number_of_clinics", value);

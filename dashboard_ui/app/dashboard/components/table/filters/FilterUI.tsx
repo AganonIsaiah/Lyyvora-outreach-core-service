@@ -90,7 +90,7 @@ export default function FilterUI({
         className="cursor-pointer text-sm w-38 flex justify-between items-center bg-white border border-gray-200 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
         onClick={() => setIsOpen((v) => !v)}
       >
-        <span className="text-gray-400 w-full! truncate text-xs font-semibold">
+        <span className="text-gray-400 w-full! truncate text-xs font-semibold text-left!">
           {buttonLabel}
         </span>
         {isOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}

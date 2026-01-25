@@ -46,21 +46,20 @@ export default function ClinicDetailUI({ clinicId }: Props) {
 
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center">
-      <div className="flex justify-evenly items-center separator w-full bg-white">
-        <h1 className="text-3xl font-bold text-gray-800">
-          {displayValue(clinic.name) || "Clinic Name"}
-        </h1>
+      <div className="w-full px-8! m-4 flex gap-6 mt-6">
+        <div className="max-w-1/2! bg-white shadow rounded-lg p-6 flex flex-col gap-4 h-full!">
+          <div className="flex justify-between items-center border-b border-gray-200 pb-3">
+            <h1 className="text-3xl font-bold text-gray-800">
+              {displayValue(clinic.name) || "Clinic Name"}
+            </h1>
 
-        <button
-          className="text-sm! bg-slate-200 text-slate-600 font-semibold px-2 py-1 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:bg-slate-300"
-          onClick={redirectToDashboard}
-        >
-          Dashboard
-        </button>
-      </div>
-
-      <div className="w-full max-w-3xl m-4 flex flex-col gap-6 mt-6">
-        <div className="bg-white shadow rounded-lg p-6 flex flex-col gap-4">
+            <button
+              className="text-sm! bg-slate-200 text-slate-600 font-semibold px-2 py-1 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:bg-slate-300"
+              onClick={redirectToDashboard}
+            >
+              Dashboard
+            </button>
+          </div>
           <div className="flex flex-col sm:flex-row sm:gap-6">
             <div className="flex-1">
               <p>
@@ -139,25 +138,27 @@ export default function ClinicDetailUI({ clinicId }: Props) {
             <p className="font-semibold mb-1">Website Description:</p>
             <p className="text-gray-700">{displayValue(clinic.notes)}</p>
           </div>
+        </div>
 
+        <div className="max-w-1/2! bg-white! shadow rounded-lg p-6">
           {emails.length > 0 && (
-            <div className="mt-2">
+            <div>
               <p className="font-semibold mb-2">Emails for Outreach:</p>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4">
                 {emails.map((email, idx) => (
                   <div
                     key={idx}
-                    className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+                    className="bg-gray-50 border border-gray-200 rounded-lg p-2"
                   >
-                    <p className="text-sm font-medium mb-1">
+                    <p className="text-xs font-medium mb-1">
                       <span className="font-semibold">Type:</span>{" "}
                       {displayValue(email.type)}
                     </p>
-                    <p className="text-sm mb-1">
+                    <p className="text-xs mb-1">
                       <span className="font-semibold">Subject:</span>{" "}
                       {displayValue(email.subject_line)}
                     </p>
-                    <p className="text-sm whitespace-pre-wrap">
+                    <p className="text-xs whitespace-pre-wrap">
                       <span className="font-semibold">Body:</span>{" "}
                       {email.email_body}
                     </p>
