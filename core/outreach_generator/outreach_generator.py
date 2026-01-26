@@ -19,8 +19,7 @@ Best regards,
 Sharmeen Aqeel 
 Founder & CEO, Lyyvora
 Lending-as-a-service for healthcare clinics
-https://lyyvora.com/
-"""
+https://lyyvora.com"""
 
 load_dotenv()
 

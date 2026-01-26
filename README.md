@@ -58,8 +58,8 @@ Lyyvora-outreach-core-service/
 3. `AWS EC2` - https://aws.amazon.com
 - AWS EC2 is used for Backend FastAPI deployment. Upload the project to your EC2 instance and use `Dockerfile.backend` to run the server. Make sure to configure the `dashboard_ui/.env.production` file with the deployed backend url.
 
-4. `OpenAI API` - https://openai.com/api
-- OpenAI API gpt-40-mini model is used in the outreach_generator/outreach_generator.py file for email generation. Make sure to configure the `.env` file with the OpenAI API key.
+4. `OpenAI API` - https://platform.openai.com/settings/organization/usage
+- OpenAI API gpt-4o-mini model is used in the outreach_generator/outreach_generator.py file for email generation. Make sure to configure the `.env` file with the OpenAI API key.
 
 
 # Configure Environment Files (DO BEFORE RUNNING PROJECT)

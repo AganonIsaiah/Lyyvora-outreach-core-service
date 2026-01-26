@@ -1,7 +1,11 @@
+CALENDER_LINK = "https://calendar.app.google/Pn8hXvqtkGVD7LYf8"
+
+
 def prompt(clinic_info: dict = {}, user_prompt: str = "") -> str:
     GUARDRAILS = f"""IMPORTANT: STRICT GUARDRAILS
 - Follow ALL rules exactly.
 - Subject lines in Title Case.
+- Each email body must be split into up to 2 short paragraphs including the final CTA.
 - ALWAYS include a greeting in each email body using the clinics name (be mindful of poorly formatted clinic names).
 - When adding a greeting, use Hello and ONLY the clinic name itself.
 - Do NOT include any personal names, doctor names, titles, or location info in the greeting.
@@ -10,11 +14,10 @@ def prompt(clinic_info: dict = {}, user_prompt: str = "") -> str:
 - Do not fabricate turnaround times, dollar amounts, or lender claims.
 - No exaggerations, hype, or guarantees.
 - No markdown, placeholders, or brackets.
-- Each email body must be split into 1-2 short paragraphs.
 - Separate each paragraph with a blank line.
 - Tone: calm, credible, human, and conversational.
 - Primary goal: start a conversation, not to close.
-- End each email with a soft, low-pressure CTA question.
+- Close each email by gently inviting the recipient to chat or explore further, phrased naturally like a conversation. Include the link for booking, but integrate it smoothly, not as a command: {CALENDER_LINK} 
 - Do NOT include horizontal lines, "---", "___",
 - Output ONLY the format below:
 
@@ -25,13 +28,15 @@ subject_line_2: <one concise subject line>
 email_body_2: <email body>
 
 subject_line_3: <one concise subject line>
-email_body_3: <email body>"""
+email_body_3: <email body>
+"""
 
     CLINIC_CONTEXT = f"""Clinic Info:
 - Name: {clinic_info.get('clinic_name', 'N/A')}
 - Specialty: {clinic_info.get('clinic_sub_type', 'N/A')}
 - City: {clinic_info.get('city', 'N/A')}
-- Website Description: {clinic_info.get('website_desc', 'N/A')}"""
+- Website Description: {clinic_info.get('website_desc', 'N/A')}
+"""
 
     CORE_FRAMEWORK = """Core Email Framework (follow this structure loosely):
 
@@ -55,7 +60,8 @@ email_body_3: <email body>"""
 
 5) Soft CTA
    - Invite a short conversation or question-based reply.
-   - No pressure, no aggressive booking language."""
+   - No pressure, no aggressive booking language.
+"""
 
     SEQUENCE = """Email Sequence Strategy:
 
@@ -75,7 +81,8 @@ Email 3:
 - Final touch
 - New angle or reframing
 - Polite, respectful close-out
-- Very easy reply CTA"""
+- Very easy reply CTA
+"""
 
     ANGLES = """Each email must use a different primary angle:
 - Expansion and growth funding
@@ -94,7 +101,8 @@ Your style:
 - Clear, simple language
 - Focused on opening conversations
 
-You do NOT invent facts."""
+You do NOT invent facts.
+"""
 
     return f"""USER PROMPT:
 {user_prompt}
