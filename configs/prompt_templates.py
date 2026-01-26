@@ -5,7 +5,7 @@ def prompt(clinic_info: dict = {}, user_prompt: str = "") -> str:
     GUARDRAILS = f"""IMPORTANT: STRICT GUARDRAILS
 - Follow ALL rules exactly.
 - Subject lines in Title Case.
-- Each email body must be split into up to 2 short paragraphs including the final CTA.
+- Each email body must be split into up to 2 short paragraphs and have an additional final line as the CTA.
 - ALWAYS include a greeting in each email body using the clinics name (be mindful of poorly formatted clinic names).
 - When adding a greeting, use Hello and ONLY the clinic name itself.
 - Do NOT include any personal names, doctor names, titles, or location info in the greeting.
