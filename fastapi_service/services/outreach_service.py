@@ -2,6 +2,8 @@ import asyncio
 from core.outreach_generator.outreach_generator import run_email_generation
 from .ws_manager import manager
 
+from configs import prompt_templates
+
 
 def run_outreach_job(job_id: str, batch_size: int, prompt: str | None, word_limit: int):
     total = batch_size

@@ -1,4 +1,4 @@
-CALENDER_LINK = "https://calendar.app.google/Pn8hXvqtkGVD7LYf8"
+CALENDER_LINK = "https://calendar.app.google/muX98GemcHJumZSU7"
 
 
 def prompt(clinic_info: dict = {}, user_prompt: str = "") -> str:
