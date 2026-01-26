@@ -1,8 +1,43 @@
 # Lyyvora-outreach-core-service
+# Deployments
+- Frontend dashboard: 
+- Backend FastAPI:
+
+# Summary
 - Outreach service for Lyyvora built with Python 3.14.2, FastAPI, React, and Next.js
 - This service helps Lyyvora prioritize and engage healthcare clinics by cleaning public lead data, scoring prospects with ML, generating safe personalized outreach messages, and evaluating financing readiness with a rules engine
 
-## Table of Contents
+# Directory Structure
+```
+Lyyvora-outreach-core-service/
+│
+├── configs/                    # Centralized Python configuration modules
+│   ├── database.py             # Database connections, Supabase/Postgres config
+│   │── prompt_template.py      # Prompt template for outreach generator
+│   │── logging_module.py       # Logging setup and formatters
+│   └── configs.py              # Loads environment variables from .env 
+│
+├── core/                       # Core business logic (Python)
+│   ├── lead_data_pipeline/     # Data cleaning, validation, ingestion pipeline
+│   ├── lead_scoring_model/     # ML-based lead scoring logic
+│   └── outreach_generator/     # AI-powered personalized outreach generation
+│
+├── fastapi_service/            # Backend service (FastAPI)
+│   ├── services/               # Business/service layer
+│   ├── models/                 # Request/response models
+│   └── main.py                 # FastAPI application entry point
+│
+├── dashboard_ui/               # Frontend (React + Next.js)
+│   ├── app/                    # Next.js app router
+│   ├── context/                # Manages global state
+│   ├── services/               # API communication layer
+│   ├── mock/                   # Stores mock data
+│   ├── hooks/                  # Business logic and API communication
+│   └── lib/                    # Request/response models
+│
+└── tests/                      # Python unit tests
+```
+# Table of Contents
 - [Services Used (AWS, Vercel, Supabase, OpenAI API)](#services-used)
 - [Configure Environment Files](#configure-environment-files(do-before-running-project))
 - [Setup and Run](#setup-and-run)

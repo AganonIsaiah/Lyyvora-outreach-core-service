@@ -12,8 +12,7 @@ if ENV == "production":
 else:
     load_dotenv(".env")
 
-API_USERNAME = os.getenv("API_USERNAME")
-API_PASSWORD_HASH = os.getenv("API_PASSWORD_HASH")
+
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", 60))
