@@ -41,7 +41,7 @@ def generate_email(
 
     retry_count = 3
     email_text = ""
-    max_tokens = 900
+    max_tokens = 1000
 
     for attempt in range(1, retry_count + 1):
         try:
