@@ -1,7 +1,7 @@
 # Lyyvora-outreach-core-service
 # Deployments
-- Frontend dashboard: 
-- Backend FastAPI:
+- Frontend Dashboard Url: 
+- Backend FastAPI Url: https://lyyvora-api.duckdns.org/docs
 
 # Summary
 - Outreach service for Lyyvora built with Python 3.14.2, FastAPI, React, and Next.js
