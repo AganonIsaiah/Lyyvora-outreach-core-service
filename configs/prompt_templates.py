@@ -3,6 +3,7 @@ CALENDER_LINK = "https://calendar.app.google/muX98GemcHJumZSU7"
 
 def prompt(clinic_info: dict = {}, user_prompt: str = "") -> str:
     GUARDRAILS = f"""IMPORTANT: STRICT GUARDRAILS
+- THE USER'S PROMPT SUPERSEDES EVERYTHING (EVEN THE GUARDRAILS), FOLLOW USER PROMPT STRICTLY!!!
 - Follow ALL rules exactly.
 - Subject lines in Title Case.
 - Each email body must be split into up to 2 short paragraphs and have an additional final line as the CTA.
@@ -104,8 +105,9 @@ Your style:
 You do NOT invent facts.
 """
 
-    return f"""USER PROMPT:
+    return f"""IMPORTANT USER PROMPT:
 {user_prompt}
+
 {GUARDRAILS}
 {ROLE}
 {CLINIC_CONTEXT}

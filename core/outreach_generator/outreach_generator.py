@@ -37,6 +37,18 @@ def generate_email(
     clinic_name = clinic_info.get("clinic_name", "N/A")
     start_time = time.perf_counter()
 
+    def extract_user_prompt(raw_prompt: str) -> str:
+        if "IMPORTANT: STRICT GUARDRAILS" in raw_prompt:
+            return (
+                raw_prompt.split("IMPORTANT: STRICT GUARDRAILS")[0]
+                .replace("USER PROMPT", "")
+                .replace(":", "")
+                .strip()
+            )
+        return raw_prompt.strip()
+
+    user_prompt = extract_user_prompt(user_prompt)
+
     prompt_content = prompt(clinic_info=clinic_info, user_prompt=user_prompt)
 
     retry_count = 3
@@ -50,7 +62,7 @@ def generate_email(
                 messages=[
                     {
                         "role": "system",
-                        "content": f"Stay within this word limit f{max_words} when generating the emails. You are an expert email copywriter specializing in B2B outreach for healthcare clinics.",
+                        "content": f"Stay within this word limit {max_words} when generating the emails. You are an expert email copywriter specializing in B2B outreach for healthcare clinics.",
                     },
                     {"role": "user", "content": prompt_content},
                 ],
