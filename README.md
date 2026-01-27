@@ -1,6 +1,6 @@
 # Lyyvora-outreach-core-service
 # Deployments
-- Frontend Dashboard Url: 
+- Frontend Dashboard Url: https://lyyvora-outreach-core-service.vercel.app
 - Backend FastAPI Url: https://lyyvora-api.duckdns.org/docs
 
 # Summary
