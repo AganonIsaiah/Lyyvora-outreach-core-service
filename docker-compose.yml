@@ -17,7 +17,7 @@ services:
   ui:
     build:
       context: ./dashboard_ui
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.frontend
     container_name: lyyvora_ui
     ports:
       - "3000:3000"
