@@ -95,15 +95,39 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
     return {"message": "Login successful"}
 
 
-@app.patch("/clinics/{clinic_id}/mark-delivered")
-def mark_delivered(clinic_id: int, user: str = Depends(get_current_user)):
+@app.patch("/clinics/{clinic_id}/mark-replied")
+def mark_replied(clinic_id: int, user: str = Depends(get_current_user)):
     res = supabase.table("leads").select("id").eq("id", clinic_id).execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Clinic not found")
-    supabase.table("leads").update({"email_status": "Delivered"}).eq(
+
+    supabase.table("leads").update({"email_status": "Replied"}).eq(
         "id", clinic_id
     ).execute()
-    return {"message": "Status updated to Delivered"}
+
+    sl_res = (
+        supabase.table("smartlead").select("id").eq("leads_id", clinic_id).execute()
+    )
+    if sl_res.data:
+        smartlead_id = sl_res.data[0]["id"]
+        se_res = (
+            supabase.table("scheduled_emails")
+            .select("id, status_1, status_2, status_3")
+            .eq("smartlead_id", smartlead_id)
+            .execute()
+        )
+        for row in se_res.data or []:
+            updates = {
+                f"status_{i}": "cancelled"
+                for i in (1, 2, 3)
+                if row.get(f"status_{i}") == "pending"
+            }
+            if updates:
+                supabase.table("scheduled_emails").update(updates).eq(
+                    "id", row["id"]
+                ).execute()
+
+    return {"message": "Status updated to Replied"}
 
 
 @app.get("/clinics/{clinic_id}")

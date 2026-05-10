@@ -52,8 +52,8 @@ export default function ClinicDetailUI({ clinicId }: Props) {
     });
   };
 
-  const handleMarkDelivered = async () => {
-    await fetch(`${BASE_URL}/clinics/${clinicId}/mark-delivered`, {
+  const handleMarkReplied = async () => {
+    await fetch(`${BASE_URL}/clinics/${clinicId}/mark-replied`, {
       method: "PATCH",
       credentials: "include",
     });
@@ -162,12 +162,12 @@ export default function ClinicDetailUI({ clinicId }: Props) {
                   >
                     {displayValue(clinic.email_status)}
                   </span>
-                  {clinic.email_status !== "Delivered" && (
+                  {clinic.email_status !== "Replied" && (
                     <button
-                      onClick={handleMarkDelivered}
+                      onClick={handleMarkReplied}
                       className="text-xs! bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-xl border border-blue-200 cursor-pointer hover:bg-blue-200 transition-all duration-200"
                     >
-                      Mark Delivered
+                      Mark Replied
                     </button>
                   )}
                 </p>
@@ -204,7 +204,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
           <div className="bg-white shadow rounded-lg p-6">
             <p className="font-semibold mb-2">Outreach Scheduler:</p>
 
-            <div className="flex gap-3">
+            <div className="flex gap-8 mt-4!">
               {([1, 2, 3] as const).map((i) => {
                 const labels = { 1: "Initial Outreach", 2: "Follow-up 1", 3: "Follow-up 2" };
                 const sendAt = schedule[`send_${i}_at` as keyof EmailSchedule] as string | null | undefined;
@@ -236,7 +236,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
         </div>
 
         {/* full-page right, three emails for outreach */}
-        <div className="w-1/2! bg-white! shadow rounded-lg p-6">
+        <div className="h-screen! w-1/2! bg-white! shadow rounded-lg p-6">
           <p className="font-semibold mb-2">Emails for Outreach:</p>
 
           {emails.length <= 0 && (

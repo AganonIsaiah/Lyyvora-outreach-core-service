@@ -5,6 +5,8 @@ import {
   useContext,
   useEffect,
   useState,
+  Dispatch,
+  SetStateAction,
   ReactNode,
 } from "react";
 import {
@@ -39,6 +41,10 @@ interface DashboardContextProps {
   filteredCount: number;
   totalPages: number;
   notGeneratedEmailsCount: number;
+  sentCount: number;
+  repliedCount: number;
+  wsClinicsGenerated: number;
+  setWsClinicsGenerated: Dispatch<SetStateAction<number>>;
   setPage: (p: number) => void;
   setLoading: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
@@ -64,6 +70,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [total, setTotal] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
   const [notGeneratedEmailsCount, setNotGeneratedEmailsCount] = useState(0);
+  const [sentCount, setSentCount] = useState(0);
+  const [repliedCount, setRepliedCount] = useState(0);
+  const [wsClinicsGenerated, setWsClinicsGenerated] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -77,6 +86,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setMetrics(data.metrics);
         setShowExport(data.show_export);
         setNotGeneratedEmailsCount(data.not_generated_emails_count);
+        setSentCount(data.sent_count);
+        setRepliedCount(data.replied_count);
         setTotal(data.total_clinics);
         setFilteredCount(data.filtered_clinics_count);
       })
@@ -113,6 +124,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setPage,
         showExport,
         notGeneratedEmailsCount,
+        sentCount,
+        repliedCount,
+        wsClinicsGenerated,
+        setWsClinicsGenerated,
       }}
     >
       {children}

@@ -5,4 +5,4 @@ class ClinicStatus(str, Enum):
     NOT_GENERATED = "Not Generated"
     GENERATED = "Generated"
     EXPORTED = "Exported"
-    DELIVERED = "Delivered"
+    REPLIED = "Replied"

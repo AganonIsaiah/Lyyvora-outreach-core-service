@@ -12,7 +12,7 @@ def send_email(
 ) -> None:
     client = get_ses_client()
 
-    body = {"Html": {"Data": body_html, "Charset": "UTF-8"}}
+    body = {"Html": {"Data": body_html.replace("\n", "<br>"), "Charset": "UTF-8"}}
     if body_text:
         body["Text"] = {"Data": body_text, "Charset": "UTF-8"}
 

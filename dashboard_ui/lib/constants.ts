@@ -4,7 +4,7 @@ export const CLINIC_STATUS_COLOR: Record<ClinicStatus, string> = {
   [ClinicStatus.NOT_GENERATED]: "bg-orange-100 text-orange-700",
   [ClinicStatus.GENERATED]: "bg-green-100 text-green-700",
   [ClinicStatus.EXPORTED]: "bg-red-400 text-white",
-  [ClinicStatus.DELIVERED]: "bg-blue-100 text-blue-700",
+  [ClinicStatus.REPLIED]: "bg-blue-100 text-blue-700",
 };
 
 export const SIDEBAR_ROUTES: SidebarRoute[] = [

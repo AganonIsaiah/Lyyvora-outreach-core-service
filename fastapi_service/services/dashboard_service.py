@@ -34,6 +34,26 @@ def get_total_clinics_count() -> int:
     return resp.count or 0
 
 
+def get_sent_count() -> int:
+    resp = (
+        supabase.table("scheduled_emails")
+        .select("id", count="exact")
+        .or_("status_1.eq.sent,status_2.eq.sent,status_3.eq.sent")
+        .execute()
+    )
+    return resp.count or 0
+
+
+def get_replied_count() -> int:
+    resp = (
+        supabase.table("leads")
+        .select("id", count="exact")
+        .eq("email_status", "Replied")
+        .execute()
+    )
+    return resp.count or 0
+
+
 def get_not_generated_emails_count() -> int:
     resp = (
         supabase.table("leads")
@@ -296,6 +316,8 @@ def generate_dashboard(req: DashboardRequest):
         campaign_batch=campaign_batch,
     )
     not_generated_count = get_not_generated_emails_count()
+    sent_count = get_sent_count()
+    replied_count = get_replied_count()
     filter_values = get_all_filter_values()
 
     metrics = [
@@ -335,4 +357,6 @@ def generate_dashboard(req: DashboardRequest):
         filtered_clinics_count=filtered_clinics_count,
         show_export=has_lead_records(),
         not_generated_emails_count=not_generated_count,
+        sent_count=sent_count,
+        replied_count=replied_count,
     )

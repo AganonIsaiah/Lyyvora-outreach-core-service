@@ -1,12 +1,14 @@
 "use client";
 
-import EmergencyIcon from "@mui/icons-material/Emergency";
-
 import { useDashboardContext } from "@/context/DashboardContext";
 import { IMPORT_COLUMNS } from "@/lib/constants";
 import { useImportCsv } from "@/hooks/useImportCsv";
 
-export default function ImportCard() {
+interface ImportCardProps {
+  onColumnsToggle?: (open: boolean) => void;
+}
+
+export default function ImportCard({ onColumnsToggle }: ImportCardProps) {
   const importColumns = IMPORT_COLUMNS;
   const { showExport } = useDashboardContext();
 
@@ -35,23 +37,24 @@ export default function ImportCard() {
   }
 
   return (
-    <div
-      className={`card-section ${
-        !showExport ? "w-full! border-0! shadow-none!" : "w-120!"
-      }`}
-    >
-      <h2 className="text-base font-semibold">
-        {showExport ? "Replace or Append to the CSV " : "Import CSV"}
-      </h2>
+    <div className={`card-section ${!showExport ? "border-0! shadow-none!" : ""}`}>
+      <h2>{showExport ? "Import Data" : "Import CSV"}</h2>
 
-      <p className="text-slate-400 text-xs flex gap-1 mt-0.5">
-        <EmergencyIcon className="text-[10px]! mt-0.5" />
+      <p className="text-slate-400 text-xs mt-1">
         {showExport
-          ? "Append or replace the CSV file to continue outreach, include following columns:"
-          : "Import a CSV file to begin outreach, include the following columns:"}
+          ? "Replace or append to the existing dataset."
+          : "Import a CSV to begin outreach."}
       </p>
 
-      <ColumnChips columns={importColumns} />
+      <details
+        className="mt-2"
+        onToggle={(e) => onColumnsToggle?.((e.target as HTMLDetailsElement).open)}
+      >
+        <summary className="text-xs text-indigo-500 cursor-pointer select-none hover:text-indigo-600">
+          Required columns
+        </summary>
+        <ColumnChips columns={importColumns} />
+      </details>
 
       <input
         ref={fileInputRef}
@@ -61,26 +64,22 @@ export default function ImportCard() {
         onChange={handleFileChange}
       />
 
-      <div className="flex gap-4">
+      <div className="flex gap-2 mt-3">
         <button
           disabled={loadingReplace || loadingAppend}
           onClick={() => openFilePicker("import")}
-          className="bg-blue-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-blue-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex-1 bg-indigo-500 text-white text-xs font-semibold rounded px-3 py-1.5 cursor-pointer hover:bg-indigo-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {loadingReplace
-            ? "Importing..."
-            : showExport
-            ? "Replace CSV"
-            : "Import CSV"}
+          {loadingReplace ? "Importing..." : showExport ? "Replace" : "Import CSV"}
         </button>
 
         {showExport && (
           <button
             disabled={loadingReplace || loadingAppend}
             onClick={() => openFilePicker("append")}
-            className="bg-lime-500 text-white font-semibold rounded px-2 py-1 h-8! mt-4 cursor-pointer hover:bg-lime-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex-1 bg-white text-indigo-600 text-xs font-semibold rounded px-3 py-1.5 border border-indigo-200 cursor-pointer hover:bg-indigo-50 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loadingAppend ? "Appending..." : "Append to CSV"}
+            {loadingAppend ? "Appending..." : "Append"}
           </button>
         )}
       </div>

@@ -11,9 +11,9 @@ export const useGenerateOutreach = () => {
     campaignStatus,
     setCampaignStatus,
     notGeneratedEmailsCount,
+    wsClinicsGenerated,
+    setWsClinicsGenerated,
   } = useDashboardContext();
-
-  const [wsClinicsGenerated, setWsClinicsGenerated] = useState(0);
   const [loading, setLoading] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const startTimeRef = useRef<number | null>(null);

@@ -2,7 +2,7 @@ export enum ClinicStatus {
   NOT_GENERATED = "Not Generated",
   GENERATED = "Generated",
   EXPORTED = "Exported",
-  DELIVERED = "Delivered",
+  REPLIED = "Replied",
 };
 
 export enum Routes {
@@ -85,4 +85,6 @@ export interface DashboardResponse {
   total_clinics: number;
   filtered_clinics_count: number;
   not_generated_emails_count: number;
+  sent_count: number;
+  replied_count: number;
 }
