@@ -16,7 +16,9 @@ from fastapi import (
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from contextlib import asynccontextmanager
 from typing import List, Optional, Dict, Any
+from datetime import datetime, timezone
 import uuid
 import csv
 from io import StringIO
@@ -32,12 +34,22 @@ from .services.auth_service import (
     create_access_token,
     decode_access_token,
 )
+from .services.email_scheduler import start_scheduler, stop_scheduler
+from .services.email_service import send_email
 
 from configs.database import supabase
 from configs.configs import FRONTEND_URL
 from .models.dashboard_models import DashboardRequest, DashboardResponse
 
-app = FastAPI(title="Lyyvora Outreach API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()
+    yield
+    stop_scheduler()
+
+
+app = FastAPI(title="Lyyvora Outreach API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -81,6 +93,17 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
     )
 
     return {"message": "Login successful"}
+
+
+@app.patch("/clinics/{clinic_id}/mark-delivered")
+def mark_delivered(clinic_id: int, user: str = Depends(get_current_user)):
+    res = supabase.table("leads").select("id").eq("id", clinic_id).execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Clinic not found")
+    supabase.table("leads").update({"email_status": "Delivered"}).eq(
+        "id", clinic_id
+    ).execute()
+    return {"message": "Status updated to Delivered"}
 
 
 @app.get("/clinics/{clinic_id}")
@@ -220,6 +243,136 @@ async def import_csv(
 ):
     res = process_uploaded_csv(file)
     return res
+
+
+@app.post("/emails/schedule")
+def schedule_email(payload: dict = Body(...), user: str = Depends(get_current_user)):
+    smartlead_id = payload.get("smartlead_id")
+    if not smartlead_id:
+        raise HTTPException(status_code=400, detail="smartlead_id is required")
+
+    res = (
+        supabase.table("scheduled_emails")
+        .insert(
+            {
+                "smartlead_id": smartlead_id,
+                "send_1_at": payload.get("send_1_at"),
+                "send_2_at": payload.get("send_2_at"),
+                "send_3_at": payload.get("send_3_at"),
+            }
+        )
+        .execute()
+    )
+
+    return {"message": "Emails scheduled", "id": res.data[0]["id"]}
+
+
+@app.get("/emails")
+def list_emails(user: str = Depends(get_current_user)):
+    res = (
+        supabase.table("scheduled_emails")
+        .select(
+            "*, smartlead(clinic_name, email, subject_line_1, subject_line_2, subject_line_3)"
+        )
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return res.data
+
+
+@app.patch("/emails/schedule/{schedule_id}")
+def update_schedule(
+    schedule_id: str,
+    payload: dict = Body(...),
+    user: str = Depends(get_current_user),
+):
+    now = datetime.now(timezone.utc).isoformat()
+    updates = {}
+    for i in (1, 2, 3):
+        key = f"send_{i}_at"
+        if key in payload:
+            if payload[key] < now:
+                raise HTTPException(
+                    status_code=400, detail=f"{key} cannot be in the past"
+                )
+            updates[key] = payload[key]
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    supabase.table("scheduled_emails").update(updates).eq("id", schedule_id).execute()
+    return {"message": "Schedule updated"}
+
+
+@app.post("/emails/send-now/{schedule_id}/{sequence}")
+def send_email_now(
+    schedule_id: str,
+    sequence: int,
+    user: str = Depends(get_current_user),
+):
+    if sequence not in (1, 2, 3):
+        raise HTTPException(status_code=400, detail="Sequence must be 1, 2, or 3")
+
+    res = (
+        supabase.table("scheduled_emails")
+        .select(f"*, smartlead(email, subject_line_{sequence}, email_body_{sequence})")
+        .eq("id", schedule_id)
+        .maybe_single()
+        .execute()
+    )
+
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+
+    sl = res.data.get("smartlead") or {}
+
+    try:
+        send_email(
+            recipient=sl.get("email"),
+            subject=sl.get(f"subject_line_{sequence}"),
+            body_html=sl.get(f"email_body_{sequence}"),
+        )
+        now_iso = datetime.now(timezone.utc).isoformat()
+        supabase.table("scheduled_emails").update(
+            {
+                f"status_{sequence}": "sent",
+                f"sent_{sequence}_at": now_iso,
+                f"send_{sequence}_at": now_iso,
+            }
+        ).eq("id", schedule_id).execute()
+    except Exception as e:
+        supabase.table("scheduled_emails").update(
+            {f"status_{sequence}": "failed", f"error_{sequence}": str(e)}
+        ).eq("id", schedule_id).execute()
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": f"Email {sequence} sent"}
+
+
+@app.delete("/emails/{email_id}")
+def cancel_email(email_id: str, user: str = Depends(get_current_user)):
+    res = (
+        supabase.table("scheduled_emails")
+        .select("id, status_1, status_2, status_3")
+        .eq("id", email_id)
+        .execute()
+    )
+
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+
+    row = res.data[0]
+    updates = {
+        f"status_{i}": "cancelled"
+        for i in (1, 2, 3)
+        if row.get(f"status_{i}") == "pending"
+    }
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No pending emails to cancel")
+
+    supabase.table("scheduled_emails").update(updates).eq("id", email_id).execute()
+    return {"message": "Pending emails cancelled"}
 
 
 @app.get("/dashboard", response_model=DashboardResponse)

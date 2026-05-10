@@ -1,7 +1,8 @@
 export enum ClinicStatus {
   NOT_GENERATED = "Not Generated",
   GENERATED = "Generated",
-  EXPORTED = "Exported"
+  EXPORTED = "Exported",
+  DELIVERED = "Delivered",
 };
 
 export enum Routes {
@@ -31,6 +32,16 @@ export interface ClinicEmails {
   type: EmailType;
 }
 
+export interface EmailSchedule {
+  id: string;
+  send_1_at: string | null;
+  status_1: string;
+  send_2_at: string | null;
+  status_2: string;
+  send_3_at: string | null;
+  status_3: string;
+}
+
 export interface Clinic {
   id: number;
   name: string;
@@ -45,7 +56,8 @@ export interface Clinic {
   lead_score: number;
   notes: string;
   top_features: string;
-  emails_for_outreach: ClinicEmails[];  
+  emails_for_outreach: ClinicEmails[];
+  schedule: Partial<EmailSchedule>;
   campaign_batch: string;
   phone: string;
 };

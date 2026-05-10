@@ -1,7 +1,7 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import re
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -121,12 +121,40 @@ def parse_email(email_text: str):
         return None
 
 
+def add_business_days(dt: datetime, days: int) -> datetime:
+    count = 0
+    current = dt
+    while count < days:
+        current += timedelta(days=1)
+        if current.weekday() < 5:
+            count += 1
+    hour = random.randint(8, 11)
+    minute = random.randint(0, 59)
+    return current.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+
 def batch_save_to_supabase(records: list[dict]):
     if not records:
         return
     try:
-        supabase.table("smartlead").insert(records).execute()
+        res = supabase.table("smartlead").insert(records).execute()
         logger.info(f"Batch inserted {len(records)} emails to Supabase")
+
+        now = datetime.now(timezone.utc)
+        schedule_records = [
+            {
+                "smartlead_id": row["id"],
+                "send_1_at": add_business_days(now, 2).isoformat(),
+                "send_2_at": add_business_days(now, 5).isoformat(),
+                "send_3_at": add_business_days(now, 7).isoformat(),
+            }
+            for row in res.data or []
+        ]
+
+        if schedule_records:
+            supabase.table("scheduled_emails").insert(schedule_records).execute()
+            logger.info(f"Scheduled {len(schedule_records)} email sequences")
+
     except Exception as e:
         logger.error(f"Supabase batch insert failed: {e}")
 
