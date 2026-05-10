@@ -58,6 +58,24 @@ h3 {
   @apply p-4 rounded-lg border border-gray-200 shadow-sm;
 }
 
+.scroll-visible {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.scroll-visible::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scroll-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-visible::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 9999px;
+}
+
 @keyframes blink {
   0%, 100% {
     opacity: 1;

@@ -95,6 +95,18 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
     return {"message": "Login successful"}
 
 
+@app.post("/logout")
+def logout(response: Response):
+    is_local = FRONTEND_URL.startswith("http://localhost")
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        samesite="lax" if is_local else "none",
+        secure=not is_local,
+    )
+    return {"message": "Logged out"}
+
+
 @app.patch("/clinics/{clinic_id}/mark-replied")
 def mark_replied(clinic_id: int, user: str = Depends(get_current_user)):
     res = supabase.table("leads").select("id").eq("id", clinic_id).execute()

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+// @ts-ignore: CSS imports may not have type declarations in this setup
 import "./globals.css";
+import ClientProviders from "./ClientProviders";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +31,7 @@ export default function RootLayout({
           ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <main className="flex-1">
-          {children}
+          <ClientProviders>{children}</ClientProviders>
         </main>
       </body>
     </html>

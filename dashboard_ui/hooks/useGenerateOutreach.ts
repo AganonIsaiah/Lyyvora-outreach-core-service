@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useDashboardContext } from "@/context/DashboardContext";
+import { useConfirm } from "@/context/ConfirmContext";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 const WS_URL = `${process.env.NEXT_PUBLIC_WS_URL}`;
@@ -14,6 +15,7 @@ export const useGenerateOutreach = () => {
     wsClinicsGenerated,
     setWsClinicsGenerated,
   } = useDashboardContext();
+  const { notify } = useConfirm();
   const [loading, setLoading] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -40,13 +42,13 @@ export const useGenerateOutreach = () => {
       notGeneratedEmailsCount != null &&
       notGeneratedEmailsCount - number_of_clinics < 0
     ) {
-      alert("Number of clinics exceeds limit, outreach generation has failed!");
+      await notify("Invalid batch size", "The number of clinics exceeds the available limit.");
       return;
     }
 
     setWsClinicsGenerated(0);
     setLoading(true);
-    alert("Outreach generation started!");
+    await notify("Generation started", "Outreach generation is running. The progress bar will update as emails are generated.");
     startTimeRef.current = performance.now();
 
     try {
@@ -71,7 +73,7 @@ export const useGenerateOutreach = () => {
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
-      ws.onmessage = (event) => {
+      ws.onmessage = async (event) => {
         const msg = JSON.parse(event.data);
 
         if (msg.type === "completed") {
@@ -79,11 +81,12 @@ export const useGenerateOutreach = () => {
             const seconds =
               (performance.now() - startTimeRef.current) / 1000;
 
-            alert(
-              `Outreach generation finished in ${seconds.toFixed(2)} seconds!`
+            await notify(
+              "Generation complete",
+              `Outreach generation finished in ${seconds.toFixed(2)} seconds.`
             );
           } else {
-            alert("Outreach generation finished!");
+            await notify("Generation complete", "Outreach generation has finished.");
           }
 
           setLoading(false);
@@ -112,7 +115,7 @@ export const useGenerateOutreach = () => {
       };
     } catch (err: any) {
       console.error(err.message);
-      alert("Failed to start outreach generation");
+      await notify("Error", "Failed to start outreach generation. Please try again.");
       setLoading(false);
     }
   };

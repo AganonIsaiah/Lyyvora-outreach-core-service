@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { CLINIC_STATUS_COLOR } from "@/lib/constants";
 import { EmailSchedule } from "@/lib/types";
 import useClinicDetail from "@/hooks/useClinicDetail";
+import { useConfirm } from "@/context/ConfirmContext";
 import Loading from "../loading";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
@@ -28,7 +29,9 @@ interface Props {
 export default function ClinicDetailUI({ clinicId }: Props) {
   const { clinic, emails, loading, error } = useClinicDetail(clinicId);
   const router = useRouter();
+  const { confirm } = useConfirm();
   const [schedule, setSchedule] = useState<Partial<EmailSchedule>>({});
+  const [sentSequences, setSentSequences] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (clinic?.schedule) setSchedule(clinic.schedule);
@@ -46,6 +49,18 @@ export default function ClinicDetailUI({ clinicId }: Props) {
   };
 
   const handleSendNow = async (sequence: 1 | 2 | 3) => {
+    const labels: Record<number, string> = {
+      1: "Initial Outreach",
+      2: "Follow-up 1",
+      3: "Follow-up 2",
+    };
+    const ok = await confirm({
+      title: `Send ${labels[sequence]}`,
+      message: "This will send the email immediately to the clinic. Are you sure?",
+      confirmLabel: "Send Now",
+    });
+    if (!ok) return;
+    setSentSequences((prev) => new Set(prev).add(sequence));
     await fetch(`${BASE_URL}/emails/send-now/${schedule.id}/${sequence}`, {
       method: "POST",
       credentials: "include",
@@ -90,144 +105,147 @@ export default function ClinicDetailUI({ clinicId }: Props) {
 
   const topFeatures = formatTopFeatures(clinic.top_features);
 
+  const SEQUENCE_LABELS: Record<number, string> = {
+    1: "Initial Outreach",
+    2: "Follow-up 1",
+    3: "Follow-up 2",
+  };
+
+  const STATUS_STYLE: Record<string, string> = {
+    sent: "bg-green-100 text-green-700",
+    pending: "bg-amber-100 text-amber-700",
+    cancelled: "bg-gray-100 text-gray-400",
+    failed: "bg-red-100 text-red-600",
+  };
+
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center">
-      <div className="w-full px-8! m-4 flex gap-6 mt-6">
-        {/* Left side */}
-        <div className="flex flex-col gap-4 w-1/2!">
-          {/* Top left, Email Name and Data */}
-          <div className="bg-white shadow rounded-lg p-6 flex flex-col gap-4">
-            <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-              <h1 className="text-3xl font-bold text-gray-800">
-                {displayValue(clinic.name) || "Clinic Name"}
-              </h1>
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+      {/* Header */}
+      <div className="shrink-0 flex items-center justify-between px-8 h-14 border-b border-gray-200 bg-white shadow-sm">
+        <h1 className="text-xl font-bold text-gray-800">
+          {displayValue(clinic.name)}
+        </h1>
+        <button
+          className="text-sm bg-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:bg-slate-200"
+          onClick={redirectToDashboard}
+        >
+          Dashboard
+        </button>
+      </div>
 
-              <button
-                className="text-sm! bg-slate-200 text-slate-600 font-semibold px-2 py-1 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:bg-slate-300"
-                onClick={redirectToDashboard}
-              >
-                Dashboard
-              </button>
-            </div>
+      {/* Body — two equal-height columns */}
+      <div className="flex-1 flex gap-5 overflow-hidden p-5 min-h-0">
 
-            <div className="flex flex-col sm:flex-row sm:gap-6">
-              <div className="flex-1">
+        {/* Left column */}
+        <div className="flex flex-col gap-4 w-1/2 min-h-0">
+
+          {/* Clinic info — notes-only scrollable */}
+          <div className="flex-1 bg-white rounded-xl shadow-sm p-6 overflow-hidden min-h-0 flex flex-col gap-5">
+            <p className="text-lg font-semibold text-gray-700 shrink-0 -mb-1">Clinic Information</p>
+            <div className="flex gap-6">              
+              <div className="flex-1 flex flex-col gap-1.5 text-sm">
+                <p><span className="font-semibold text-gray-700">Email:</span> {displayValue(clinic.email)}</p>
                 <p>
-                  <span className="font-semibold">Email:</span>{" "}
-                  {displayValue(clinic.email)}
+                  <span className="font-semibold text-gray-700">Website:</span>{" "}
+                  {clinic.website_url
+                    ? <a href={clinic.website_url} target="_blank" className="text-indigo-600 underline">{clinic.website_url}</a>
+                    : "N/A"}
                 </p>
-                <p>
-                  <span className="font-semibold">Website:</span>{" "}
-                  {clinic.website_url ? (
-                    <a
-                      href={clinic.website_url}
-                      target="_blank"
-                      className="text-indigo-600 underline"
-                    >
-                      {clinic.website_url}
-                    </a>
-                  ) : (
-                    "N/A"
-                  )}
-                </p>
-                <p>
-                  <span className="font-semibold">Type:</span>{" "}
-                  {displayValue(clinic.type)}
-                </p>
-                <p>
-                  <span className="font-semibold">Location:</span>{" "}
-                  {displayValue(clinic.city)}, {displayValue(clinic.province)}
-                </p>
+                <p><span className="font-semibold text-gray-700">Type:</span> {displayValue(clinic.type)}</p>
+                <p><span className="font-semibold text-gray-700">Location:</span> {displayValue(clinic.city)}, {displayValue(clinic.province)}</p>
+                <p><span className="font-semibold text-gray-700">Phone:</span> {formatPhoneNumber(clinic.phone)}</p>
               </div>
 
-              <div className="flex-1 mt-4 sm:mt-0">
-                <p>
-                  <span className="font-semibold">Total Reviews:</span>{" "}
-                  {displayValue(clinic.total_reviews)}
-                </p>
-                <p>
-                  <span className="font-semibold">Average Rating:</span>{" "}
-                  {displayValue(clinic.average_rating)}
-                </p>
-                <p>
-                  <span className="font-semibold">Lead Score:</span>{" "}
-                  {displayValue(clinic.lead_score)}
-                </p>
-                <p className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold">Status:</span>{" "}
-                  <span
-                    className={`whitespace-nowrap font-semibold px-2 py-0.5 rounded-xl text-xs! ${
-                      CLINIC_STATUS_COLOR[clinic.email_status]
-                    }`}
-                  >
+              <div className="flex-1 flex flex-col gap-1.5 text-sm">
+                <p><span className="font-semibold text-gray-700">Total Reviews:</span> {displayValue(clinic.total_reviews)}</p>
+                <p><span className="font-semibold text-gray-700">Average Rating:</span> {displayValue(clinic.average_rating)}</p>
+                <p><span className="font-semibold text-gray-700">Lead Score:</span> {displayValue(clinic.lead_score)}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-gray-700">Status:</span>
+                  <span className={`whitespace-nowrap font-semibold px-2 py-0.5 rounded-xl text-xs ${CLINIC_STATUS_COLOR[clinic.email_status]}`}>
                     {displayValue(clinic.email_status)}
                   </span>
                   {clinic.email_status !== "Replied" && (
                     <button
                       onClick={handleMarkReplied}
-                      className="text-xs! bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-xl border border-blue-200 cursor-pointer hover:bg-blue-200 transition-all duration-200"
+                      className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-xl border border-blue-200 cursor-pointer hover:bg-blue-200 transition-all duration-200"
                     >
                       Mark Replied
                     </button>
                   )}
-                </p>
-                <p>
-                  <span className="font-semibold">Phone:</span>{" "}
-                  {formatPhoneNumber(clinic.phone)}
-                </p>
+                </div>
               </div>
             </div>
 
             <div>
-              <p className="font-semibold mb-1">Top Features:</p>
-              <div className="flex flex-wrap gap-x-4 gap-y-3">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Top Features</p>
+              <div className="flex flex-wrap gap-2">
                 {topFeatures.map((feature, i) => (
-                  <span
-                    key={i}
-                    className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-1 rounded-full"
-                  >
+                  <span key={i} className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-1 rounded-full">
                     {feature}
                   </span>
                 ))}
               </div>
             </div>
 
-            <div>
-              <p className="font-semibold mb-1">Website Description:</p>
-              <p className="text-gray-700 text-sm">
+            <div className="flex-1 min-h-0 flex flex-col">
+              <p className="text-sm font-semibold text-gray-700 mb-1 shrink-0">Website Description</p>
+              <div className="flex-1 min-h-0 overflow-y-scroll scroll-visible text-gray-600 text-sm leading-relaxed pr-2">
                 {displayValue(clinic.notes)}
-              </p>
+              </div>
             </div>
           </div>
 
-          {/* bottom left, scheduled email outreach times */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <p className="font-semibold mb-2">Outreach Scheduler:</p>
+          {/* Outreach scheduler — timeline, fixed height */}
+          <div className="shrink-0 bg-white rounded-xl shadow-sm p-6">
+            <p className="text-lg font-semibold text-gray-700 mb-3">Outreach Schedule</p>
 
-            <div className="flex gap-8 mt-4!">
-              {([1, 2, 3] as const).map((i) => {
-                const labels = { 1: "Initial Outreach", 2: "Follow-up 1", 3: "Follow-up 2" };
+            <div className="flex flex-col gap-0">
+              {([1, 2, 3] as const).map((i, idx) => {
                 const sendAt = schedule[`send_${i}_at` as keyof EmailSchedule] as string | null | undefined;
-                const isSent = schedule[`status_${i}` as keyof EmailSchedule] === "sent";
+                const status = (schedule[`status_${i}` as keyof EmailSchedule] as string) || "pending";
+                const isSent = status === "sent" || sentSequences.has(i);
+                const isCancelled = status === "cancelled";
 
                 return (
-                  <div key={i} className="flex flex-col w-50!">
-                    <label className="label-outreach">{labels[i]}</label>
-                    <input
-                      type="datetime-local"
-                      className="input-outreach h-9! w-44! text-sm!"
-                      value={sendAt ? toDatetimeLocal(sendAt) : ""}
-                      min={nowDatetimeLocal()}
-                      disabled={isSent}
-                      onChange={(e) => handleScheduleChange(i, e.target.value)}
-                    />
-                    <button
-                      className="w-30! mt-2.5 bg-indigo-500! text-white font-semibold rounded px-2 py-1 h-8! transition-all cursor-pointer duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={isSent || !schedule.id}
-                      onClick={() => handleSendNow(i)}
-                    >
-                      {isSent ? "Sent" : "Send Now"}
-                    </button>
+                  <div key={i} className="flex items-center gap-4 relative">
+                    {/* Connector line */}
+                    {idx < 2 && (
+                      <div className={`absolute left-4.5 top-10 w-px h-6.5 bg-gray-200 ${isSent ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-500"}`} />
+                    )}
+
+                    {/* Step circle */}
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isSent ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-500"}`}>
+                      {i}
+                    </div>
+
+                    {/* Row content */}
+                    <div className="flex-1 flex items-center justify-between py-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-sm font-medium text-gray-700">{SEQUENCE_LABELS[i]}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${STATUS_STYLE[status] ?? "bg-gray-100 text-gray-400"}`}>
+                          {status}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="datetime-local"
+                          className="input-outreach h-8! text-xs! w-40!"
+                          value={sendAt ? toDatetimeLocal(sendAt) : ""}
+                          min={nowDatetimeLocal()}
+                          disabled={isSent || isCancelled}
+                          onChange={(e) => handleScheduleChange(i, e.target.value)}
+                        />
+                        <button
+                          className="w-21! bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded cursor-pointer transition-all duration-200 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isSent || isCancelled || !schedule.id}
+                          onClick={() => handleSendNow(i)}
+                        >
+                          {isSent ? "Sent" : "Send Now"}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
@@ -235,34 +253,27 @@ export default function ClinicDetailUI({ clinicId }: Props) {
           </div>
         </div>
 
-        {/* full-page right, three emails for outreach */}
-        <div className="h-screen! w-1/2! bg-white! shadow rounded-lg p-6">
-          <p className="font-semibold mb-2">Emails for Outreach:</p>
+        {/* Right column — emails, scrollable */}
+        <div className="w-1/2 min-h-0 bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <p className="text-lg font-semibold text-gray-700 mb-3 shrink-0">Emails for Outreach</p>
 
-          {emails.length <= 0 && (
-            <div className="p-1 text-gray-500 font-semibold text-sm!">
-              {" "}
-              No emails have been generated for this clinic yet.
-            </div>
-          )}
-
-          {emails.length > 0 && (
-            <div className="flex flex-col gap-4">
+          {emails.length === 0 ? (
+            <p className="text-gray-400 text-sm">No emails have been generated for this clinic yet.</p>
+          ) : (
+            <div className="flex-1 overflow-y-scroll scroll-visible min-h-0 flex flex-col gap-4 pr-2">
               {emails.map((email, idx) => (
-                <div
-                  key={idx}
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-2"
-                >
-                  <p className="text-xs font-medium mb-1">
-                    <span className="font-semibold">Type:</span>{" "}
-                    {displayValue(email.type)}
-                  </p>
-                  <p className="text-xs mb-1">
-                    <span className="font-semibold">Subject:</span>{" "}
+                <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                      {email.type}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    <span className="font-semibold text-gray-700">Subject:</span>{" "}
                     {displayValue(email.subject_line)}
                   </p>
-                  <p className="text-xs whitespace-pre-wrap">
-                    <span className="font-semibold">Body:</span>{" "}
+                  <p className="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed">
+                    <span className="font-semibold text-gray-700">Body:</span>{" "}
                     {email.email_body}
                   </p>
                 </div>
@@ -270,6 +281,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
             </div>
           )}
         </div>
+
       </div>
     </div>
   );

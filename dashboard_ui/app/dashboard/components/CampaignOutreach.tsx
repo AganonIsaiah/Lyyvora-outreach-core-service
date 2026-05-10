@@ -28,7 +28,7 @@ export default function CampaignOutreach() {
       <div>
         <h2>Outreach Generator</h2>
         <p className="text-slate-400 text-xs mt-0.5">
-          Configure and generate personalised email outreach at scale
+          Configure and generate personalized email outreach at scale
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export default function CampaignOutreach() {
             Batch Size <span className="text-gray-400">(max 100)</span>
           </label>
           <div className="flex gap-2 h-10! items-center">
-            {[10, 25, 50, 100].map((size) => {
+            {[1, 10, 25, 50, 100].map((size) => {
               const isSelected = number_of_clinics === size;
               const isDisabled = notGeneratedEmailsCount != null && size > notGeneratedEmailsCount;
               return (

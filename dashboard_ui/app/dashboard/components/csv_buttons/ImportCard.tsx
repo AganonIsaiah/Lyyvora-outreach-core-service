@@ -3,6 +3,7 @@
 import { useDashboardContext } from "@/context/DashboardContext";
 import { IMPORT_COLUMNS } from "@/lib/constants";
 import { useImportCsv } from "@/hooks/useImportCsv";
+import { useConfirm } from "@/context/ConfirmContext";
 
 interface ImportCardProps {
   onColumnsToggle?: (open: boolean) => void;
@@ -12,6 +13,7 @@ export default function ImportCard({ onColumnsToggle }: ImportCardProps) {
   const importColumns = IMPORT_COLUMNS;
   const { showExport } = useDashboardContext();
 
+  const { confirm } = useConfirm();
   const {
     fileInputRef,
     loadingReplace,
@@ -19,6 +21,17 @@ export default function ImportCard({ onColumnsToggle }: ImportCardProps) {
     openFilePicker,
     handleFileChange,
   } = useImportCsv();
+
+  const handleReplace = async () => {
+    const ok = await confirm({
+      title: "Replace CSV",
+      message:
+        "This will overwrite all existing clinic data with the new file. This cannot be undone.",
+      confirmLabel: "Replace",
+      variant: "danger",
+    });
+    if (ok) openFilePicker("import");
+  };
 
   function ColumnChips({ columns }: { columns: string[] }) {
     return (
@@ -67,7 +80,7 @@ export default function ImportCard({ onColumnsToggle }: ImportCardProps) {
       <div className="flex gap-2 mt-3">
         <button
           disabled={loadingReplace || loadingAppend}
-          onClick={() => openFilePicker("import")}
+          onClick={showExport ? handleReplace : () => openFilePicker("import")}
           className="flex-1 bg-indigo-500 text-white text-xs font-semibold rounded px-3 py-1.5 cursor-pointer hover:bg-indigo-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loadingReplace ? "Importing..." : showExport ? "Replace" : "Import CSV"}
