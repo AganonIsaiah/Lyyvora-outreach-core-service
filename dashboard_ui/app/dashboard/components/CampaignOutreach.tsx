@@ -32,7 +32,7 @@ export default function CampaignOutreach() {
         </p>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-8">
         <span className="flex flex-col">
           <label htmlFor="max-word-limit" className="label-outreach text-xs!">
             Word Limit <span className="text-gray-400">(max 200)</span>
@@ -55,8 +55,8 @@ export default function CampaignOutreach() {
           <label className="label-outreach text-xs!">
             Batch Size <span className="text-gray-400">(max 100)</span>
           </label>
-          <div className="flex gap-2 h-10! items-center">
-            {[1, 10, 25, 50, 100].map((size) => {
+          <div className="grid grid-cols-3 gap-2 h-10! items-center">
+            {[1, 5, 10, 25, 50, 100].map((size) => {
               const isSelected = number_of_clinics === size;
               const isDisabled = notGeneratedEmailsCount != null && size > notGeneratedEmailsCount;
               return (
@@ -64,7 +64,7 @@ export default function CampaignOutreach() {
                   key={size}
                   disabled={isDisabled}
                   onClick={() => updateStatus("number_of_clinics", isSelected ? 0 : size)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-all duration-150 cursor-pointer
+                  className={`px-3 py-1 rounded-md text-xs font-semibold border transition-all duration-150 cursor-pointer
                     ${isSelected
                       ? "bg-indigo-500 text-white border-indigo-500"
                       : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"

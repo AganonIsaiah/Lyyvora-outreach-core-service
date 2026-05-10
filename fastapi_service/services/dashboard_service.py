@@ -14,8 +14,9 @@ from configs.database import supabase
 from datetime import datetime
 
 STATUS_PRIORITY = {
-    ClinicStatus.GENERATED: 3,
-    ClinicStatus.EXPORTED: 2,
+    ClinicStatus.REPLIED: 4,
+    ClinicStatus.EXPORTED: 3,
+    ClinicStatus.GENERATED: 2,
     ClinicStatus.NOT_GENERATED: 1,
 }
 
@@ -210,7 +211,10 @@ def get_all_clinics_from_db(
 
     reverse = sort_order.lower() != "asc"
     if sort_by == "lead_score" or sort_by is None:
-        clinics_data.sort(key=get_lead_score, reverse=reverse)
+        clinics_data.sort(
+            key=lambda c: (get_lead_score(c), get_email_status_priority(c)),
+            reverse=True,
+        )
     elif sort_by == "average_rating":
         clinics_data.sort(key=lambda c: c.get("average_rating") or 0, reverse=reverse)
     elif sort_by == "email_status":
@@ -334,7 +338,12 @@ def generate_dashboard(req: DashboardRequest):
         Filter(
             key="email_status",
             label="Email Status",
-            values=[s.value for s in ClinicStatus],
+            values=[
+                ClinicStatus.REPLIED.value,
+                ClinicStatus.EXPORTED.value,
+                ClinicStatus.GENERATED.value,
+                ClinicStatus.NOT_GENERATED.value,
+            ],
             type="select",
         ),
     ]
