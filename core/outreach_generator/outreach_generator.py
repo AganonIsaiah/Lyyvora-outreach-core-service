@@ -16,7 +16,6 @@ MODEL = "gpt-4o-mini"
 
 EMAIL_SIGNATURE = """
 Best regards,
-Sharmeen Aqeel 
 Founder & CEO, Lyyvora
 Lending-as-a-service for healthcare clinics
 https://lyyvora.com"""
