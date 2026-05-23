@@ -60,13 +60,19 @@ app.add_middleware(
 )
 
 
-def get_current_user(access_token: str = Cookie(None)):
+def get_current_user(access_token: str = Cookie(None)) -> dict:
     if not access_token:
         raise HTTPException(status_code=401, detail="Missing access token")
     payload = decode_access_token(access_token)
     if not payload or "sub" not in payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    return payload["sub"]
+    return payload
+
+
+def require_admin(user: dict = Depends(get_current_user)) -> dict:
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
 
 
 @app.get("/")
@@ -76,10 +82,11 @@ def home():
 
 @app.post("/login")
 def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
-    if not authenticate_user(form_data.username, form_data.password):
+    role = authenticate_user(form_data.username, form_data.password)
+    if role is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = create_access_token({"sub": form_data.username})
+    token = create_access_token({"sub": form_data.username, "role": role})
 
     is_local = FRONTEND_URL.startswith("http://localhost")
 
@@ -92,7 +99,12 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         max_age=60 * 60 * 8,
     )
 
-    return {"message": "Login successful"}
+    return {"message": "Login successful", "role": role, "username": form_data.username}
+
+
+@app.get("/me")
+def get_me(user: dict = Depends(get_current_user)):
+    return {"username": user["sub"], "role": user["role"]}
 
 
 @app.post("/logout")
@@ -108,7 +120,7 @@ def logout(response: Response):
 
 
 @app.patch("/clinics/{clinic_id}/mark-replied")
-def mark_replied(clinic_id: int, user: str = Depends(get_current_user)):
+def mark_replied(clinic_id: int, user: dict = Depends(get_current_user)):
     res = supabase.table("leads").select("id").eq("id", clinic_id).execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Clinic not found")
@@ -143,13 +155,15 @@ def mark_replied(clinic_id: int, user: str = Depends(get_current_user)):
 
 
 @app.get("/clinics/{clinic_id}")
-def get_clinic(clinic_id: int, user: str = Depends(get_current_user)) -> Dict[str, Any]:
+def get_clinic(
+    clinic_id: int, user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
     return get_clinic_by_id(clinic_id)
 
 
 @app.post("/append-leads")
 async def append_leads(
-    file: UploadFile = File(...), user: str = Depends(get_current_user)
+    file: UploadFile = File(...), user: dict = Depends(get_current_user)
 ):
     try:
         res = append_csv_to_leads(file)
@@ -160,7 +174,7 @@ async def append_leads(
 
 @app.get("/export-smartlead-csv")
 def export_smartlead_csv(
-    campaign_batch: Optional[str] = Query(None), user: str = Depends(get_current_user)
+    campaign_batch: Optional[str] = Query(None), user: dict = Depends(get_current_user)
 ):
     columns = [
         "clinic_name",
@@ -224,7 +238,7 @@ def export_smartlead_csv(
 
 
 @app.post("/drop-tables")
-def drop_tables(user: str = Depends(get_current_user)):
+def drop_tables(user: dict = Depends(require_admin)):
     try:
         drop_all_tables_supabase()
         return {"status": "success", "message": "All tables dropped successfully."}
@@ -253,7 +267,7 @@ def generate_outreach(
     request: Request,
     background_tasks: BackgroundTasks,
     payload: dict = Body(...),
-    user: str = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
 ):
     email_batch_size = payload.get("email_batch_size", 1)
     prompt = payload.get("prompt")
@@ -274,15 +288,13 @@ def generate_outreach(
 
 
 @app.post("/import-csv")
-async def import_csv(
-    file: UploadFile = File(...), user: str = Depends(get_current_user)
-):
+async def import_csv(file: UploadFile = File(...), user: dict = Depends(require_admin)):
     res = process_uploaded_csv(file)
     return res
 
 
 @app.post("/emails/schedule")
-def schedule_email(payload: dict = Body(...), user: str = Depends(get_current_user)):
+def schedule_email(payload: dict = Body(...), user: dict = Depends(get_current_user)):
     smartlead_id = payload.get("smartlead_id")
     if not smartlead_id:
         raise HTTPException(status_code=400, detail="smartlead_id is required")
@@ -304,7 +316,7 @@ def schedule_email(payload: dict = Body(...), user: str = Depends(get_current_us
 
 
 @app.get("/emails")
-def list_emails(user: str = Depends(get_current_user)):
+def list_emails(user: dict = Depends(get_current_user)):
     res = (
         supabase.table("scheduled_emails")
         .select(
@@ -320,7 +332,7 @@ def list_emails(user: str = Depends(get_current_user)):
 def update_schedule(
     schedule_id: str,
     payload: dict = Body(...),
-    user: str = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
 ):
     now = datetime.now(timezone.utc).isoformat()
     updates = {}
@@ -344,7 +356,7 @@ def update_schedule(
 def send_email_now(
     schedule_id: str,
     sequence: int,
-    user: str = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
 ):
     if sequence not in (1, 2, 3):
         raise HTTPException(status_code=400, detail="Sequence must be 1, 2, or 3")
@@ -386,7 +398,7 @@ def send_email_now(
 
 
 @app.delete("/emails/{email_id}")
-def cancel_email(email_id: str, user: str = Depends(get_current_user)):
+def cancel_email(email_id: str, user: dict = Depends(get_current_user)):
     res = (
         supabase.table("scheduled_emails")
         .select("id, status_1, status_2, status_3")
@@ -413,7 +425,7 @@ def cancel_email(email_id: str, user: str = Depends(get_current_user)):
 
 @app.get("/dashboard", response_model=DashboardResponse)
 def get_dashboard(
-    user: str = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
     limit: int = Query(25, ge=1, le=100),
     page: int = Query(1, ge=1),
     name: Optional[List[str]] = Query(None),

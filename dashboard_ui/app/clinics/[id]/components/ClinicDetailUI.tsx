@@ -1,12 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CLINIC_STATUS_COLOR } from "@/lib/constants";
 import { EmailSchedule } from "@/lib/types";
 import useClinicDetail from "@/hooks/useClinicDetail";
 import { useConfirm } from "@/context/ConfirmContext";
 import Loading from "../loading";
+import Header from "@/shared/Header";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 
@@ -28,7 +28,6 @@ interface Props {
 
 export default function ClinicDetailUI({ clinicId }: Props) {
   const { clinic, emails, loading, error } = useClinicDetail(clinicId);
-  const router = useRouter();
   const { confirm } = useConfirm();
   const [schedule, setSchedule] = useState<Partial<EmailSchedule>>({});
   const [sentSequences, setSentSequences] = useState<Set<number>>(new Set());
@@ -74,8 +73,6 @@ export default function ClinicDetailUI({ clinicId }: Props) {
     });
   };
 
-  const redirectToDashboard = () => router.push("/dashboard");
-
   if (loading) return <Loading />;
   else if (error) return <div className="text-red-500">Error: {error}</div>;
   else if (!clinic) return <div>Clinic not found</div>;
@@ -120,18 +117,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
-      {/* Header */}
-      <div className="shrink-0 flex items-center justify-between px-8 h-14 border-b border-gray-200 bg-white shadow-sm">
-        <h1 className="text-xl font-bold text-gray-800">
-          {displayValue(clinic.name)}
-        </h1>
-        <button
-          className="text-sm bg-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:bg-slate-200"
-          onClick={redirectToDashboard}
-        >
-          Dashboard
-        </button>
-      </div>
+      <Header title={displayValue(clinic.name)} showDashboardButton />
 
       {/* Body — two equal-height columns */}
       <div className="flex-1 flex gap-5 overflow-hidden p-5 min-h-0">

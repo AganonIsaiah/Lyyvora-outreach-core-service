@@ -9,6 +9,7 @@ import {
   ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
+import { PUBLIC_ROUTES } from "@/lib/constants";
 import { CampaignStatus, Filter, FilterState, Clinic, Metric } from "@/lib/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -50,8 +51,6 @@ interface DashboardContextProps {
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
 
-const PUBLIC_ROUTES = ["/", "/login"];
-
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
   const state = useAppSelector(selectDashboard);
@@ -62,7 +61,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     dispatch(fetchDashboard({ page: state.page, limit: state.limit, filters: state.filters }));
   }, [state.page, state.filters, pathname]);
 
-  // Reset stale data when the user lands on a public route (e.g. after logout)
+  // Reset dashboard state when user lands on a public route (e.g. after logout)
   useEffect(() => {
     if (PUBLIC_ROUTES.includes(pathname)) {
       dispatch(resetDashboard());

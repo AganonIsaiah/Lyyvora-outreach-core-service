@@ -3,12 +3,14 @@
 import EmergencyIcon from "@mui/icons-material/Emergency";
 import { useDashboardContext } from "@/context/DashboardContext";
 import { useDropTables } from "@/hooks/useDropTables";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DropTableCard() {
   const { showExport } = useDashboardContext();
   const { dropTables, loading } = useDropTables();
+  const { isAdmin } = useAuth();
 
-  if (!showExport) return null;
+  if (!showExport || !isAdmin) return null;
 
   return (
     <div className="rounded-lg border border-red-100 bg-red-50 p-4">

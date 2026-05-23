@@ -17,20 +17,24 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def authenticate_user(username: str, password: str) -> bool:
+def authenticate_user(username: str, password: str) -> Optional[str]:
+    """Returns the user's role on success, None on failure."""
     res = (
         supabase.table("auth")
-        .select("id, name, password")
+        .select("id, name, password, role")
         .eq("name", username)
         .limit(1)
         .execute()
     )
 
     if not res.data:
-        return False
+        return None
 
     user = res.data[0]
-    return verify_password(password, user["password"])
+    if not verify_password(password, user["password"]):
+        return None
+
+    return user["role"]
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
