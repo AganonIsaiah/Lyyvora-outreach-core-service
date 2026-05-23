@@ -53,7 +53,9 @@ export const dashboardService = {
     });
 
     if (res.status === 401) {
-      if (typeof window !== "undefined") window.location.href = "/login";
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
       return Promise.reject(new Error("Not authenticated"));
     }
     
