@@ -1,3 +1,4 @@
+import traceback
 from fastapi import UploadFile, HTTPException
 from configs.database import supabase
 from core.lead_data_pipeline.lead_data_pipeline import run_pipeline
@@ -41,4 +42,5 @@ def process_uploaded_csv(file: UploadFile) -> dict:
         }
 
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

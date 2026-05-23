@@ -104,7 +104,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
 
 @app.get("/me")
 def get_me(user: dict = Depends(get_current_user)):
-    return {"username": user["sub"], "role": user["role"]}
+    return {"username": user["sub"], "role": user.get("role", "user")}
 
 
 @app.post("/logout")
@@ -434,10 +434,6 @@ def get_dashboard(
     province: Optional[List[str]] = Query(None),
     email_status: Optional[List[str]] = Query(None),
     campaign_batch: Optional[List[str]] = Query(None),
-    sort_by: Optional[str] = Query(
-        None, regex="^(email_status|lead_score|average_rating)$"
-    ),
-    sort_order: str = Query("desc", regex="^(asc|desc)$"),
 ):
     req = DashboardRequest(
         limit=limit,
@@ -448,8 +444,6 @@ def get_dashboard(
         province=province,
         email_status=email_status,
         campaign_batch=campaign_batch,
-        sort_by=sort_by,
-        sort_order=sort_order,
     )
     try:
         result = generate_dashboard(req)

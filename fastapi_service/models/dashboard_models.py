@@ -78,5 +78,3 @@ class DashboardRequest(BaseModel):
     province: Optional[List[str]] = None
     email_status: Optional[List[str]] = None
     campaign_batch: Optional[List[str]] = None
-    sort_by: Optional[str] = None
-    sort_order: str = "desc"

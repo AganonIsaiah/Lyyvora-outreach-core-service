@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface ModalOptions {
   title: string;
@@ -14,15 +14,25 @@ interface ModalState extends ModalOptions {
   resolve: (value: boolean) => void;
 }
 
+interface ToastItem {
+  id: number;
+  title: string;
+  message: string;
+}
+
 interface ConfirmContextValue {
   confirm: (opts: ModalOptions) => Promise<boolean>;
   notify: (title: string, message: string) => Promise<void>;
+  toast: (title: string, message: string) => void;
 }
 
 const ConfirmContext = createContext<ConfirmContextValue | undefined>(undefined);
 
+const TOAST_DURATION = 4000;
+
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ModalState | null>(null);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const confirm = (opts: ModalOptions): Promise<boolean> =>
     new Promise((resolve) => setState({ ...opts, resolve }));
@@ -38,6 +48,12 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       })
     );
 
+  const toast = (title: string, message: string) => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, title, message }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), TOAST_DURATION);
+  };
+
   const handleConfirm = () => {
     state?.resolve(true);
     setState(null);
@@ -49,8 +65,10 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ConfirmContext.Provider value={{ confirm, notify }}>
+    <ConfirmContext.Provider value={{ confirm, notify, toast }}>
       {children}
+
+      {/* Blocking modal */}
       {state && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
@@ -88,6 +106,19 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           </div>
         </div>
       )}
+
+      {/* Non-blocking toasts */}
+      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 items-end">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className="bg-white border border-gray-200 shadow-lg rounded-xl px-4 py-3 w-72 flex flex-col gap-0.5 animate-fade-in"
+          >
+            <p className="text-sm font-semibold text-gray-800">{t.title}</p>
+            <p className="text-xs text-gray-500">{t.message}</p>
+          </div>
+        ))}
+      </div>
     </ConfirmContext.Provider>
   );
 }

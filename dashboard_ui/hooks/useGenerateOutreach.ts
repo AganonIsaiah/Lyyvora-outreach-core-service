@@ -15,10 +15,41 @@ export const useGenerateOutreach = () => {
     wsClinicsGenerated,
     setWsClinicsGenerated,
   } = useDashboardContext();
-  const { notify } = useConfirm();
+  const { notify, toast } = useConfirm();
   const [loading, setLoading] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  // Animation refs — avoids stale closure issues inside setInterval
+  const displayedRef = useRef<number>(0);
+  const targetRef = useRef<number>(0);
+  const animIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const ANIM_DURATION_MS = 6000;
+
+  const animateTo = (next: number) => {
+    targetRef.current = next;
+    if (animIntervalRef.current) return; // already draining
+    const msPerStep = Math.max(80, ANIM_DURATION_MS / number_of_clinics);
+    animIntervalRef.current = setInterval(() => {
+      if (displayedRef.current >= targetRef.current) {
+        clearInterval(animIntervalRef.current!);
+        animIntervalRef.current = null;
+        return;
+      }
+      displayedRef.current += 1;
+      setWsClinicsGenerated(displayedRef.current);
+    }, msPerStep);
+  };
+
+  const stopAnimation = (finalValue: number) => {
+    if (animIntervalRef.current) {
+      clearInterval(animIntervalRef.current);
+      animIntervalRef.current = null;
+    }
+    displayedRef.current = finalValue;
+    targetRef.current = finalValue;
+    setWsClinicsGenerated(finalValue);
+  };
 
   const safeCampaignStatus = campaignStatus ?? {
     max_word_limit: 120,
@@ -46,10 +77,12 @@ export const useGenerateOutreach = () => {
       return;
     }
 
+    displayedRef.current = 0;
+    targetRef.current = 0;
     setWsClinicsGenerated(0);
     setLoading(true);
-    await notify("Generation started", "Outreach generation is running. The progress bar will update as emails are generated.");
     startTimeRef.current = performance.now();
+    toast("Generation started", "Outreach generation is running. The progress bar will update as emails are generated.");
 
     try {
       const response = await fetch(`${BASE_URL}/generate-outreach`, {
@@ -77,17 +110,19 @@ export const useGenerateOutreach = () => {
         const msg = JSON.parse(event.data);
 
         if (msg.type === "completed") {
-          if (startTimeRef.current) {
-            const seconds =
-              (performance.now() - startTimeRef.current) / 1000;
+          const maxVal = Math.min(number_of_clinics, notGeneratedEmailsCount ?? number_of_clinics);
+          stopAnimation(maxVal);
 
-            await notify(
-              "Generation complete",
-              `Outreach generation finished in ${seconds.toFixed(2)} seconds.`
-            );
-          } else {
-            await notify("Generation complete", "Outreach generation has finished.");
-          }
+          const seconds = startTimeRef.current
+            ? ((performance.now() - startTimeRef.current) / 1000).toFixed(2)
+            : null;
+
+          await notify(
+            "Generation complete",
+            seconds
+              ? `Outreach generation finished in ${seconds}s.`
+              : "Outreach generation has finished."
+          );
 
           setLoading(false);
           window.location.reload();
@@ -95,14 +130,8 @@ export const useGenerateOutreach = () => {
         }
 
         const increment = msg.contacted_clinics ?? 1;
-
-        setWsClinicsGenerated((prev) =>
-          Math.min(
-            prev + increment,
-            number_of_clinics,
-            notGeneratedEmailsCount ?? number_of_clinics,
-          ),
-        );
+        const cap = Math.min(number_of_clinics, notGeneratedEmailsCount ?? number_of_clinics);
+        animateTo(Math.min(targetRef.current + increment, cap));
       };
 
       ws.onclose = () => {
@@ -115,7 +144,7 @@ export const useGenerateOutreach = () => {
       };
     } catch (err: any) {
       console.error(err.message);
-      await notify("Error", "Failed to start outreach generation. Please try again.");
+      toast("Error", "Failed to start outreach generation. Please try again.");
       setLoading(false);
     }
   };
@@ -123,6 +152,7 @@ export const useGenerateOutreach = () => {
   useEffect(() => {
     return () => {
       if (wsRef.current) wsRef.current.close();
+      if (animIntervalRef.current) clearInterval(animIntervalRef.current);
     };
   }, []);
 

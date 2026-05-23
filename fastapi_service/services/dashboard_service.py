@@ -167,8 +167,6 @@ def get_all_clinics_from_db(
     city: Optional[List[str]] = None,
     province: Optional[List[str]] = None,
     email_status: Optional[List[ClinicStatus]] = None,
-    sort_by: Optional[str] = None,
-    sort_order: str = "desc",
     campaign_batch: Optional[List[str]] = None,
 ) -> List[Clinic]:
     query = supabase.table("leads").select(
@@ -209,16 +207,10 @@ def get_all_clinics_from_db(
     def get_email_status_priority(c):
         return STATUS_PRIORITY.get(ClinicStatus(c.get("email_status")), 0)
 
-    reverse = sort_order.lower() != "asc"
-    if sort_by == "lead_score" or sort_by is None:
-        clinics_data.sort(
-            key=lambda c: (get_lead_score(c), get_email_status_priority(c)),
-            reverse=True,
-        )
-    elif sort_by == "average_rating":
-        clinics_data.sort(key=lambda c: c.get("average_rating") or 0, reverse=reverse)
-    elif sort_by == "email_status":
-        clinics_data.sort(key=get_email_status_priority, reverse=reverse)
+    clinics_data.sort(
+        key=lambda c: (get_email_status_priority(c), get_lead_score(c)),
+        reverse=True,
+    )
 
     paginated_data = clinics_data[offset : offset + limit]
 
@@ -305,8 +297,6 @@ def generate_dashboard(req: DashboardRequest):
         city=city,
         province=province,
         email_status=email_status,
-        sort_by=req.sort_by,
-        sort_order=req.sort_order,
         campaign_batch=campaign_batch,
     )
 

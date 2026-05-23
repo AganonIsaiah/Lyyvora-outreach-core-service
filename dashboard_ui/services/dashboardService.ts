@@ -37,15 +37,6 @@ export const dashboardService = {
           params.append("campaign_batch", v)
         );
 
-      if (filters.lead_score?.length) {
-        params.append("sort_by", "lead_score");
-        params.append("sort_order", filters.lead_score[0].toLowerCase());
-      }
-
-      if (filters.average_rating?.length) {
-        params.append("sort_by", "average_rating");
-        params.append("sort_order", filters.average_rating[0].toLowerCase());
-      }
     }
 
     const res = await fetch(`${BASE_URL}/dashboard?${params.toString()}`, {

@@ -10,6 +10,35 @@ import Header from "@/shared/Header";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 
+const NAMED_LINKS: Record<string, string> = {
+  "https://calendar.app.google/nK7cT3FXwYBGCgWU6": "Book a time here",
+  "https://lyyvora.com": "Discover Lyyvora",
+  "http://lyyvora.com": "Discover Lyyvora",
+};
+
+function renderEmailBody(text: string) {
+  // Create regex fresh each call to avoid /g flag lastIndex issues
+  const urlRe = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRe);
+  return parts.map((part, i) => {
+    if (/^https?:\/\//.test(part)) {
+      const label = NAMED_LINKS[part] ?? part;
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline font-semibold hover:text-blue-800"
+        >
+          {label}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 const toDatetimeLocal = (iso: string) => {
   const d = new Date(iso);
   const offset = d.getTimezoneOffset();
@@ -258,10 +287,10 @@ export default function ClinicDetailUI({ clinicId }: Props) {
                     <span className="font-semibold text-gray-700">Subject:</span>{" "}
                     {displayValue(email.subject_line)}
                   </p>
-                  <p className="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed">
+                  <div className="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed">
                     <span className="font-semibold text-gray-700">Body:</span>{" "}
-                    {email.email_body}
-                  </p>
+                    {renderEmailBody(email.email_body)}
+                  </div>
                 </div>
               ))}
             </div>

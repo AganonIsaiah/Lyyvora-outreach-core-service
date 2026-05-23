@@ -43,7 +43,10 @@ export function useImportCsv() {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("CSV upload failed");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail ?? "CSV upload failed");
+      }
 
       await notify(
         "Success",
@@ -53,9 +56,9 @@ export function useImportCsv() {
       );
 
       window.location.reload();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      await notify("Error", `Failed to ${uploadMode} CSV. Please try again.`);
+      await notify("Error", err.message ?? `Failed to ${uploadMode} CSV. Please try again.`);
     } finally {
       setLoadingAppend(false);
       setLoadingReplace(false);
