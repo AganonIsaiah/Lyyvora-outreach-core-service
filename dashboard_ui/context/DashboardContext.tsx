@@ -14,6 +14,7 @@ import { CampaignStatus, Filter, FilterState, Clinic, Metric } from "@/lib/types
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchDashboard,
+  loadPageFromCache,
   resetDashboard,
   selectDashboard,
   setCampaignStatus,
@@ -58,7 +59,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (PUBLIC_ROUTES.includes(pathname)) return;
-    dispatch(fetchDashboard({ page: state.page, limit: state.limit, filters: state.filters }));
+    const key = JSON.stringify({ page: state.page, filters: state.filters });
+    if (key in state.pageCache) {
+      dispatch(loadPageFromCache(key));
+    } else {
+      dispatch(fetchDashboard({ page: state.page, limit: state.limit, filters: state.filters }));
+    }
   }, [state.page, state.filters, pathname]);
 
   // Reset dashboard state when user lands on a public route (e.g. after logout)
@@ -71,13 +77,19 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const value: DashboardContextProps = {
     clinics: state.clinics,
     filters: state.filters,
-    setFilters: (updater) => dispatch(setFiltersAction(updater as FilterState)),
+    setFilters: (updater) => {
+      const next = typeof updater === "function" ? updater(state.filters) : updater;
+      dispatch(setFiltersAction(next));
+    },
     filtersConfig: state.filtersConfig,
     loading: state.loading,
     loadingPage: state.loadingPage,
     error: state.error,
     campaignStatus: state.campaignStatus,
-    setCampaignStatus: (updater) => dispatch(setCampaignStatus(updater as CampaignStatus)),
+    setCampaignStatus: (updater) => {
+      const next = typeof updater === "function" ? updater(state.campaignStatus) : updater;
+      dispatch(setCampaignStatus(next));
+    },
     metrics: state.metrics,
     showExport: state.showExport,
     page: state.page,
@@ -89,9 +101,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     sentCount: state.sentCount,
     repliedCount: state.repliedCount,
     wsClinicsGenerated: state.wsClinicsGenerated,
-    setWsClinicsGenerated: (updater) => dispatch(setWsClinicsGeneratedAction(updater as number)),
+    setWsClinicsGenerated: (updater) => {
+      const next = typeof updater === "function" ? updater(state.wsClinicsGenerated) : updater;
+      dispatch(setWsClinicsGeneratedAction(next));
+    },
     setPage: (p) => dispatch(setPageAction(p)),
-    setLoading: (value) => dispatch(setLoadingAction(value as boolean)),
+    setLoading: (value) => {
+      const next = typeof value === "function" ? value(state.loading) : value;
+      dispatch(setLoadingAction(next));
+    },
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;

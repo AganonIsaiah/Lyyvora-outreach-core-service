@@ -32,6 +32,7 @@ interface DashboardState {
   repliedCount: number;
   wsClinicsGenerated: number;
   lastFetchKey: string;
+  pageCache: Record<string, DashboardResponse>;
   clinicDetails: Record<string, Clinic>;
   clinicEmails: Record<string, ClinicEmails[]>;
   pendingClinicIds: string[];
@@ -58,6 +59,7 @@ const initialState: DashboardState = {
   repliedCount: 0,
   wsClinicsGenerated: 0,
   lastFetchKey: "",
+  pageCache: {},
   clinicDetails: {},
   clinicEmails: {},
   pendingClinicIds: [],
@@ -78,8 +80,9 @@ export const fetchDashboard = createAsyncThunk<
     condition: ({ page, filters }, { getState }) => {
       const { dashboard } = getState();
       const key = JSON.stringify({ page, filters });
-      // Skip fetch if data is already loaded for the exact same page + filters
-      return !(dashboard.lastFetchKey === key && !dashboard.loadingPage && !dashboard.loading);
+      // Skip if already cached or an in-flight request for this key is running
+      if (key in dashboard.pageCache) return false;
+      return !(dashboard.lastFetchKey === key && dashboard.loading);
     },
   }
 );
@@ -115,37 +118,36 @@ const dashboardSlice = createSlice({
     setPage(state, action: PayloadAction<number>) {
       state.page = action.payload;
     },
-    setFilters(state, action: PayloadAction<FilterState | ((prev: FilterState) => FilterState)>) {
-      if (typeof action.payload === "function") {
-        state.filters = action.payload(state.filters);
-      } else {
-        state.filters = action.payload;
-      }
+    setFilters(state, action: PayloadAction<FilterState>) {
+      state.filters = action.payload;
       state.page = 1;
+      state.pageCache = {};
     },
-    setCampaignStatus(
-      state,
-      action: PayloadAction<CampaignStatus | ((prev: CampaignStatus) => CampaignStatus)>
-    ) {
-      if (typeof action.payload === "function") {
-        state.campaignStatus = action.payload(state.campaignStatus);
-      } else {
-        state.campaignStatus = action.payload;
-      }
+    setCampaignStatus(state, action: PayloadAction<CampaignStatus>) {
+      state.campaignStatus = action.payload;
     },
-    setWsClinicsGenerated(state, action: PayloadAction<number | ((prev: number) => number)>) {
-      if (typeof action.payload === "function") {
-        state.wsClinicsGenerated = action.payload(state.wsClinicsGenerated);
-      } else {
-        state.wsClinicsGenerated = action.payload;
-      }
+    setWsClinicsGenerated(state, action: PayloadAction<number>) {
+      state.wsClinicsGenerated = action.payload;
     },
-    setLoading(state, action: PayloadAction<boolean | ((prev: boolean) => boolean)>) {
-      if (typeof action.payload === "function") {
-        state.loading = action.payload(state.loading);
-      } else {
-        state.loading = action.payload;
-      }
+    setLoading(state, action: PayloadAction<boolean>) {
+      state.loading = action.payload;
+    },
+    loadPageFromCache(state, action: PayloadAction<string>) {
+      const cached = state.pageCache[action.payload];
+      if (!cached) return;
+      state.clinics = cached.clinics_data;
+      state.filtersConfig = cached.filters;
+      state.campaignStatus = cached.campaign_status;
+      state.metrics = cached.metrics;
+      state.showExport = cached.show_export;
+      state.notGeneratedEmailsCount = cached.not_generated_emails_count;
+      state.sentCount = cached.sent_count;
+      state.repliedCount = cached.replied_count;
+      state.total = cached.total_clinics;
+      state.filteredCount = cached.filtered_clinics_count;
+      state.loading = false;
+      state.loadingPage = false;
+      state.error = null;
     },
     resetDashboard() {
       return { ...initialState, loadingPage: false };
@@ -161,6 +163,7 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchDashboard.fulfilled, (state, action) => {
         const data = action.payload;
+        const { page, filters } = action.meta.arg;
         state.clinics = data.clinics_data;
         state.filtersConfig = data.filters;
         state.campaignStatus = data.campaign_status;
@@ -174,6 +177,8 @@ const dashboardSlice = createSlice({
         state.loading = false;
         state.loadingPage = false;
         state.error = null;
+        // Cache the response so revisiting this page is instant
+        state.pageCache[JSON.stringify({ page, filters })] = data;
       })
       .addCase(fetchDashboard.rejected, (state, action) => {
         state.error = action.error.message ?? "Unknown error";
@@ -220,6 +225,7 @@ export const {
   setCampaignStatus,
   setWsClinicsGenerated,
   setLoading,
+  loadPageFromCache,
   resetDashboard,
 } = dashboardSlice.actions;
 
