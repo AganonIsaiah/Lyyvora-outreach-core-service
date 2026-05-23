@@ -42,40 +42,35 @@ export default function CampaignOutreach() {
             id="max-word-limit"
             className="input-outreach"
             max={200}
-            value={max_word_limit ?? 0}
+            value={max_word_limit || ""}
             onChange={(e) => {
-              let value = parseInt(e.target.value);
-              value = Math.min(Math.max(value, 1), 200);
-              updateStatus("max_word_limit", value);
+              if (e.target.value === "") { updateStatus("max_word_limit", 0); return; }
+              const value = parseInt(e.target.value);
+              if (isNaN(value)) return;
+              updateStatus("max_word_limit", Math.min(Math.max(value, 1), 200));
             }}
           />
         </span>
 
         <span className="flex flex-col">
-          <label className="label-outreach text-xs!">
-            Batch Size <span className="text-gray-400">(max 100)</span>
+          <label htmlFor="batch-size" className="label-outreach text-xs!">
+            Batch Size <span className="text-gray-400">(max {Math.min(100, notGeneratedEmailsCount ?? 100)})</span>
           </label>
-          <div className="grid grid-cols-3 gap-2 h-10! items-center">
-            {[1, 5, 10, 25, 50, 100].map((size) => {
-              const isSelected = number_of_clinics === size;
-              const isDisabled = notGeneratedEmailsCount != null && size > notGeneratedEmailsCount;
-              return (
-                <button
-                  key={size}
-                  disabled={isDisabled}
-                  onClick={() => updateStatus("number_of_clinics", isSelected ? 0 : size)}
-                  className={`px-3 py-1 rounded-md text-xs font-semibold border transition-all duration-150 cursor-pointer
-                    ${isSelected
-                      ? "bg-indigo-500 text-white border-indigo-500"
-                      : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
-                    }
-                    disabled:opacity-40 disabled:cursor-not-allowed`}
-                >
-                  {size}
-                </button>
-              );
-            })}
-          </div>
+          <input
+            type="number"
+            id="batch-size"
+            className="input-outreach disabled:opacity-40 disabled:cursor-not-allowed"
+            min={1}
+            max={Math.min(100, notGeneratedEmailsCount ?? 100)}
+            value={number_of_clinics || ""}
+            disabled={notGeneratedEmailsCount === 0}
+            onChange={(e) => {
+              if (e.target.value === "") { updateStatus("number_of_clinics", 0); return; }
+              const value = parseInt(e.target.value);
+              if (isNaN(value)) return;
+              updateStatus("number_of_clinics", Math.min(Math.max(value, 1), Math.min(100, notGeneratedEmailsCount ?? 100)));
+            }}
+          />
         </span>
 
         <span className="flex flex-col justify-end">
