@@ -31,3 +31,6 @@ datasets/*.csv
 
 # Logs
 *.log
+
+# Mock Data
+mock-data/*.csv

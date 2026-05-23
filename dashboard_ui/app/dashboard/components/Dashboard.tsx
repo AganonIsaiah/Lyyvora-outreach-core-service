@@ -9,7 +9,7 @@ import CampaignStats from "./CampaignStats";
 import ImportCard from "./csv_buttons/ImportCard";
 import DropTableCard from "./csv_buttons/DropTablesCard";
 import Header from "./Header";
-import { DashboardProvider, useDashboardContext } from "@/context/DashboardContext";
+import { useDashboardContext } from "@/context/DashboardContext";
 import Loading from "../loading";
 
 function DashboardContent() {
@@ -60,9 +60,5 @@ function DashboardContent() {
 }
 
 export default function Dashboard() {
-  return (
-    <DashboardProvider>
-      <DashboardContent />
-    </DashboardProvider>
-  );
+  return <DashboardContent />;
 }

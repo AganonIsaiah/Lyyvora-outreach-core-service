@@ -4,35 +4,34 @@ import {
   createContext,
   useContext,
   useEffect,
-  useState,
   Dispatch,
   SetStateAction,
   ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
+import { CampaignStatus, Filter, FilterState, Clinic, Metric } from "@/lib/types";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  DashboardResponse,
-  Clinic,
-  FilterState,
-  Filter,
-  CampaignStatus,
-  Metric,
-} from "@/lib/types";
-import { dashboardService } from "@/services/dashboardService";
+  fetchDashboard,
+  resetDashboard,
+  selectDashboard,
+  setCampaignStatus,
+  setFilters as setFiltersAction,
+  setLoading as setLoadingAction,
+  setPage as setPageAction,
+  setWsClinicsGenerated as setWsClinicsGeneratedAction,
+} from "@/store/dashboardSlice";
 
 interface DashboardContextProps {
   clinics: Clinic[];
   filters: FilterState;
-  setFilters: (
-    updater: ((prev: FilterState) => FilterState) | FilterState
-  ) => void;
+  setFilters: (updater: ((prev: FilterState) => FilterState) | FilterState) => void;
   filtersConfig: Filter[];
   loading: boolean;
   loadingPage: boolean;
   error: string | null;
   campaignStatus: CampaignStatus;
-  setCampaignStatus: (
-    updater: ((prev: CampaignStatus) => CampaignStatus) | CampaignStatus
-  ) => void;
+  setCampaignStatus: (updater: ((prev: CampaignStatus) => CampaignStatus) | CampaignStatus) => void;
   metrics: Metric[];
   showExport: boolean;
   page: number;
@@ -49,97 +48,59 @@ interface DashboardContextProps {
   setLoading: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
 
-const DashboardContext = createContext<DashboardContextProps | undefined>(
-  undefined
-);
+const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
+
+const PUBLIC_ROUTES = ["/", "/login"];
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [clinics, setClinics] = useState<Clinic[]>([]);
-  const [filters, setFilters] = useState<FilterState>({});
-  const [filtersConfig, setFiltersConfig] = useState<Filter[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingPage, setLoadingPage] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [campaignStatus, setCampaignStatus] = useState<CampaignStatus>(
-    {} as CampaignStatus
-  );
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-  const [showExport, setShowExport] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(100);
-  const [total, setTotal] = useState(0);
-  const [filteredCount, setFilteredCount] = useState(0);
-  const [notGeneratedEmailsCount, setNotGeneratedEmailsCount] = useState(0);
-  const [sentCount, setSentCount] = useState(0);
-  const [repliedCount, setRepliedCount] = useState(0);
-  const [wsClinicsGenerated, setWsClinicsGenerated] = useState(0);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector(selectDashboard);
+  const pathname = usePathname();
 
   useEffect(() => {
-    setLoading(true);
+    if (PUBLIC_ROUTES.includes(pathname)) return;
+    dispatch(fetchDashboard({ page: state.page, limit: state.limit, filters: state.filters }));
+  }, [state.page, state.filters, pathname]);
 
-    dashboardService
-      .fetchDashboardData(page, limit, filters)
-      .then((data: DashboardResponse) => {
-        setClinics(data.clinics_data);
-        setFiltersConfig(data.filters);
-        setCampaignStatus(data.campaign_status);
-        setMetrics(data.metrics);
-        setShowExport(data.show_export);
-        setNotGeneratedEmailsCount(data.not_generated_emails_count);
-        setSentCount(data.sent_count);
-        setRepliedCount(data.replied_count);
-        setTotal(data.total_clinics);
-        setFilteredCount(data.filtered_clinics_count);
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => {
-        setLoading(false);
-        setLoadingPage(false); 
-      });
-  }, [page, filters]);
-
+  // Reset stale data when the user lands on a public route (e.g. after logout)
   useEffect(() => {
-    setPage(1);
-  }, [filters]);
+    if (PUBLIC_ROUTES.includes(pathname)) {
+      dispatch(resetDashboard());
+    }
+  }, [pathname]);
 
-  return (
-    <DashboardContext.Provider
-      value={{
-        clinics,
-        filters,
-        setFilters,
-        filtersConfig,
-        loading,
-        setLoading,
-        loadingPage,
-        error,
-        campaignStatus,
-        setCampaignStatus,
-        metrics,
-        page,
-        limit,
-        total,
-        filteredCount,
-        totalPages: Math.ceil(filteredCount / limit),
-        setPage,
-        showExport,
-        notGeneratedEmailsCount,
-        sentCount,
-        repliedCount,
-        wsClinicsGenerated,
-        setWsClinicsGenerated,
-      }}
-    >
-      {children}
-    </DashboardContext.Provider>
-  );
+  const value: DashboardContextProps = {
+    clinics: state.clinics,
+    filters: state.filters,
+    setFilters: (updater) => dispatch(setFiltersAction(updater as FilterState)),
+    filtersConfig: state.filtersConfig,
+    loading: state.loading,
+    loadingPage: state.loadingPage,
+    error: state.error,
+    campaignStatus: state.campaignStatus,
+    setCampaignStatus: (updater) => dispatch(setCampaignStatus(updater as CampaignStatus)),
+    metrics: state.metrics,
+    showExport: state.showExport,
+    page: state.page,
+    limit: state.limit,
+    total: state.total,
+    filteredCount: state.filteredCount,
+    totalPages: Math.ceil(state.filteredCount / state.limit),
+    notGeneratedEmailsCount: state.notGeneratedEmailsCount,
+    sentCount: state.sentCount,
+    repliedCount: state.repliedCount,
+    wsClinicsGenerated: state.wsClinicsGenerated,
+    setWsClinicsGenerated: (updater) => dispatch(setWsClinicsGeneratedAction(updater as number)),
+    setPage: (p) => dispatch(setPageAction(p)),
+    setLoading: (value) => dispatch(setLoadingAction(value as boolean)),
+  };
+
+  return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 }
 
 export function useDashboardContext() {
   const context = useContext(DashboardContext);
   if (!context)
-    throw new Error(
-      "useDashboardContext must be used within DashboardProvider"
-    );
+    throw new Error("useDashboardContext must be used within DashboardProvider");
   return context;
 }

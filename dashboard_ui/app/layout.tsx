@@ -28,7 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`flex
-          ${geistSans.variable} ${geistMono.variable} antialiased`}
+          ${geistSans.variable} ${geistMono.variable} antialiased min-w-[1320px]`}
       >
         <main className="flex-1">
           <ClientProviders>{children}</ClientProviders>
