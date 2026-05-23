@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   Clinic,
   ClinicEmails,
+  ClinicStatus,
   CampaignStatus,
   Filter,
   FilterState,
@@ -10,6 +11,23 @@ import {
 } from "@/lib/types";
 import { dashboardService } from "@/services/dashboardService";
 import type { RootState } from "./store";
+
+const EMAIL_STATUS_PRIORITY: Record<string, number> = {
+  [ClinicStatus.REPLIED]: 4,
+  [ClinicStatus.EXPORTED]: 3,
+  [ClinicStatus.GENERATED]: 2,
+  [ClinicStatus.NOT_GENERATED]: 1,
+};
+
+function sortClinics(clinics: Clinic[]): Clinic[] {
+  return [...clinics].sort((a, b) => {
+    const priorityDiff =
+      (EMAIL_STATUS_PRIORITY[b.email_status] ?? 0) -
+      (EMAIL_STATUS_PRIORITY[a.email_status] ?? 0);
+    if (priorityDiff !== 0) return priorityDiff;
+    return (b.lead_score ?? 0) - (a.lead_score ?? 0);
+  });
+}
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -135,7 +153,7 @@ const dashboardSlice = createSlice({
     loadPageFromCache(state, action: PayloadAction<string>) {
       const cached = state.pageCache[action.payload];
       if (!cached) return;
-      state.clinics = cached.clinics_data;
+      state.clinics = sortClinics(cached.clinics_data);
       state.filtersConfig = cached.filters;
       state.campaignStatus = cached.campaign_status;
       state.metrics = cached.metrics;
@@ -148,6 +166,18 @@ const dashboardSlice = createSlice({
       state.loading = false;
       state.loadingPage = false;
       state.error = null;
+    },
+    clearPageCache(state) {
+      state.pageCache = {};
+    },
+    markBatchAsExported(state, action: PayloadAction<string>) {
+      const batch = action.payload;
+      state.clinics = sortClinics(
+        state.clinics.map((c) =>
+          c.campaign_batch === batch ? { ...c, email_status: ClinicStatus.EXPORTED } : c
+        )
+      );
+      state.pageCache = {};
     },
     resetDashboard() {
       return { ...initialState, loadingPage: false };
@@ -164,7 +194,8 @@ const dashboardSlice = createSlice({
       .addCase(fetchDashboard.fulfilled, (state, action) => {
         const data = action.payload;
         const { page, filters } = action.meta.arg;
-        state.clinics = data.clinics_data;
+        const sortedClinics = sortClinics(data.clinics_data);
+        state.clinics = sortedClinics;
         state.filtersConfig = data.filters;
         state.campaignStatus = data.campaign_status;
         state.metrics = data.metrics;
@@ -178,7 +209,7 @@ const dashboardSlice = createSlice({
         state.loadingPage = false;
         state.error = null;
         // Cache the response so revisiting this page is instant
-        state.pageCache[JSON.stringify({ page, filters })] = data;
+        state.pageCache[JSON.stringify({ page, filters })] = { ...data, clinics_data: sortedClinics };
       })
       .addCase(fetchDashboard.rejected, (state, action) => {
         state.error = action.error.message ?? "Unknown error";
@@ -226,6 +257,8 @@ export const {
   setWsClinicsGenerated,
   setLoading,
   loadPageFromCache,
+  clearPageCache,
+  markBatchAsExported,
   resetDashboard,
 } = dashboardSlice.actions;
 

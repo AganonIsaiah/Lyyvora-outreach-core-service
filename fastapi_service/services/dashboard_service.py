@@ -205,7 +205,13 @@ def get_all_clinics_from_db(
         return scores[0].get("score") if scores else 0
 
     def get_email_status_priority(c):
-        return STATUS_PRIORITY.get(ClinicStatus(c.get("email_status")), 0)
+        status = c.get("email_status")
+        if not status:
+            return 0
+        try:
+            return STATUS_PRIORITY.get(ClinicStatus(status), 0)
+        except ValueError:
+            return 0
 
     clinics_data.sort(
         key=lambda c: (get_email_status_priority(c), get_lead_score(c)),

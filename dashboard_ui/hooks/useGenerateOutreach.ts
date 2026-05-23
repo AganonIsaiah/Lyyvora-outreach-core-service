@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useDashboardContext } from "@/context/DashboardContext";
 import { useConfirm } from "@/context/ConfirmContext";
+import { useAppDispatch } from "@/store/hooks";
+import { clearPageCache } from "@/store/dashboardSlice";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 const WS_URL = `${process.env.NEXT_PUBLIC_WS_URL}`;
@@ -16,6 +18,7 @@ export const useGenerateOutreach = () => {
     setWsClinicsGenerated,
   } = useDashboardContext();
   const { notify, toast } = useConfirm();
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -80,6 +83,7 @@ export const useGenerateOutreach = () => {
     displayedRef.current = 0;
     targetRef.current = 0;
     setWsClinicsGenerated(0);
+    dispatch(clearPageCache());
     setLoading(true);
     startTimeRef.current = performance.now();
     toast("Generation started", "Outreach generation is running. The progress bar will update as emails are generated.");
