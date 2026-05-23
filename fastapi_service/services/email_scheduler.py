@@ -1,6 +1,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timezone
 from configs.database import supabase
+from configs.types import ClinicStatus
 from .email_service import send_email
 
 scheduler = BackgroundScheduler()
@@ -12,7 +13,7 @@ def process_pending_emails():
     res = (
         supabase.table("scheduled_emails")
         .select(
-            "*, smartlead(email, subject_line_1, email_body_1, subject_line_2, email_body_2, subject_line_3, email_body_3)"
+            "*, smartlead(leads_id, email, subject_line_1, email_body_1, subject_line_2, email_body_2, subject_line_3, email_body_3)"
         )
         .or_("status_1.eq.pending,status_2.eq.pending,status_3.eq.pending")
         .execute()
@@ -44,6 +45,27 @@ def process_pending_emails():
                         f"sent_{i}_at": datetime.now(timezone.utc).isoformat(),
                     }
                 ).eq("id", row["id"]).execute()
+
+                statuses = {
+                    1: row.get("status_1"),
+                    2: row.get("status_2"),
+                    3: row.get("status_3"),
+                }
+                statuses[i] = "sent"
+                if all(s == "sent" for s in statuses.values()):
+                    lead_id = sl.get("leads_id")
+                    if lead_id:
+                        lead_res = (
+                            supabase.table("leads")
+                            .select("email_status")
+                            .eq("id", lead_id)
+                            .maybe_single()
+                            .execute()
+                        )
+                        if lead_res.data and lead_res.data.get("email_status") != ClinicStatus.REPLIED.value:
+                            supabase.table("leads").update(
+                                {"email_status": ClinicStatus.NO_RESPONSE.value}
+                            ).eq("id", lead_id).execute()
 
             except Exception as e:
                 supabase.table("scheduled_emails").update(

@@ -6,3 +6,4 @@ class ClinicStatus(str, Enum):
     GENERATED = "Generated"
     EXPORTED = "Exported"
     REPLIED = "Replied"
+    NO_RESPONSE = "No Response"

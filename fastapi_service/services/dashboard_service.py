@@ -14,6 +14,7 @@ from configs.database import supabase
 from datetime import datetime
 
 STATUS_PRIORITY = {
+    ClinicStatus.NO_RESPONSE: 5,
     ClinicStatus.REPLIED: 4,
     ClinicStatus.EXPORTED: 3,
     ClinicStatus.GENERATED: 2,
@@ -335,6 +336,7 @@ def generate_dashboard(req: DashboardRequest):
             key="email_status",
             label="Email Status",
             values=[
+                ClinicStatus.NO_RESPONSE.value,
                 ClinicStatus.REPLIED.value,
                 ClinicStatus.EXPORTED.value,
                 ClinicStatus.GENERATED.value,

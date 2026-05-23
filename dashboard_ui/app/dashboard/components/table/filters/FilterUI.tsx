@@ -124,7 +124,7 @@ export default function FilterUI({
             />
           )}
 
-          <ul className="max-h-40 overflow-auto">
+          <ul className="max-h-full overflow-auto">
             {filteredValues.length > 0 ? (
               filteredValues.map((v) => {
                 const isSelected = tempSelected?.includes(v) ?? false;

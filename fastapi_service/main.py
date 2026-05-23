@@ -36,6 +36,7 @@ from .services.auth_service import (
 )
 from .services.email_scheduler import start_scheduler, stop_scheduler
 from .services.email_service import send_email
+from configs.types import ClinicStatus
 
 from configs.database import supabase
 from configs.configs import FRONTEND_URL
@@ -363,7 +364,7 @@ def send_email_now(
 
     res = (
         supabase.table("scheduled_emails")
-        .select(f"*, smartlead(email, subject_line_{sequence}, email_body_{sequence})")
+        .select(f"*, smartlead(leads_id, email, subject_line_{sequence}, email_body_{sequence})")
         .eq("id", schedule_id)
         .maybe_single()
         .execute()
@@ -372,7 +373,8 @@ def send_email_now(
     if not res.data:
         raise HTTPException(status_code=404, detail="Schedule not found")
 
-    sl = res.data.get("smartlead") or {}
+    row = res.data
+    sl = row.get("smartlead") or {}
 
     try:
         send_email(
@@ -388,6 +390,27 @@ def send_email_now(
                 f"send_{sequence}_at": now_iso,
             }
         ).eq("id", schedule_id).execute()
+
+        statuses = {
+            1: row.get("status_1"),
+            2: row.get("status_2"),
+            3: row.get("status_3"),
+        }
+        statuses[sequence] = "sent"
+        if all(s == "sent" for s in statuses.values()):
+            lead_id = sl.get("leads_id")
+            if lead_id:
+                lead_res = (
+                    supabase.table("leads")
+                    .select("email_status")
+                    .eq("id", lead_id)
+                    .maybe_single()
+                    .execute()
+                )
+                if lead_res.data and lead_res.data.get("email_status") != ClinicStatus.REPLIED.value:
+                    supabase.table("leads").update(
+                        {"email_status": ClinicStatus.NO_RESPONSE.value}
+                    ).eq("id", lead_id).execute()
     except Exception as e:
         supabase.table("scheduled_emails").update(
             {f"status_{sequence}": "failed", f"error_{sequence}": str(e)}

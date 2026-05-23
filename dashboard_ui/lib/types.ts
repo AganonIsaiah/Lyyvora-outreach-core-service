@@ -3,6 +3,7 @@ export enum ClinicStatus {
   GENERATED = "Generated",
   EXPORTED = "Exported",
   REPLIED = "Replied",
+  NO_RESPONSE = "No Response",
 };
 
 export enum Routes {
