@@ -177,6 +177,8 @@ def get_all_clinics_from_db(
     province: Optional[List[str]] = None,
     email_status: Optional[List[ClinicStatus]] = None,
     campaign_batch: Optional[List[str]] = None,
+    limit: int = 1000,
+    offset: int = 0,
 ) -> List[Clinic]:
     query = supabase.table("leads").select(
         """
@@ -202,11 +204,12 @@ def get_all_clinics_from_db(
             email_body_3
         )
         """
-    ).limit(10000)
+    ).order("id")
 
     query = build_filters(
         query, name, city, province, sub_type, email_status, campaign_batch
     )
+    query = query.range(offset, offset + limit - 1)
     clinics_data = query.execute().data or []
 
     def get_lead_score(c):
@@ -300,6 +303,7 @@ def generate_dashboard(req: DashboardRequest):
     email_status = parse_comma_separated(req.email_status)
     email_status = [ClinicStatus(s) for s in email_status] if email_status else None
 
+    offset = (req.page - 1) * req.limit
     clinics = get_all_clinics_from_db(
         name=name,
         sub_type=sub_type,
@@ -307,6 +311,8 @@ def generate_dashboard(req: DashboardRequest):
         province=province,
         email_status=email_status,
         campaign_batch=campaign_batch,
+        limit=req.limit,
+        offset=offset,
     )
 
     total_clinics = get_total_clinics_count()
@@ -333,7 +339,7 @@ def generate_dashboard(req: DashboardRequest):
             key="campaign_batch",
             label="Campaign Batch ID",
             values=sorted(filter_values["campaign_batch"], reverse=True),
-            type="select",
+            type="search",
         ),
         Filter(
             key="email_status",

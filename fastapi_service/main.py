@@ -449,7 +449,7 @@ def cancel_email(email_id: str, user: dict = Depends(get_current_user)):
 @app.get("/dashboard", response_model=DashboardResponse)
 def get_dashboard(
     user: dict = Depends(get_current_user),
-    limit: int = Query(25, ge=1, le=100),
+    limit: int = Query(1000, ge=1, le=1000),
     page: int = Query(1, ge=1),
     name: Optional[List[str]] = Query(None),
     sub_type: Optional[List[str]] = Query(None),

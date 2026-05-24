@@ -6,11 +6,16 @@ const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 
 export const dashboardService = {
   async fetchDashboardData(
-    filters?: FilterState
+    filters?: FilterState,
+    backendPage: number = 1,
+    limit: number = 1000,
   ): Promise<DashboardResponse> {
     if (MOCK_DATA) return mockDashboardResponse;
 
     const params = new URLSearchParams();
+
+    params.append("page", String(backendPage));
+    params.append("limit", String(limit));
 
     if (filters) {
       if (filters.name?.length)

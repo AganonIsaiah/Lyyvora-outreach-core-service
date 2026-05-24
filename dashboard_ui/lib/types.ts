@@ -11,7 +11,7 @@ export enum Routes {
   CLINICS = "/clinics"
 };
 
-export type FilterType = "select" | "sort";
+export type FilterType = "select" | "sort" | "search";
 export type EmailType = "Email 1" | "Follow-up 1" | "Follow-up 2";
 export type FilterState = Record<string, string[]>;
 

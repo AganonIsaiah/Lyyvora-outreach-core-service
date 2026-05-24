@@ -71,7 +71,7 @@ class DashboardResponse(BaseModel):
 
 
 class DashboardRequest(BaseModel):
-    limit: int = 25
+    limit: int = 1000
     page: int = 1
     name: Optional[List[str]] = None
     sub_type: Optional[List[str]] = None

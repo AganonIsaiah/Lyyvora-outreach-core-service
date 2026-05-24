@@ -49,12 +49,12 @@ export default function FilterUI({
 
   useEffect(() => {
     setFilteredValues(
-      values.filter((v) => v.toLowerCase().includes(search.toLowerCase()))
+      values.filter((v) => v.toLowerCase().includes(search.toLowerCase())),
     );
   }, [search, values]);
 
   const toggleTempSelect = (value: string) => {
-    setTempSelected([value]); 
+    setTempSelected([value]);
   };
 
   const handleTempSort = (value: string) => {
@@ -77,10 +77,10 @@ export default function FilterUI({
 
   const buttonLabel =
     type === "sort"
-      ? sortValue ?? "Sort by..."
+      ? (sortValue ?? "Sort by...")
       : selected && selected.length
-      ? `${selected.length} selected`
-      : `Select ${label.toLowerCase()}...`;
+        ? `${selected.length} selected`
+        : `Select ${label.toLowerCase()}...`;
 
   return (
     <div ref={ref} className="relative">
@@ -93,7 +93,11 @@ export default function FilterUI({
         <span className="text-gray-400 w-full! truncate text-xs font-semibold text-left!">
           {buttonLabel}
         </span>
-        {isOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+        {isOpen ? (
+          <ExpandLessIcon fontSize="small" />
+        ) : (
+          <ExpandMoreIcon fontSize="small" />
+        )}
       </button>
 
       {isOpen && (
@@ -113,7 +117,7 @@ export default function FilterUI({
             </button>
           </div>
 
-          {type === "select" && (
+          {type === "search" && (
             <input
               id={`search-${label.toLowerCase()}`}
               name={`search-${label.toLowerCase()}`}
@@ -124,7 +128,7 @@ export default function FilterUI({
             />
           )}
 
-          <ul className="max-h-full overflow-auto">
+          <ul className="max-h-50 overflow-auto">
             {filteredValues.length > 0 ? (
               filteredValues.map((v) => {
                 const isSelected = tempSelected?.includes(v) ?? false;
@@ -139,27 +143,38 @@ export default function FilterUI({
                     }`}
                   >
                     <span className="flex items-center gap-2 w-full">
-                      {type === "select" && (
-                        <span
-                          className={`inline-block w-3.5 h-3 border rounded-full ${
-                            isSelected ? "bg-blue-500 border-blue-500" : "border-gray-400"
-                          }`}
-                        />
-                      )}
-                      <p className="whitespace-normal break-words w-full">{v}</p>
+                      <span
+                        className={`inline-block w-3.5 h-3 border rounded-full ${
+                          isSelected
+                            ? "bg-blue-500 border-blue-500"
+                            : "border-gray-400"
+                        }`}
+                      />
+
+                      <p className="whitespace-normal break-words w-full">
+                        {v}
+                      </p>
                     </span>
 
                     {type === "sort" && v === "Asc" && (
-                      <ArrowUpwardIcon fontSize="small" className="text-gray-400" />
+                      <ArrowUpwardIcon
+                        fontSize="small"
+                        className="text-gray-400"
+                      />
                     )}
                     {type === "sort" && v === "Desc" && (
-                      <ArrowDownwardIcon fontSize="small" className="text-gray-400" />
+                      <ArrowDownwardIcon
+                        fontSize="small"
+                        className="text-gray-400"
+                      />
                     )}
                   </li>
                 );
               })
             ) : (
-              <li className="px-3 py-2 text-gray-400 text-center">No results found</li>
+              <li className="px-3 py-2 text-gray-400 text-center">
+                No results found
+              </li>
             )}
           </ul>
         </div>

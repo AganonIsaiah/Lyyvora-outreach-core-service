@@ -60,11 +60,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (PUBLIC_ROUTES.includes(pathname)) return;
-    const key = JSON.stringify({ filters: state.filters });
+    const key = JSON.stringify({ filters: state.filters, backendPage: 1 });
     if (key in state.pageCache) {
-      dispatch(loadPageFromCache(key));
+      dispatch(loadPageFromCache({ key, targetPage: 1, backendPage: 1 }));
     } else {
-      dispatch(fetchDashboard({ filters: state.filters }));
+      dispatch(fetchDashboard({ filters: state.filters, backendPage: 1 }));
     }
   }, [state.filters, pathname]);
 
@@ -107,7 +107,20 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       const next = typeof updater === "function" ? updater(state.wsClinicsGenerated) : updater;
       dispatch(setWsClinicsGeneratedAction(next));
     },
-    setPage: (p) => dispatch(setPageAction(p)),
+    setPage: (p) => {
+      const pagesPerBatch = 10; // BACKEND_BATCH_SIZE (1000) / limit (100)
+      const neededBatch = Math.ceil(p / pagesPerBatch);
+      if (neededBatch !== state.backendPage) {
+        const key = JSON.stringify({ filters: state.filters, backendPage: neededBatch });
+        if (key in state.pageCache) {
+          dispatch(loadPageFromCache({ key, targetPage: p, backendPage: neededBatch }));
+        } else {
+          dispatch(fetchDashboard({ filters: state.filters, backendPage: neededBatch, targetPage: p }));
+        }
+      } else {
+        dispatch(setPageAction(p));
+      }
+    },
     setLoading: (value) => {
       const next = typeof value === "function" ? value(state.loading) : value;
       dispatch(setLoadingAction(next));

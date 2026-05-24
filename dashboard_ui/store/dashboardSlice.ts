@@ -31,6 +31,7 @@ function sortClinics(clinics: Clinic[]): Clinic[] {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const BACKEND_BATCH_SIZE = 1000;
 
 interface DashboardState {
   clinics: Clinic[];
@@ -45,6 +46,7 @@ interface DashboardState {
   showExport: boolean;
   page: number;
   limit: number;
+  backendPage: number;
   total: number;
   filteredCount: number;
   notGeneratedEmailsCount: number;
@@ -74,6 +76,7 @@ const initialState: DashboardState = {
   showExport: false,
   page: 1,
   limit: 100,
+  backendPage: 1,
   total: 0,
   filteredCount: 0,
   notGeneratedEmailsCount: 0,
@@ -92,17 +95,17 @@ const initialState: DashboardState = {
 
 export const fetchDashboard = createAsyncThunk<
   DashboardResponse,
-  { filters: FilterState },
+  { filters: FilterState; backendPage?: number; targetPage?: number },
   { state: RootState }
 >(
   "dashboard/fetch",
-  async ({ filters }) => {
-    return dashboardService.fetchDashboardData(filters);
+  async ({ filters, backendPage = 1 }) => {
+    return dashboardService.fetchDashboardData(filters, backendPage, BACKEND_BATCH_SIZE);
   },
   {
-    condition: ({ filters }, { getState }) => {
+    condition: ({ filters, backendPage = 1 }, { getState }) => {
       const { dashboard } = getState();
-      const key = JSON.stringify({ filters });
+      const key = JSON.stringify({ filters, backendPage });
       if (key in dashboard.pageCache) return false;
       return !(dashboard.lastFetchKey === key && dashboard.loading);
     },
@@ -139,12 +142,15 @@ const dashboardSlice = createSlice({
   reducers: {
     setPage(state, action: PayloadAction<number>) {
       state.page = action.payload;
-      const start = (action.payload - 1) * state.limit;
+      const pagesPerBatch = BACKEND_BATCH_SIZE / state.limit;
+      const withinBatchPage = ((action.payload - 1) % pagesPerBatch) + 1;
+      const start = (withinBatchPage - 1) * state.limit;
       state.clinics = state.allClinics.slice(start, start + state.limit);
     },
     setFilters(state, action: PayloadAction<FilterState>) {
       state.filters = action.payload;
       state.page = 1;
+      state.backendPage = 1;
       state.allClinics = [];
       state.pageCache = {};
     },
@@ -157,12 +163,17 @@ const dashboardSlice = createSlice({
     setLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;
     },
-    loadPageFromCache(state, action: PayloadAction<string>) {
-      const cached = state.pageCache[action.payload];
+    loadPageFromCache(state, action: PayloadAction<{ key: string; targetPage: number; backendPage: number }>) {
+      const { key, targetPage, backendPage } = action.payload;
+      const cached = state.pageCache[key];
       if (!cached) return;
       const all = cached.clinics_data as Clinic[];
       state.allClinics = all;
-      const start = (state.page - 1) * state.limit;
+      state.backendPage = backendPage;
+      state.page = targetPage;
+      const pagesPerBatch = BACKEND_BATCH_SIZE / state.limit;
+      const withinBatchPage = ((targetPage - 1) % pagesPerBatch) + 1;
+      const start = (withinBatchPage - 1) * state.limit;
       state.clinics = all.slice(start, start + state.limit);
       state.filtersConfig = cached.filters;
       state.campaignStatus = cached.campaign_status;
@@ -189,7 +200,9 @@ const dashboardSlice = createSlice({
         )
       );
       state.allClinics = updatedAll;
-      const start = (state.page - 1) * state.limit;
+      const pagesPerBatch = BACKEND_BATCH_SIZE / state.limit;
+      const withinBatchPage = ((state.page - 1) % pagesPerBatch) + 1;
+      const start = (withinBatchPage - 1) * state.limit;
       state.clinics = updatedAll.slice(start, start + state.limit);
       state.pageCache = {};
     },
@@ -201,17 +214,24 @@ const dashboardSlice = createSlice({
     builder
       .addCase(fetchDashboard.pending, (state, action) => {
         state.loading = true;
-        const { filters } = action.meta.arg;
+        const { filters, backendPage = 1 } = action.meta.arg;
         if (state.lastFetchKey === "") state.loadingPage = true;
-        state.lastFetchKey = JSON.stringify({ filters });
+        state.lastFetchKey = JSON.stringify({ filters, backendPage });
       })
       .addCase(fetchDashboard.fulfilled, (state, action) => {
         const data = action.payload;
-        const { filters } = action.meta.arg;
+        const { filters, backendPage = 1, targetPage } = action.meta.arg;
         const sortedClinics = sortClinics(data.clinics_data);
         state.allClinics = sortedClinics;
-        state.page = 1;
-        state.clinics = sortedClinics.slice(0, state.limit);
+        state.backendPage = backendPage;
+
+        const pagesPerBatch = BACKEND_BATCH_SIZE / state.limit;
+        const newPage = targetPage ?? (backendPage - 1) * pagesPerBatch + 1;
+        const withinBatchPage = ((newPage - 1) % pagesPerBatch) + 1;
+        const start = (withinBatchPage - 1) * state.limit;
+
+        state.page = newPage;
+        state.clinics = sortedClinics.slice(start, start + state.limit);
         state.filtersConfig = data.filters;
         state.campaignStatus = data.campaign_status;
         state.metrics = data.metrics;
@@ -225,7 +245,7 @@ const dashboardSlice = createSlice({
         state.loading = false;
         state.loadingPage = false;
         state.error = null;
-        state.pageCache[JSON.stringify({ filters })] = { ...data, clinics_data: sortedClinics };
+        state.pageCache[JSON.stringify({ filters, backendPage })] = { ...data, clinics_data: sortedClinics };
       })
       .addCase(fetchDashboard.rejected, (state, action) => {
         state.error = action.error.message ?? "Unknown error";
