@@ -2,6 +2,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import time
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 import re
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -120,16 +121,20 @@ def parse_email(email_text: str):
         return None
 
 
+EASTERN = ZoneInfo("America/New_York")
+
 def add_business_days(dt: datetime, days: int) -> datetime:
+    current = dt.astimezone(EASTERN)
     count = 0
-    current = dt
     while count < days:
         current += timedelta(days=1)
-        if current.weekday() < 5:
+        if current.weekday() < 5:  # Monday–Friday
             count += 1
-    hour = random.randint(8, 11)
-    minute = random.randint(0, 59)
-    return current.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    # Random send time between 9:00 AM and 1:45 PM Eastern, in 15-min increments
+    hour = random.randint(9, 11)
+    minute = random.choice([0, 10, 15, 20, 25, 30, 35, 40, 45])
+    eastern_scheduled = current.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    return eastern_scheduled.astimezone(timezone.utc)
 
 
 def batch_save_to_supabase(records: list[dict]):

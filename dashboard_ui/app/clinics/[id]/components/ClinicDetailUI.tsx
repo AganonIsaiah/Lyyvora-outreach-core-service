@@ -8,7 +8,7 @@ import { useConfirm } from "@/context/ConfirmContext";
 import Loading from "../loading";
 import Header from "@/shared/Header";
 import { useAppDispatch } from "@/store/hooks";
-import { clearPageCache } from "@/store/dashboardSlice";
+import { clearPageCache, evictClinicDetail, fetchClinicDetail } from "@/store/dashboardSlice";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 
@@ -91,12 +91,15 @@ export default function ClinicDetailUI({ clinicId }: Props) {
       confirmLabel: "Send Now",
     });
     if (!ok) return;
-    setSentSequences((prev) => new Set(prev).add(sequence));
-    await fetch(`${BASE_URL}/emails/send-now/${schedule.id}/${sequence}`, {
+    const res = await fetch(`${BASE_URL}/emails/send-now/${schedule.id}/${sequence}`, {
       method: "POST",
       credentials: "include",
     });
+    if (!res.ok) return;
+    setSentSequences((prev) => new Set(prev).add(sequence));
     dispatch(clearPageCache());
+    dispatch(evictClinicDetail(clinicId));
+    dispatch(fetchClinicDetail(clinicId));
   };
 
   const handleMarkReplied = async () => {
@@ -104,6 +107,9 @@ export default function ClinicDetailUI({ clinicId }: Props) {
       method: "PATCH",
       credentials: "include",
     });
+    dispatch(clearPageCache());
+    dispatch(evictClinicDetail(clinicId));
+    dispatch(fetchClinicDetail(clinicId));
   };
 
   if (loading) return <Loading />;
@@ -248,14 +254,16 @@ export default function ClinicDetailUI({ clinicId }: Props) {
                       </div>
 
                       <div className="flex items-center gap-4">
-                        <input
-                          type="datetime-local"
-                          className="input-outreach h-8! text-xs! w-40!"
-                          value={sendAt ? toDatetimeLocal(sendAt) : ""}
-                          min={nowDatetimeLocal()}
-                          disabled={isSent || isCancelled}
-                          onChange={(e) => handleScheduleChange(i, e.target.value)}
-                        />
+                        <div className={isSent || isCancelled ? "cursor-not-allowed" : ""}>
+                          <input
+                            type="datetime-local"
+                            className="input-outreach h-8! text-xs! w-40! disabled:opacity-50 disabled:bg-gray-100 disabled:pointer-events-none"
+                            value={sendAt ? toDatetimeLocal(sendAt) : ""}
+                            min={nowDatetimeLocal()}
+                            disabled={isSent || isCancelled}
+                            onChange={(e) => handleScheduleChange(i, e.target.value)}
+                          />
+                        </div>
                         <button
                           className="w-21! bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded cursor-pointer transition-all duration-200 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={isSent || isCancelled || !schedule.id}

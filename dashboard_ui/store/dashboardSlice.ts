@@ -192,6 +192,10 @@ const dashboardSlice = createSlice({
     clearPageCache(state) {
       state.pageCache = {};
     },
+    evictClinicDetail(state, action: PayloadAction<string>) {
+      delete state.clinicDetails[action.payload];
+      delete state.clinicEmails[action.payload];
+    },
     markBatchAsExported(state, action: PayloadAction<string>) {
       const batch = action.payload;
       const updatedAll = sortClinics(
@@ -294,6 +298,7 @@ export const {
   setLoading,
   loadPageFromCache,
   clearPageCache,
+  evictClinicDetail,
   markBatchAsExported,
   resetDashboard,
 } = dashboardSlice.actions;
