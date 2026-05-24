@@ -62,7 +62,7 @@ export default function CampaignStats() {
 
   return (
     <div className="flex gap-4">
-      <div className="p-5 flex flex-col justify-center gap-2 w-45 shrink-0">
+      <div className="p-2 flex flex-col justify-center gap-2 w-50 shrink-0">
         <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
           Total Clinics
         </p>
