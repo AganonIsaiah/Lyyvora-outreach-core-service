@@ -6,7 +6,7 @@ import EmergencyIcon from "@mui/icons-material/Emergency";
 
 import FilterUI from "./FilterUI";
 import SelectedFilters from "./SelectedFilters";
-import { FilterState } from "@/lib/types";
+import { FilterState, FilterType } from "@/lib/types";
 
 export default function ClinicsFilters() {
   const { filters, setFilters, filtersConfig, showExport } =
@@ -22,7 +22,7 @@ export default function ClinicsFilters() {
   const handleChange = (
     key: string,
     value: string,
-    type: "select" | "sort",
+    type: FilterType,
   ) => {
     setFilters((prev: FilterState) => {
       if (type === "sort") return { ...prev, [key]: [value] };
