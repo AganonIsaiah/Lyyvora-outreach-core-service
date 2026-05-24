@@ -6,15 +6,11 @@ const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 
 export const dashboardService = {
   async fetchDashboardData(
-    page: number = 1,
-    limit: number = 25,
     filters?: FilterState
   ): Promise<DashboardResponse> {
     if (MOCK_DATA) return mockDashboardResponse;
 
     const params = new URLSearchParams();
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
 
     if (filters) {
       if (filters.name?.length)
@@ -62,6 +58,7 @@ export const dashboardService = {
         not_generated_emails_count: 0,
         sent_count: 0,
         replied_count: 0,
+        no_response_count: 0,
       };
     }
 
@@ -78,6 +75,7 @@ export const dashboardService = {
       not_generated_emails_count: data.not_generated_emails_count ?? 0,
       sent_count: data.sent_count ?? 0,
       replied_count: data.replied_count ?? 0,
+      no_response_count: data.no_response_count ?? 0,
     };
   },
 };

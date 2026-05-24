@@ -7,6 +7,8 @@ import useClinicDetail from "@/hooks/useClinicDetail";
 import { useConfirm } from "@/context/ConfirmContext";
 import Loading from "../loading";
 import Header from "@/shared/Header";
+import { useAppDispatch } from "@/store/hooks";
+import { clearPageCache } from "@/store/dashboardSlice";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 
@@ -58,6 +60,7 @@ interface Props {
 export default function ClinicDetailUI({ clinicId }: Props) {
   const { clinic, emails, loading, error } = useClinicDetail(clinicId);
   const { confirm } = useConfirm();
+  const dispatch = useAppDispatch();
   const [schedule, setSchedule] = useState<Partial<EmailSchedule>>({});
   const [sentSequences, setSentSequences] = useState<Set<number>>(new Set());
 
@@ -93,6 +96,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
       method: "POST",
       credentials: "include",
     });
+    dispatch(clearPageCache());
   };
 
   const handleMarkReplied = async () => {

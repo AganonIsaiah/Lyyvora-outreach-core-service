@@ -14,11 +14,11 @@ from configs.database import supabase
 from datetime import datetime
 
 STATUS_PRIORITY = {
-    ClinicStatus.NO_RESPONSE: 5,
     ClinicStatus.REPLIED: 4,
     ClinicStatus.EXPORTED: 3,
     ClinicStatus.GENERATED: 2,
     ClinicStatus.NOT_GENERATED: 1,
+    ClinicStatus.NO_RESPONSE: 0,
 }
 
 
@@ -41,6 +41,16 @@ def get_sent_count() -> int:
         supabase.table("scheduled_emails")
         .select("id", count="exact")
         .or_("status_1.eq.sent,status_2.eq.sent,status_3.eq.sent")
+        .execute()
+    )
+    return resp.count or 0
+
+
+def get_no_response_count() -> int:
+    resp = (
+        supabase.table("leads")
+        .select("id", count="exact")
+        .eq("email_status", ClinicStatus.NO_RESPONSE.value)
         .execute()
     )
     return resp.count or 0
@@ -161,8 +171,6 @@ def build_filters(
 
 
 def get_all_clinics_from_db(
-    limit: int = 10,
-    offset: int = 0,
     name: Optional[List[str]] = None,
     sub_type: Optional[List[str]] = None,
     city: Optional[List[str]] = None,
@@ -194,7 +202,7 @@ def get_all_clinics_from_db(
             email_body_3
         )
         """
-    )
+    ).limit(10000)
 
     query = build_filters(
         query, name, city, province, sub_type, email_status, campaign_batch
@@ -219,10 +227,8 @@ def get_all_clinics_from_db(
         reverse=True,
     )
 
-    paginated_data = clinics_data[offset : offset + limit]
-
     result = []
-    for row in paginated_data:
+    for row in clinics_data:
         lead_scores_list = row.get("lead_scores") or []
         lead_score_data = lead_scores_list[0] if lead_scores_list else {}
 
@@ -286,8 +292,6 @@ def get_total_filtered_clinics_count(
 
 
 def generate_dashboard(req: DashboardRequest):
-    offset = (req.page - 1) * req.limit
-
     name = parse_comma_separated(req.name)
     sub_type = parse_comma_separated(req.sub_type)
     city = parse_comma_separated(req.city)
@@ -297,8 +301,6 @@ def generate_dashboard(req: DashboardRequest):
     email_status = [ClinicStatus(s) for s in email_status] if email_status else None
 
     clinics = get_all_clinics_from_db(
-        limit=req.limit,
-        offset=offset,
         name=name,
         sub_type=sub_type,
         city=city,
@@ -319,6 +321,7 @@ def generate_dashboard(req: DashboardRequest):
     not_generated_count = get_not_generated_emails_count()
     sent_count = get_sent_count()
     replied_count = get_replied_count()
+    no_response_count = get_no_response_count()
     filter_values = get_all_filter_values()
 
     metrics = [
@@ -336,11 +339,11 @@ def generate_dashboard(req: DashboardRequest):
             key="email_status",
             label="Email Status",
             values=[
-                ClinicStatus.NO_RESPONSE.value,
                 ClinicStatus.REPLIED.value,
                 ClinicStatus.EXPORTED.value,
                 ClinicStatus.GENERATED.value,
                 ClinicStatus.NOT_GENERATED.value,
+                ClinicStatus.NO_RESPONSE.value,
             ],
             type="select",
         ),
@@ -366,4 +369,5 @@ def generate_dashboard(req: DashboardRequest):
         not_generated_emails_count=not_generated_count,
         sent_count=sent_count,
         replied_count=replied_count,
+        no_response_count=no_response_count,
     )

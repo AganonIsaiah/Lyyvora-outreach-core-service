@@ -88,4 +88,5 @@ export interface DashboardResponse {
   not_generated_emails_count: number;
   sent_count: number;
   replied_count: number;
+  no_response_count: number;
 }

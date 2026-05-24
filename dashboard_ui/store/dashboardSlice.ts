@@ -17,6 +17,7 @@ const EMAIL_STATUS_PRIORITY: Record<string, number> = {
   [ClinicStatus.EXPORTED]: 3,
   [ClinicStatus.GENERATED]: 2,
   [ClinicStatus.NOT_GENERATED]: 1,
+  [ClinicStatus.NO_RESPONSE]: 0
 };
 
 function sortClinics(clinics: Clinic[]): Clinic[] {
@@ -33,6 +34,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface DashboardState {
   clinics: Clinic[];
+  allClinics: Clinic[];
   filters: FilterState;
   filtersConfig: Filter[];
   loading: boolean;
@@ -48,6 +50,7 @@ interface DashboardState {
   notGeneratedEmailsCount: number;
   sentCount: number;
   repliedCount: number;
+  noResponseCount: number;
   wsClinicsGenerated: number;
   lastFetchKey: string;
   pageCache: Record<string, DashboardResponse>;
@@ -60,6 +63,7 @@ interface DashboardState {
 
 const initialState: DashboardState = {
   clinics: [],
+  allClinics: [],
   filters: {},
   filtersConfig: [],
   loading: false,
@@ -75,6 +79,7 @@ const initialState: DashboardState = {
   notGeneratedEmailsCount: 0,
   sentCount: 0,
   repliedCount: 0,
+  noResponseCount: 0,
   wsClinicsGenerated: 0,
   lastFetchKey: "",
   pageCache: {},
@@ -87,18 +92,17 @@ const initialState: DashboardState = {
 
 export const fetchDashboard = createAsyncThunk<
   DashboardResponse,
-  { page: number; limit: number; filters: FilterState },
+  { filters: FilterState },
   { state: RootState }
 >(
   "dashboard/fetch",
-  async ({ page, limit, filters }) => {
-    return dashboardService.fetchDashboardData(page, limit, filters);
+  async ({ filters }) => {
+    return dashboardService.fetchDashboardData(filters);
   },
   {
-    condition: ({ page, filters }, { getState }) => {
+    condition: ({ filters }, { getState }) => {
       const { dashboard } = getState();
-      const key = JSON.stringify({ page, filters });
-      // Skip if already cached or an in-flight request for this key is running
+      const key = JSON.stringify({ filters });
       if (key in dashboard.pageCache) return false;
       return !(dashboard.lastFetchKey === key && dashboard.loading);
     },
@@ -135,10 +139,13 @@ const dashboardSlice = createSlice({
   reducers: {
     setPage(state, action: PayloadAction<number>) {
       state.page = action.payload;
+      const start = (action.payload - 1) * state.limit;
+      state.clinics = state.allClinics.slice(start, start + state.limit);
     },
     setFilters(state, action: PayloadAction<FilterState>) {
       state.filters = action.payload;
       state.page = 1;
+      state.allClinics = [];
       state.pageCache = {};
     },
     setCampaignStatus(state, action: PayloadAction<CampaignStatus>) {
@@ -153,7 +160,10 @@ const dashboardSlice = createSlice({
     loadPageFromCache(state, action: PayloadAction<string>) {
       const cached = state.pageCache[action.payload];
       if (!cached) return;
-      state.clinics = sortClinics(cached.clinics_data);
+      const all = cached.clinics_data as Clinic[];
+      state.allClinics = all;
+      const start = (state.page - 1) * state.limit;
+      state.clinics = all.slice(start, start + state.limit);
       state.filtersConfig = cached.filters;
       state.campaignStatus = cached.campaign_status;
       state.metrics = cached.metrics;
@@ -161,6 +171,7 @@ const dashboardSlice = createSlice({
       state.notGeneratedEmailsCount = cached.not_generated_emails_count;
       state.sentCount = cached.sent_count;
       state.repliedCount = cached.replied_count;
+      state.noResponseCount = cached.no_response_count;
       state.total = cached.total_clinics;
       state.filteredCount = cached.filtered_clinics_count;
       state.loading = false;
@@ -172,11 +183,14 @@ const dashboardSlice = createSlice({
     },
     markBatchAsExported(state, action: PayloadAction<string>) {
       const batch = action.payload;
-      state.clinics = sortClinics(
-        state.clinics.map((c) =>
+      const updatedAll = sortClinics(
+        state.allClinics.map((c) =>
           c.campaign_batch === batch ? { ...c, email_status: ClinicStatus.EXPORTED } : c
         )
       );
+      state.allClinics = updatedAll;
+      const start = (state.page - 1) * state.limit;
+      state.clinics = updatedAll.slice(start, start + state.limit);
       state.pageCache = {};
     },
     resetDashboard() {
@@ -187,15 +201,17 @@ const dashboardSlice = createSlice({
     builder
       .addCase(fetchDashboard.pending, (state, action) => {
         state.loading = true;
-        const { page, filters } = action.meta.arg;
+        const { filters } = action.meta.arg;
         if (state.lastFetchKey === "") state.loadingPage = true;
-        state.lastFetchKey = JSON.stringify({ page, filters });
+        state.lastFetchKey = JSON.stringify({ filters });
       })
       .addCase(fetchDashboard.fulfilled, (state, action) => {
         const data = action.payload;
-        const { page, filters } = action.meta.arg;
+        const { filters } = action.meta.arg;
         const sortedClinics = sortClinics(data.clinics_data);
-        state.clinics = sortedClinics;
+        state.allClinics = sortedClinics;
+        state.page = 1;
+        state.clinics = sortedClinics.slice(0, state.limit);
         state.filtersConfig = data.filters;
         state.campaignStatus = data.campaign_status;
         state.metrics = data.metrics;
@@ -203,13 +219,13 @@ const dashboardSlice = createSlice({
         state.notGeneratedEmailsCount = data.not_generated_emails_count;
         state.sentCount = data.sent_count;
         state.repliedCount = data.replied_count;
+        state.noResponseCount = data.no_response_count;
         state.total = data.total_clinics;
         state.filteredCount = data.filtered_clinics_count;
         state.loading = false;
         state.loadingPage = false;
         state.error = null;
-        // Cache the response so revisiting this page is instant
-        state.pageCache[JSON.stringify({ page, filters })] = { ...data, clinics_data: sortedClinics };
+        state.pageCache[JSON.stringify({ filters })] = { ...data, clinics_data: sortedClinics };
       })
       .addCase(fetchDashboard.rejected, (state, action) => {
         state.error = action.error.message ?? "Unknown error";

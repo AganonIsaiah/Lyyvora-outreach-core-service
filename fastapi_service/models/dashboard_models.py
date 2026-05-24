@@ -67,6 +67,7 @@ class DashboardResponse(BaseModel):
     not_generated_emails_count: int
     sent_count: int
     replied_count: int
+    no_response_count: int
 
 
 class DashboardRequest(BaseModel):

@@ -6,11 +6,7 @@ import { useImportCsv } from "@/hooks/useImportCsv";
 import { useConfirm } from "@/context/ConfirmContext";
 import { useAuth } from "@/hooks/useAuth";
 
-interface ImportCardProps {
-  onColumnsToggle?: (open: boolean) => void;
-}
-
-export default function ImportCard({ onColumnsToggle }: ImportCardProps) {
+export default function ImportCard() {
   const importColumns = IMPORT_COLUMNS;
   const { showExport } = useDashboardContext();
   const { isAdmin } = useAuth();
@@ -37,11 +33,13 @@ export default function ImportCard({ onColumnsToggle }: ImportCardProps) {
 
   function ColumnChips({ columns }: { columns: string[] }) {
     return (
-      <div className={`flex flex-wrap gap-1.5 mt-2 ${!isAdmin ? 'py-1.75' : ''}`}>
+      <div
+        className={`flex flex-wrap gap-2 my-3`}
+      >
         {columns.map((col) => (
           <span
             key={col}
-            className="px-2 py-0.5 text-[11px] rounded-md 
+            className="px-3 py-0.5 text-[11px] rounded-md 
                      bg-slate-100 text-slate-600 border border-slate-200"
           >
             {col}
@@ -52,7 +50,9 @@ export default function ImportCard({ onColumnsToggle }: ImportCardProps) {
   }
 
   return (
-    <div className={`card-section ${!showExport ? "border-0! shadow-none!" : ""}`}>
+    <div
+      className={`card-section h-84! ${!showExport ? "border-0! shadow-none!" : ""}`}
+    >
       <h2>{showExport ? "Import Data" : "Import CSV"}</h2>
 
       <p className="text-slate-400 text-xs mt-1">
@@ -61,22 +61,10 @@ export default function ImportCard({ onColumnsToggle }: ImportCardProps) {
           : "Import a CSV to begin outreach."}
       </p>
 
-      {isAdmin ? (
-        <details
-          className="mt-2"
-          onToggle={(e) => onColumnsToggle?.((e.target as HTMLDetailsElement).open)}
-        >
-          <summary className="text-xs text-indigo-500 cursor-pointer select-none hover:text-indigo-600">
-            Required columns
-          </summary>
-          <ColumnChips columns={importColumns} />
-        </details>
-      ) : (
-        <div className="mt-2">
-          <p className="text-xs text-indigo-500">Required columns</p>
-          <ColumnChips columns={importColumns} />
-        </div>
-      )}
+      <div className="mt-2">
+        <p className="text-xs text-indigo-500">Required columns</p>
+        <ColumnChips columns={importColumns} />
+      </div>
 
       <input
         ref={fileInputRef}
@@ -86,14 +74,20 @@ export default function ImportCard({ onColumnsToggle }: ImportCardProps) {
         onChange={handleFileChange}
       />
 
-      <div className="flex gap-2 mt-3">
+      <div className="flex gap-2 mt-4">
         {(!showExport || isAdmin) && (
           <button
             disabled={loadingReplace || loadingAppend}
-            onClick={showExport ? handleReplace : () => openFilePicker("import")}
+            onClick={
+              showExport ? handleReplace : () => openFilePicker("import")
+            }
             className="flex-1 bg-indigo-500 text-white text-xs font-semibold rounded px-3 py-1.5 cursor-pointer hover:bg-indigo-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loadingReplace ? "Importing..." : showExport ? "Replace" : "Import CSV"}
+            {loadingReplace
+              ? "Importing..."
+              : showExport
+                ? "Replace"
+                : "Import CSV"}
           </button>
         )}
 

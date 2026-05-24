@@ -12,47 +12,55 @@ import Header from "./Header";
 import { useDashboardContext } from "@/context/DashboardContext";
 import Loading from "../loading";
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+      {children}
+    </p>
+  );
+}
+
 function DashboardContent() {
-  const { loadingPage, total } = useDashboardContext();
-  const [columnsOpen, setColumnsOpen] = useState(false);
+  const { loadingPage } = useDashboardContext();
 
   if (loadingPage) return <Loading />;
 
   return (
-    <div className="overflow-auto text-sm w-full flex flex-col min-h-screen bg-gray-50">
+    <div className="text-sm w-full flex flex-col min-h-screen bg-gray-50">
       <Header />
 
       <div className="w-full flex justify-center">
-        <div className="p-6 flex flex-col gap-6 w-full max-w-360!">
+        <div className="p-6 flex flex-col gap-8 w-full max-w-360!">
+          {/* Campaign metrics */}
+          <section className="flex flex-col gap-3">
+            <SectionLabel>Campaign Overview</SectionLabel>
+            <hr className="border-gray-300 mb-2" />
+            <CampaignStats />
+          </section>
 
-          {/* Campaign stats island */}
-          <CampaignStats />
-
-          {/* Generator + data management row */}
-          <div className="flex gap-6 items-stretch">
-            <CampaignOutreach />
-
-            <div className="flex flex-col gap-4 w-72 shrink-0">
-              <ImportCard onColumnsToggle={setColumnsOpen} />
-              <DropTableCard />
-              {!columnsOpen && (
-                <div className="h-31 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-                  <p className="pb-1! text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Total Clinics
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{total}</p>
-                </div>
-              )}
+          {/* Outreach generator + data management */}
+          <section className="flex flex-col gap-3">
+            <SectionLabel>Outreach</SectionLabel>
+            <hr className="border-gray-300 mb-2" />
+            <div className="flex gap-6 items-stretch">
+              <CampaignOutreach />
+              <div className="flex flex-col gap-4 w-72 shrink-0">
+                <ImportCard />
+                <DropTableCard />
+              </div>
             </div>
-          </div>
+          </section>
 
-          {/* Clinic table */}
-          <div className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <TableHeader />
-            <ClinicsFilters />
-            <ClinicsTable />
-          </div>
-
+          {/* Clinics table */}
+          <section className="flex flex-col gap-3">
+            <SectionLabel>Clinics</SectionLabel>
+            <hr className="border-gray-300 mb-2" />
+            <div className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+              <TableHeader />
+              <ClinicsFilters />
+              <ClinicsTable />
+            </div>
+          </section>
         </div>
       </div>
     </div>

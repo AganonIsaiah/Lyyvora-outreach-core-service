@@ -13,7 +13,11 @@ export default function CampaignOutreach() {
     number_of_clinics,
     prompt,
     loading,
+    wsClinicsGenerated,
   } = useGenerateOutreach();
+
+  const batchTotal = Math.min(number_of_clinics || 0, notGeneratedEmailsCount ?? 0);
+  const batchPct = batchTotal > 0 ? Math.min((wsClinicsGenerated / batchTotal) * 100, 100) : 0;
 
   if (!showExport) {
     return (
@@ -88,13 +92,33 @@ export default function CampaignOutreach() {
         </span>
       </div>
 
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <span className="font-medium text-gray-600">Batch Progress</span>
+          <span className={loading ? "text-indigo-500 font-semibold" : "text-gray-400"}>
+            {wsClinicsGenerated} / {batchTotal}
+          </span>
+        </div>
+        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+          <div
+            className="bg-indigo-500 h-full rounded-full transition-all duration-500"
+            style={{ width: `${batchPct}%` }}
+          />
+        </div>
+        {loading ? (
+          <p className="text-xs text-indigo-400 animate-pulse">Generating...</p>
+        ) : (
+          <p className="text-xs text-indigo-500 font-medium">{Math.round(batchPct)}% complete</p>
+        )}
+      </div>
+
       <div className="flex flex-col flex-1">
         <label htmlFor="prompt" className="label-outreach text-xs!">
           Prompt Template
         </label>
         <textarea
           id="prompt"
-          className="resize-none! input-outreach border w-full! flex-1 min-h-60! border-gray-300 rounded px-3 py-2"
+          className="resize-none! input-outreach border w-full! flex-1 min-h-50! border-gray-300 rounded px-3 py-2"
           value={prompt ?? ""}
           onChange={(e) => updateStatus("prompt", e.target.value)}
         />

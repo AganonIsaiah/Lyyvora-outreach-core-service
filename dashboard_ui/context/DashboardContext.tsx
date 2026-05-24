@@ -44,6 +44,7 @@ interface DashboardContextProps {
   notGeneratedEmailsCount: number;
   sentCount: number;
   repliedCount: number;
+  noResponseCount: number;
   wsClinicsGenerated: number;
   setWsClinicsGenerated: Dispatch<SetStateAction<number>>;
   setPage: (p: number) => void;
@@ -59,13 +60,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (PUBLIC_ROUTES.includes(pathname)) return;
-    const key = JSON.stringify({ page: state.page, filters: state.filters });
+    const key = JSON.stringify({ filters: state.filters });
     if (key in state.pageCache) {
       dispatch(loadPageFromCache(key));
     } else {
-      dispatch(fetchDashboard({ page: state.page, limit: state.limit, filters: state.filters }));
+      dispatch(fetchDashboard({ filters: state.filters }));
     }
-  }, [state.page, state.filters, pathname]);
+  }, [state.filters, pathname]);
 
   // Reset dashboard state when user lands on a public route (e.g. after logout)
   useEffect(() => {
@@ -100,6 +101,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     notGeneratedEmailsCount: state.notGeneratedEmailsCount,
     sentCount: state.sentCount,
     repliedCount: state.repliedCount,
+    noResponseCount: state.noResponseCount,
     wsClinicsGenerated: state.wsClinicsGenerated,
     setWsClinicsGenerated: (updater) => {
       const next = typeof updater === "function" ? updater(state.wsClinicsGenerated) : updater;

@@ -27,7 +27,7 @@ export default function Header({ title, showDashboardButton = false }: HeaderPro
   };
 
   return (
-    <div className="separator flex justify-between items-center px-8!">
+    <div className="separator flex justify-between items-center px-8! sticky top-0 z-10 bg-white">
       <h1>{title}</h1>
       <div className="flex items-center gap-4">
         {username && (
