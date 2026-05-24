@@ -260,4 +260,5 @@ export const mockDashboardResponse: DashboardResponse = {
   not_generated_emails_count: 120,
   sent_count: 0,
   replied_count: 0,
+  no_response_count: 0
 };
