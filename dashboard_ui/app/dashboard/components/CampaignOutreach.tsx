@@ -79,10 +79,10 @@ export default function CampaignOutreach() {
 
         <span className="flex flex-col justify-end">
           <button
-            className={`bg-indigo-500! text-white font-semibold rounded px-4 py-2 h-10! transition-all duration-200 ${
+            className={`bg-[#d22624]! text-[#f3ece0] font-semibold rounded px-4 py-2 h-10! transition-all duration-200 ${
               loading || !max_word_limit || !number_of_clinics
                 ? "opacity-60 cursor-not-allowed"
-                : "hover:bg-indigo-600! cursor-pointer"
+                : "hover:bg-[#2a1311]! cursor-pointer"
             }`}
             onClick={handleGenerateOutreach}
             disabled={loading || !max_word_limit || !number_of_clinics}
@@ -95,20 +95,20 @@ export default function CampaignOutreach() {
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span className="font-medium text-gray-600">Batch Progress</span>
-          <span className={loading ? "text-indigo-500 font-semibold" : "text-gray-400"}>
+          <span className={loading ? "text-[#d22624] font-semibold" : "text-gray-400"}>
             {wsClinicsGenerated} / {batchTotal}
           </span>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
           <div
-            className="bg-indigo-500 h-full rounded-full transition-all duration-500"
+            className="bg-[#d22624] h-full rounded-full transition-all duration-500"
             style={{ width: `${batchPct}%` }}
           />
         </div>
         {loading ? (
-          <p className="text-xs text-indigo-400 animate-pulse">Generating...</p>
+          <p className="text-xs text-[#cb7348] animate-pulse">Generating...</p>
         ) : (
-          <p className="text-xs text-indigo-500 font-medium">{Math.round(batchPct)}% complete</p>
+          <p className="text-xs text-[#d22624] font-medium">{Math.round(batchPct)}% complete</p>
         )}
       </div>
 

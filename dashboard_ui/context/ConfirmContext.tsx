@@ -97,7 +97,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 className={`px-4 py-2 text-sm font-semibold rounded-lg text-white transition-all duration-150 cursor-pointer ${
                   state.variant === "danger"
                     ? "bg-red-500 hover:bg-red-600"
-                    : "bg-indigo-500 hover:bg-indigo-600"
+                    : "bg-[#d22624] hover:bg-[#2a1311]"
                 }`}
               >
                 {state.confirmLabel ?? "Confirm"}

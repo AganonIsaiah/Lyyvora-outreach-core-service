@@ -31,32 +31,28 @@ export default function CampaignStats() {
       value: totalGenerated,
       of: total,
       pct: totalGeneratedPct,
-      bar: "bg-violet-500",
-      text: "text-violet-600",
+      color: "#d22624", 
     },
     {
       label: "Clinics Contacted",
       value: sentCount ?? 0,
       of: total,
       pct: sentPct,
-      bar: "bg-emerald-500",
-      text: "text-emerald-600",
+      color: "#cb7348", // crimson
     },
     {
       label: "Replies Received",
       value: repliedCount ?? 0,
       of: total,
       pct: repliedPct,
-      bar: "bg-blue-500",
-      text: "text-blue-600",
+      color: "#51A687", 
     },
     {
       label: "No Response",
       value: noResponseCount ?? 0,
       of: total,
       pct: noResponsePct,
-      bar: "bg-rose-400",
-      text: "text-rose-500",
+      color: "#d0c4b2", // bone
     },
   ];
 
@@ -85,13 +81,13 @@ export default function CampaignStats() {
               <span className="text-sm text-gray-400 pb-0.5">/ {s.of}</span>
             </div>
             <div>
-              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className={`${s.bar} h-full rounded-full transition-all duration-500`}
-                  style={{ width: `${s.pct}%` }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${s.pct}%`, backgroundColor: s.color }}
                 />
               </div>
-              <p className={`text-xs font-medium mt-1.5 ${s.text}`}>
+              <p className="text-xs font-medium mt-1.5" style={{ color: s.color }}>
                 {Math.round(s.pct)}%
               </p>
             </div>

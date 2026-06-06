@@ -173,7 +173,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
                 <p>
                   <span className="font-semibold text-gray-700">Website:</span>{" "}
                   {clinic.website_url
-                    ? <a href={clinic.website_url} target="_blank" className="text-indigo-600 underline">{clinic.website_url}</a>
+                    ? <a href={clinic.website_url} target="_blank" className="text-[#d22624] underline">{clinic.website_url}</a>
                     : "N/A"}
                 </p>
                 <p><span className="font-semibold text-gray-700">Type:</span> {displayValue(clinic.type)}</p>
@@ -206,7 +206,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
               <p className="text-sm font-semibold text-gray-700 mb-2">Top Features</p>
               <div className="flex flex-wrap gap-2">
                 {topFeatures.map((feature, i) => (
-                  <span key={i} className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-1 rounded-full">
+                  <span key={i} className="bg-[#f3ece0] text-[#2a1311] text-xs font-medium px-2.5 py-1 rounded-full">
                     {feature}
                   </span>
                 ))}
@@ -236,11 +236,11 @@ export default function ClinicDetailUI({ clinicId }: Props) {
                   <div key={i} className="flex items-center gap-4 relative">
                     {/* Connector line */}
                     {idx < 2 && (
-                      <div className={`absolute left-4.5 top-10 w-px h-6.5 bg-gray-200 ${isSent ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-500"}`} />
+                      <div className={`absolute left-4.5 top-10 w-px h-6.5 bg-gray-200 ${isSent ? "bg-[#d22624]" : "bg-gray-100"}`} />
                     )}
 
                     {/* Step circle */}
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isSent ? "bg-indigo-500 text-white" : "bg-gray-100 text-gray-500"}`}>
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isSent ? "bg-[#d22624] text-[#f3ece0]" : "bg-gray-100 text-gray-500"}`}>
                       {i}
                     </div>
 
@@ -265,7 +265,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
                           />
                         </div>
                         <button
-                          className="w-21! bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded cursor-pointer transition-all duration-200 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-21! bg-[#d22624] text-[#f3ece0] text-xs font-semibold px-3 py-1.5 rounded cursor-pointer transition-all duration-200 hover:bg-[#2a1311] disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={isSent || isCancelled || !schedule.id}
                           onClick={() => handleSendNow(i)}
                         >
@@ -291,7 +291,7 @@ export default function ClinicDetailUI({ clinicId }: Props) {
               {emails.map((email, idx) => (
                 <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                    <span className="text-xs font-bold text-[#2a1311] bg-[#f3ece0] px-2 py-0.5 rounded-full border border-[#d0c4b2]">
                       {email.type}
                     </span>
                   </div>

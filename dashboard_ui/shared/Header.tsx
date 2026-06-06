@@ -32,7 +32,7 @@ export default function Header({ title, showDashboardButton = false }: HeaderPro
       <div className="flex items-center gap-4">
         {username && (
           <div className="relative group">
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-600 text-white text-xs font-bold cursor-pointer select-none hover:bg-indigo-700 transition-all duration-200">
+            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#d22624] text-[#f3ece0] text-xs font-bold cursor-pointer select-none hover:bg-[#2a1311] transition-all duration-200">
               {getInitials(username)}
             </div>
             <div className="absolute right-0 top-10 z-50 hidden group-hover:flex flex-col gap-0.5 bg-white border border-gray-200 rounded-lg shadow-md px-3 py-2 min-w-20 text-sm whitespace-nowrap">
@@ -47,7 +47,7 @@ export default function Header({ title, showDashboardButton = false }: HeaderPro
         {showDashboardButton && (
           <button
             onClick={() => router.push("/dashboard")}
-            className="text-sm bg-white text-indigo-600 font-semibold px-3 py-1.5 rounded-lg border border-indigo-200 cursor-pointer hover:bg-indigo-50 transition-all duration-200"
+            className="text-sm bg-white text-[#2a1311] font-semibold px-3 py-1.5 rounded-lg border border-[#d0c4b2] cursor-pointer hover:bg-[#f3ece0] transition-all duration-200"
           >
             Dashboard
           </button>

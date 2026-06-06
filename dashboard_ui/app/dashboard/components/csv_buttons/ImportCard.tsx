@@ -62,7 +62,7 @@ export default function ImportCard() {
       </p>
 
       <div className="mt-2">
-        <p className="text-xs text-indigo-500">Required columns</p>
+        <p className="text-xs text-[#cb7348]">Required columns</p>
         <ColumnChips columns={importColumns} />
       </div>
 
@@ -81,7 +81,7 @@ export default function ImportCard() {
             onClick={
               showExport ? handleReplace : () => openFilePicker("import")
             }
-            className="flex-1 bg-indigo-500 text-white text-xs font-semibold rounded px-3 py-1.5 cursor-pointer hover:bg-indigo-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex-1 bg-[#d22624] text-[#f3ece0] text-xs font-semibold rounded px-3 py-1.5 cursor-pointer hover:bg-[#2a1311] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loadingReplace
               ? "Importing..."
@@ -95,7 +95,7 @@ export default function ImportCard() {
           <button
             disabled={loadingReplace || loadingAppend}
             onClick={() => openFilePicker("append")}
-            className="flex-1 bg-white text-indigo-600 text-xs font-semibold rounded px-3 py-1.5 border border-indigo-200 cursor-pointer hover:bg-indigo-50 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex-1 bg-white text-[#2a1311] text-xs font-semibold rounded px-3 py-1.5 border border-[#d0c4b2] cursor-pointer hover:bg-[#f3ece0] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loadingAppend ? "Appending..." : "Append"}
           </button>

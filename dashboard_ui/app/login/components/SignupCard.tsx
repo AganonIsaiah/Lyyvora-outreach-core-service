@@ -196,7 +196,7 @@ export default function SignupCard() {
           </div>
 
           {/* Plan selection */}
-          <div>
+          {/* <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">Plan</label>
             <div className="flex flex-col gap-2">
               {PLANS.map((p) => (
@@ -226,7 +226,7 @@ export default function SignupCard() {
                 </label>
               ))}
             </div>
-          </div>
+          </div> */}
 
           <button
             type="submit"
@@ -267,10 +267,10 @@ export default function SignupCard() {
               type="checkbox"
               checked={agreed}
               onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-0.5 accent-slate-900"
+              className="mt-0.5 accent-[#2a1311]"
             />
             <span className="text-xs text-gray-500 leading-relaxed">
-              I agree to Lyyvora&apos;s{" "}
+              I agree to the{" "}
               <a href="#" className="text-[#d22624] underline underline-offset-2">Terms of Service</a>{" "}
               and{" "}
               <a href="#" className="text-[#d22624] underline underline-offset-2">Privacy Policy</a>.
