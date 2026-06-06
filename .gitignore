@@ -35,3 +35,4 @@ datasets/*.csv
 
 # Mock Data
 mock-data/*.csv
+EC2.md
