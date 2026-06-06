@@ -6,7 +6,7 @@ import EmergencyIcon from "@mui/icons-material/Emergency";
 
 import FilterUI from "./FilterUI";
 import SelectedFilters from "./SelectedFilters";
-import { FilterState } from "@/lib/types";
+import { FilterState, FilterType } from "@/lib/types";
 
 export default function ClinicsFilters() {
   const { filters, setFilters, filtersConfig, showExport } =
@@ -22,7 +22,7 @@ export default function ClinicsFilters() {
   const handleChange = (
     key: string,
     value: string,
-    type: "select" | "sort",
+    type: FilterType,
   ) => {
     setFilters((prev: FilterState) => {
       if (type === "sort") return { ...prev, [key]: [value] };
@@ -71,7 +71,7 @@ export default function ClinicsFilters() {
         <div className="flex items-center gap-4">
           <span className="flex gap-0.5 mt-3 text-xs font-semibold text-gray-400">
             <EmergencyIcon className="text-[10px]! mt-0.5" />
-            Select a Campaign Batch ID to export to Smartlead:
+            Select a Campaign Batch ID to export .csv:
           </span>
           {showExport && (
             <button
@@ -87,10 +87,10 @@ export default function ClinicsFilters() {
               `}
             >
               {!hasCampaignBatch
-                ? "Choose batch id to enable export"
+                ? "Select Batch ID"
                 : exportLoading
                   ? "Loading..."
-                  : "Export Smartlead CSV"}
+                  : "Export .csv"}
             </button>
           )}
         </div>

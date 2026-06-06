@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useDashboardContext } from "@/context/DashboardContext";
+import { useConfirm } from "@/context/ConfirmContext";
+import { useAppDispatch } from "@/store/hooks";
+import { clearPageCache } from "@/store/dashboardSlice";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 const WS_URL = `${process.env.NEXT_PUBLIC_WS_URL}`;
@@ -11,12 +14,45 @@ export const useGenerateOutreach = () => {
     campaignStatus,
     setCampaignStatus,
     notGeneratedEmailsCount,
+    wsClinicsGenerated,
+    setWsClinicsGenerated,
   } = useDashboardContext();
-
-  const [wsClinicsGenerated, setWsClinicsGenerated] = useState(0);
+  const { notify, toast } = useConfirm();
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  // Animation refs — avoids stale closure issues inside setInterval
+  const displayedRef = useRef<number>(0);
+  const targetRef = useRef<number>(0);
+  const animIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const ANIM_DURATION_MS = 6000;
+
+  const animateTo = (next: number) => {
+    targetRef.current = next;
+    if (animIntervalRef.current) return; // already draining
+    const msPerStep = Math.max(80, ANIM_DURATION_MS / number_of_clinics);
+    animIntervalRef.current = setInterval(() => {
+      if (displayedRef.current >= targetRef.current) {
+        clearInterval(animIntervalRef.current!);
+        animIntervalRef.current = null;
+        return;
+      }
+      displayedRef.current += 1;
+      setWsClinicsGenerated(displayedRef.current);
+    }, msPerStep);
+  };
+
+  const stopAnimation = (finalValue: number) => {
+    if (animIntervalRef.current) {
+      clearInterval(animIntervalRef.current);
+      animIntervalRef.current = null;
+    }
+    displayedRef.current = finalValue;
+    targetRef.current = finalValue;
+    setWsClinicsGenerated(finalValue);
+  };
 
   const safeCampaignStatus = campaignStatus ?? {
     max_word_limit: 120,
@@ -40,14 +76,17 @@ export const useGenerateOutreach = () => {
       notGeneratedEmailsCount != null &&
       notGeneratedEmailsCount - number_of_clinics < 0
     ) {
-      alert("Number of clinics exceeds limit, outreach generation has failed!");
+      await notify("Invalid batch size", "The number of clinics exceeds the available limit.");
       return;
     }
 
+    displayedRef.current = 0;
+    targetRef.current = 0;
     setWsClinicsGenerated(0);
+    dispatch(clearPageCache());
     setLoading(true);
-    alert("Outreach generation started!");
     startTimeRef.current = performance.now();
+    toast("Generation started", "Outreach generation is running. The progress bar will update as emails are generated.");
 
     try {
       const response = await fetch(`${BASE_URL}/generate-outreach`, {
@@ -71,20 +110,23 @@ export const useGenerateOutreach = () => {
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
-      ws.onmessage = (event) => {
+      ws.onmessage = async (event) => {
         const msg = JSON.parse(event.data);
 
         if (msg.type === "completed") {
-          if (startTimeRef.current) {
-            const seconds =
-              (performance.now() - startTimeRef.current) / 1000;
+          const maxVal = Math.min(number_of_clinics, notGeneratedEmailsCount ?? number_of_clinics);
+          stopAnimation(maxVal);
 
-            alert(
-              `Outreach generation finished in ${seconds.toFixed(2)} seconds!`
-            );
-          } else {
-            alert("Outreach generation finished!");
-          }
+          const seconds = startTimeRef.current
+            ? ((performance.now() - startTimeRef.current) / 1000).toFixed(2)
+            : null;
+
+          await notify(
+            "Generation complete",
+            seconds
+              ? `Outreach generation finished in ${seconds}s.`
+              : "Outreach generation has finished."
+          );
 
           setLoading(false);
           window.location.reload();
@@ -92,14 +134,8 @@ export const useGenerateOutreach = () => {
         }
 
         const increment = msg.contacted_clinics ?? 1;
-
-        setWsClinicsGenerated((prev) =>
-          Math.min(
-            prev + increment,
-            number_of_clinics,
-            notGeneratedEmailsCount ?? number_of_clinics,
-          ),
-        );
+        const cap = Math.min(number_of_clinics, notGeneratedEmailsCount ?? number_of_clinics);
+        animateTo(Math.min(targetRef.current + increment, cap));
       };
 
       ws.onclose = () => {
@@ -112,7 +148,7 @@ export const useGenerateOutreach = () => {
       };
     } catch (err: any) {
       console.error(err.message);
-      alert("Failed to start outreach generation");
+      toast("Error", "Failed to start outreach generation. Please try again.");
       setLoading(false);
     }
   };
@@ -120,6 +156,7 @@ export const useGenerateOutreach = () => {
   useEffect(() => {
     return () => {
       if (wsRef.current) wsRef.current.close();
+      if (animIntervalRef.current) clearInterval(animIntervalRef.current);
     };
   }, []);
 

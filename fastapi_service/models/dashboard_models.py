@@ -65,10 +65,13 @@ class DashboardResponse(BaseModel):
     total_clinics: int
     filtered_clinics_count: int
     not_generated_emails_count: int
+    sent_count: int
+    replied_count: int
+    no_response_count: int
 
 
 class DashboardRequest(BaseModel):
-    limit: int = 25
+    limit: int = 1000
     page: int = 1
     name: Optional[List[str]] = None
     sub_type: Optional[List[str]] = None
@@ -76,5 +79,3 @@ class DashboardRequest(BaseModel):
     province: Optional[List[str]] = None
     email_status: Optional[List[str]] = None
     campaign_batch: Optional[List[str]] = None
-    sort_by: Optional[str] = None
-    sort_order: str = "desc"

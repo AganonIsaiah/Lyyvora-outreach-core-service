@@ -28,6 +28,11 @@ datasets/*.csv
 # Mac / Linux system files
 .DS_Store
 *.bak
+*.pem
 
 # Logs
 *.log
+
+# Mock Data
+mock-data/*.csv
+EC2.md

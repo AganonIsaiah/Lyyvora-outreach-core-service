@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import { useDashboardContext } from "@/context/DashboardContext";
+import { useConfirm } from "@/context/ConfirmContext";
+import { useAppDispatch } from "@/store/hooks";
+import { markBatchAsExported } from "@/store/dashboardSlice";
 
 export const useExportSmartlead = () => {
   const { filters } = useDashboardContext();
+  const { notify } = useConfirm();
+  const dispatch = useAppDispatch();
   const [exportLoading, setExportLoading] = useState(false);
 
   const exportCSV = async () => {
@@ -25,6 +30,8 @@ export const useExportSmartlead = () => {
 
       if (!response.ok) throw new Error("Failed to export CSV");
 
+      if (selectedBatch) dispatch(markBatchAsExported(selectedBatch));
+
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
 
@@ -39,7 +46,7 @@ export const useExportSmartlead = () => {
       a.remove();
     } catch (err) {
       console.error(err);
-      alert("Failed to export data");
+      await notify("Error", "Failed to export data. Please try again.");
     } finally {
       setExportLoading(false);
     }

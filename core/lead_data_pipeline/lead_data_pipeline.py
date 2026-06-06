@@ -229,9 +229,7 @@ def run_pipeline(file: UploadFile):
     logger.info(f"Data cleaned | elapsed={elapsed:.2f}s")
 
     stage_start = datetime.now(timezone.utc)
-    df["total_reviews"] = pd.to_numeric(df["total_reviews"], errors="coerce").astype(
-        "Int64"
-    )
+    df["total_reviews"] = pd.to_numeric(df["total_reviews"], errors="coerce")
     df["average_rating"] = pd.to_numeric(df["average_rating"], errors="coerce")
     elapsed = (datetime.now(timezone.utc) - stage_start).total_seconds()
     logger.info(f"Numeric columns fixed | elapsed={elapsed:.2f}s")

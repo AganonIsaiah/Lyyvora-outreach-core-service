@@ -30,8 +30,8 @@ export default function Sidebar() {
               href={route.href}
               className={`transition-colors ${
                 isActive
-                  ? "bg-gray-100 text-gray-900 border-l-2 border-gray-900"
-                  : "border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-[#f3ece0] text-[#2a1311] border-l-2 border-[#d22624]"
+                  : "border-transparent text-gray-600 hover:bg-[#f3ece0] hover:text-[#2a1311]"
               }`}
             >
               <p className="p-2">{route.label}</p>
@@ -44,8 +44,8 @@ export default function Sidebar() {
             href={`/clinics/${clinicId}`}
             className={`transition-colors ${
               pathname === `/clinics/${clinicId}`
-                ? "bg-gray-100 text-gray-900 border-l-2 border-gray-900"
-                : "border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                ? "bg-[#f3ece0] text-[#2a1311] border-l-2 border-[#d22624]"
+                : "border-transparent text-gray-600 hover:bg-[#f3ece0] hover:text-[#2a1311]"
             }`}
           >
             <p className="p-2">Clinic {clinicId}</p>

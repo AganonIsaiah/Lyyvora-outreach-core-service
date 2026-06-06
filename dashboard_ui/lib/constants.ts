@@ -1,9 +1,13 @@
 import { ClinicStatus, SidebarRoute, Routes } from "./types";
 
+export const PUBLIC_ROUTES = ["/", "/login"];
+
 export const CLINIC_STATUS_COLOR: Record<ClinicStatus, string> = {
+  [ClinicStatus.NO_RESPONSE]: "bg-gray-100 text-gray-600",
   [ClinicStatus.NOT_GENERATED]: "bg-orange-100 text-orange-700",
   [ClinicStatus.GENERATED]: "bg-green-100 text-green-700",
-  [ClinicStatus.EXPORTED]: "bg-red-400 text-white"
+  [ClinicStatus.EXPORTED]: "bg-red-400 text-white",
+  [ClinicStatus.REPLIED]: "bg-blue-100 text-blue-700",
 };
 
 export const SIDEBAR_ROUTES: SidebarRoute[] = [

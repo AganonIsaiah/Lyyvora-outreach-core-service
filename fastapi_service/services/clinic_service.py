@@ -18,11 +18,12 @@ def get_clinic_by_id(clinic_id: int) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching clinic: {e}")
 
+    smartlead_id = None
     try:
         resp_sl = (
             supabase.table("smartlead")
             .select(
-                "subject_line_1, email_body_1, "
+                "id, subject_line_1, email_body_1, "
                 "subject_line_2, email_body_2, "
                 "subject_line_3, email_body_3"
             )
@@ -35,6 +36,7 @@ def get_clinic_by_id(clinic_id: int) -> Dict[str, Any]:
         smartlead_row = None
 
     if smartlead_row:
+        smartlead_id = smartlead_row.get("id")
         clinic["emails_for_outreach"] = [
             {
                 "type": f"Email {i+1}",
@@ -45,6 +47,25 @@ def get_clinic_by_id(clinic_id: int) -> Dict[str, Any]:
         ]
     else:
         clinic["emails_for_outreach"] = []
+
+    if smartlead_id:
+        try:
+            resp_sched = (
+                supabase.table("scheduled_emails")
+                .select(
+                    "id, send_1_at, status_1, "
+                    "send_2_at, status_2, "
+                    "send_3_at, status_3"
+                )
+                .eq("smartlead_id", smartlead_id)
+                .maybe_single()
+                .execute()
+            )
+            clinic["schedule"] = resp_sched.data or {}
+        except Exception:
+            clinic["schedule"] = {}
+    else:
+        clinic["schedule"] = {}
 
     try:
         resp_ls = (

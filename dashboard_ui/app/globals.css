@@ -51,11 +51,38 @@ h3 {
 }
 
 .input-outreach {
-  @apply w-30 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200;
+  @apply w-30 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#2a1311] focus:border-[#2a1311] transition-all duration-200;
 }
 
 .card-section {
   @apply p-4 rounded-lg border border-gray-200 shadow-sm;
+}
+
+.scroll-visible {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.scroll-visible::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scroll-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-visible::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 9999px;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out both;
 }
 
 @keyframes blink {

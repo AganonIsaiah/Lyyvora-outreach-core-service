@@ -1,9 +1,57 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { CLINIC_STATUS_COLOR } from "@/lib/constants";
+import { EmailSchedule } from "@/lib/types";
 import useClinicDetail from "@/hooks/useClinicDetail";
+import { useConfirm } from "@/context/ConfirmContext";
 import Loading from "../loading";
+import Header from "@/shared/Header";
+import { useAppDispatch } from "@/store/hooks";
+import { clearPageCache, evictClinicDetail, fetchClinicDetail } from "@/store/dashboardSlice";
+
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
+
+const NAMED_LINKS: Record<string, string> = {
+  "https://calendar.app.google/nK7cT3FXwYBGCgWU6": "Book a time here",
+  "https://lyyvora.com": "Discover Lyyvora",
+  "http://lyyvora.com": "Discover Lyyvora",
+};
+
+function renderEmailBody(text: string) {
+  // Create regex fresh each call to avoid /g flag lastIndex issues
+  const urlRe = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRe);
+  return parts.map((part, i) => {
+    if (/^https?:\/\//.test(part)) {
+      const label = NAMED_LINKS[part] ?? part;
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline font-semibold hover:text-blue-800"
+        >
+          {label}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
+const toDatetimeLocal = (iso: string) => {
+  const d = new Date(iso);
+  const offset = d.getTimezoneOffset();
+  return new Date(d.getTime() - offset * 60000).toISOString().slice(0, 16);
+};
+
+const nowDatetimeLocal = () => {
+  const d = new Date();
+  const offset = d.getTimezoneOffset();
+  return new Date(d.getTime() - offset * 60000).toISOString().slice(0, 16);
+};
 
 interface Props {
   clinicId: string;
@@ -11,9 +59,58 @@ interface Props {
 
 export default function ClinicDetailUI({ clinicId }: Props) {
   const { clinic, emails, loading, error } = useClinicDetail(clinicId);
-  const router = useRouter();
+  const { confirm } = useConfirm();
+  const dispatch = useAppDispatch();
+  const [schedule, setSchedule] = useState<Partial<EmailSchedule>>({});
+  const [sentSequences, setSentSequences] = useState<Set<number>>(new Set());
 
-  const redirectToDashboard = () => router.push("/dashboard");
+  useEffect(() => {
+    if (clinic?.schedule) setSchedule(clinic.schedule);
+  }, [clinic]);
+
+  const handleScheduleChange = async (sequence: 1 | 2 | 3, value: string) => {
+    const key = `send_${sequence}_at` as keyof EmailSchedule;
+    setSchedule((prev) => ({ ...prev, [key]: value }));
+    await fetch(`${BASE_URL}/emails/schedule/${schedule.id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [key]: new Date(value).toISOString() }),
+    });
+  };
+
+  const handleSendNow = async (sequence: 1 | 2 | 3) => {
+    const labels: Record<number, string> = {
+      1: "Initial Outreach",
+      2: "Follow-up 1",
+      3: "Follow-up 2",
+    };
+    const ok = await confirm({
+      title: `Send ${labels[sequence]}`,
+      message: "This will send the email immediately to the clinic. Are you sure?",
+      confirmLabel: "Send Now",
+    });
+    if (!ok) return;
+    const res = await fetch(`${BASE_URL}/emails/send-now/${schedule.id}/${sequence}`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!res.ok) return;
+    setSentSequences((prev) => new Set(prev).add(sequence));
+    dispatch(clearPageCache());
+    dispatch(evictClinicDetail(clinicId));
+    dispatch(fetchClinicDetail(clinicId));
+  };
+
+  const handleMarkReplied = async () => {
+    await fetch(`${BASE_URL}/clinics/${clinicId}/mark-replied`, {
+      method: "PATCH",
+      credentials: "include",
+    });
+    dispatch(clearPageCache());
+    dispatch(evictClinicDetail(clinicId));
+    dispatch(fetchClinicDetail(clinicId));
+  };
 
   if (loading) return <Loading />;
   else if (error) return <div className="text-red-500">Error: {error}</div>;
@@ -44,133 +141,174 @@ export default function ClinicDetailUI({ clinicId }: Props) {
 
   const topFeatures = formatTopFeatures(clinic.top_features);
 
+  const SEQUENCE_LABELS: Record<number, string> = {
+    1: "Initial Outreach",
+    2: "Follow-up 1",
+    3: "Follow-up 2",
+  };
+
+  const STATUS_STYLE: Record<string, string> = {
+    sent: "bg-green-100 text-green-700",
+    pending: "bg-amber-100 text-amber-700",
+    cancelled: "bg-gray-100 text-gray-400",
+    failed: "bg-red-100 text-red-600",
+  };
+
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center">
-      <div className="w-full px-8! m-4 flex gap-6 mt-6">
-        <div className="w-1/2! bg-white shadow rounded-lg p-6 flex flex-col gap-4 h-full!">
-          <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-            <h1 className="text-3xl font-bold text-gray-800">
-              {displayValue(clinic.name) || "Clinic Name"}
-            </h1>
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+      <Header title={displayValue(clinic.name)} showDashboardButton />
 
-            <button
-              className="text-sm! bg-slate-200 text-slate-600 font-semibold px-2 py-1 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:bg-slate-300"
-              onClick={redirectToDashboard}
-            >
-              Dashboard
-            </button>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:gap-6">
-            <div className="flex-1">
-              <p>
-                <span className="font-semibold">Email:</span>{" "}
-                {displayValue(clinic.email)}
-              </p>
-              <p>
-                <span className="font-semibold">Website:</span>{" "}
-                {clinic.website_url ? (
-                  <a
-                    href={clinic.website_url}
-                    target="_blank"
-                    className="text-indigo-600 underline"
-                  >
-                    {clinic.website_url}
-                  </a>
-                ) : (
-                  "N/A"
-                )}
-              </p>
-              <p>
-                <span className="font-semibold">Type:</span>{" "}
-                {displayValue(clinic.type)}
-              </p>
-              <p>
-                <span className="font-semibold">Location:</span>{" "}
-                {displayValue(clinic.city)}, {displayValue(clinic.province)}
-              </p>
+      {/* Body — two equal-height columns */}
+      <div className="flex-1 flex gap-5 overflow-hidden p-5 min-h-0">
+
+        {/* Left column */}
+        <div className="flex flex-col gap-4 w-1/2 min-h-0">
+
+          {/* Clinic info — notes-only scrollable */}
+          <div className="flex-1 bg-white rounded-xl shadow-sm p-6 overflow-hidden min-h-0 flex flex-col gap-5">
+            <p className="text-lg font-semibold text-gray-700 shrink-0 -mb-1">Clinic Information</p>
+            <div className="flex gap-6">              
+              <div className="flex-1 flex flex-col gap-1.5 text-sm">
+                <p><span className="font-semibold text-gray-700">Email:</span> {displayValue(clinic.email)}</p>
+                <p>
+                  <span className="font-semibold text-gray-700">Website:</span>{" "}
+                  {clinic.website_url
+                    ? <a href={clinic.website_url} target="_blank" className="text-[#d22624] underline">{clinic.website_url}</a>
+                    : "N/A"}
+                </p>
+                <p><span className="font-semibold text-gray-700">Type:</span> {displayValue(clinic.type)}</p>
+                <p><span className="font-semibold text-gray-700">Location:</span> {displayValue(clinic.city)}, {displayValue(clinic.province)}</p>
+                <p><span className="font-semibold text-gray-700">Phone:</span> {formatPhoneNumber(clinic.phone)}</p>
+              </div>
+
+              <div className="flex-1 flex flex-col gap-1.5 text-sm">
+                <p><span className="font-semibold text-gray-700">Total Reviews:</span> {displayValue(clinic.total_reviews)}</p>
+                <p><span className="font-semibold text-gray-700">Average Rating:</span> {displayValue(clinic.average_rating)}</p>
+                <p><span className="font-semibold text-gray-700">Lead Score:</span> {displayValue(clinic.lead_score)}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-gray-700">Status:</span>
+                  <span className={`whitespace-nowrap font-semibold px-2 py-0.5 rounded-xl text-xs ${CLINIC_STATUS_COLOR[clinic.email_status]}`}>
+                    {displayValue(clinic.email_status)}
+                  </span>
+                  {clinic.email_status !== "Replied" && (
+                    <button
+                      onClick={handleMarkReplied}
+                      className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-xl border border-blue-200 cursor-pointer hover:bg-blue-200 transition-all duration-200"
+                    >
+                      Mark Replied
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="flex-1 mt-4 sm:mt-0">
-              <p>
-                <span className="font-semibold">Total Reviews:</span>{" "}
-                {displayValue(clinic.total_reviews)}
-              </p>
-              <p>
-                <span className="font-semibold">Average Rating:</span>{" "}
-                {displayValue(clinic.average_rating)}
-              </p>
-              <p>
-                <span className="font-semibold">Lead Score:</span>{" "}
-                {displayValue(clinic.lead_score)}
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="font-semibold">Status:</span>{" "}
-                <span
-                  className={`whitespace-nowrap font-semibold px-2 py-0.5 rounded-xl text-xs! ${
-                    CLINIC_STATUS_COLOR[clinic.email_status]
-                  }`}
-                >
-                  {displayValue(clinic.email_status)}
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold">Phone:</span>{" "}
-                {formatPhoneNumber(clinic.phone)}
-              </p>
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-2">Top Features</p>
+              <div className="flex flex-wrap gap-2">
+                {topFeatures.map((feature, i) => (
+                  <span key={i} className="bg-[#f3ece0] text-[#2a1311] text-xs font-medium px-2.5 py-1 rounded-full">
+                    {feature}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 min-h-0 flex flex-col">
+              <p className="text-sm font-semibold text-gray-700 mb-1 shrink-0">Website Description</p>
+              <div className="flex-1 min-h-0 overflow-y-scroll scroll-visible text-gray-600 text-sm leading-relaxed pr-2">
+                {displayValue(clinic.notes)}
+              </div>
             </div>
           </div>
 
-          <div>
-            <p className="font-semibold mb-1">Top Features:</p>
-            <div className="flex flex-wrap gap-x-4 gap-y-3">
-              {topFeatures.map((feature, i) => (
-                <span
-                  key={i}
-                  className="bg-indigo-100 text-indigo-800 text-xs font-medium px-3 py-2 rounded-full"
-                >
-                  {feature}
-                </span>
-              ))}
-            </div>
-          </div>
+          {/* Outreach scheduler — timeline, fixed height */}
+          <div className="shrink-0 bg-white rounded-xl shadow-sm p-6">
+            <p className="text-lg font-semibold text-gray-700 mb-3">Outreach Schedule</p>
 
-          <div>
-            <p className="font-semibold mb-1">Website Description:</p>
-            <p className="text-gray-700">{displayValue(clinic.notes)}</p>
+            <div className="flex flex-col gap-0">
+              {([1, 2, 3] as const).map((i, idx) => {
+                const sendAt = schedule[`send_${i}_at` as keyof EmailSchedule] as string | null | undefined;
+                const status = (schedule[`status_${i}` as keyof EmailSchedule] as string) || "pending";
+                const isSent = status === "sent" || sentSequences.has(i);
+                const isCancelled = status === "cancelled";
+
+                return (
+                  <div key={i} className="flex items-center gap-4 relative">
+                    {/* Connector line */}
+                    {idx < 2 && (
+                      <div className={`absolute left-4.5 top-10 w-px h-6.5 bg-gray-200 ${isSent ? "bg-[#d22624]" : "bg-gray-100"}`} />
+                    )}
+
+                    {/* Step circle */}
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isSent ? "bg-[#d22624] text-[#f3ece0]" : "bg-gray-100 text-gray-500"}`}>
+                      {i}
+                    </div>
+
+                    {/* Row content */}
+                    <div className="flex-1 flex items-center justify-between py-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-sm font-medium text-gray-700">{SEQUENCE_LABELS[i]}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${STATUS_STYLE[status] ?? "bg-gray-100 text-gray-400"}`}>
+                          {status}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className={isSent || isCancelled ? "cursor-not-allowed" : ""}>
+                          <input
+                            type="datetime-local"
+                            className="input-outreach h-8! text-xs! w-40! disabled:opacity-50 disabled:bg-gray-100 disabled:pointer-events-none"
+                            value={sendAt ? toDatetimeLocal(sendAt) : ""}
+                            min={nowDatetimeLocal()}
+                            disabled={isSent || isCancelled}
+                            onChange={(e) => handleScheduleChange(i, e.target.value)}
+                          />
+                        </div>
+                        <button
+                          className="w-21! bg-[#d22624] text-[#f3ece0] text-xs font-semibold px-3 py-1.5 rounded cursor-pointer transition-all duration-200 hover:bg-[#2a1311] disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isSent || isCancelled || !schedule.id}
+                          onClick={() => handleSendNow(i)}
+                        >
+                          {isSent ? "Sent" : "Send Now"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        <div className="w-1/2! bg-white! shadow rounded-lg p-6">
-          <p className="font-semibold mb-2">Emails for Outreach:</p>
-          
-          {emails.length <= 0 && (
-            <div className="p-1 text-gray-500 font-semibold text-sm!"> No emails have been generated for this clinic yet.</div>
-          )}
+        {/* Right column — emails, scrollable */}
+        <div className="w-1/2 min-h-0 bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <p className="text-lg font-semibold text-gray-700 mb-3 shrink-0">Emails for Outreach</p>
 
-          {emails.length > 0 && (
-            <div className="flex flex-col gap-4">
+          {emails.length === 0 ? (
+            <p className="text-gray-400 text-sm">No emails have been generated for this clinic yet.</p>
+          ) : (
+            <div className="flex-1 overflow-y-scroll scroll-visible min-h-0 flex flex-col gap-4 pr-2">
               {emails.map((email, idx) => (
-                <div
-                  key={idx}
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-2"
-                >
-                  <p className="text-xs font-medium mb-1">
-                    <span className="font-semibold">Type:</span>{" "}
-                    {displayValue(email.type)}
-                  </p>
-                  <p className="text-xs mb-1">
-                    <span className="font-semibold">Subject:</span>{" "}
+                <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-[#2a1311] bg-[#f3ece0] px-2 py-0.5 rounded-full border border-[#d0c4b2]">
+                      {email.type}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    <span className="font-semibold text-gray-700">Subject:</span>{" "}
                     {displayValue(email.subject_line)}
                   </p>
-                  <p className="text-xs whitespace-pre-wrap">
-                    <span className="font-semibold">Body:</span>{" "}
-                    {email.email_body}
-                  </p>
+                  <div className="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed">
+                    <span className="font-semibold text-gray-700">Body:</span>{" "}
+                    {renderEmailBody(email.email_body)}
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
       </div>
     </div>
   );

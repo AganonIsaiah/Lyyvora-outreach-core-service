@@ -1,7 +1,8 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 import re
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -16,7 +17,6 @@ MODEL = "gpt-4o-mini"
 
 EMAIL_SIGNATURE = """
 Best regards,
-Sharmeen Aqeel 
 Founder & CEO, Lyyvora
 Lending-as-a-service for healthcare clinics
 https://lyyvora.com"""
@@ -121,12 +121,44 @@ def parse_email(email_text: str):
         return None
 
 
+EASTERN = ZoneInfo("America/New_York")
+
+def add_business_days(dt: datetime, days: int) -> datetime:
+    current = dt.astimezone(EASTERN)
+    count = 0
+    while count < days:
+        current += timedelta(days=1)
+        if current.weekday() < 5:  # Monday–Friday
+            count += 1
+    # Random send time between 9:00 AM and 1:45 PM Eastern, in 15-min increments
+    hour = random.randint(9, 11)
+    minute = random.choice([0, 10, 15, 20, 25, 30, 35, 40, 45])
+    eastern_scheduled = current.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    return eastern_scheduled.astimezone(timezone.utc)
+
+
 def batch_save_to_supabase(records: list[dict]):
     if not records:
         return
     try:
-        supabase.table("smartlead").insert(records).execute()
+        res = supabase.table("smartlead").insert(records).execute()
         logger.info(f"Batch inserted {len(records)} emails to Supabase")
+
+        now = datetime.now(timezone.utc)
+        schedule_records = [
+            {
+                "smartlead_id": row["id"],
+                "send_1_at": add_business_days(now, 2).isoformat(),
+                "send_2_at": add_business_days(now, 5).isoformat(),
+                "send_3_at": add_business_days(now, 7).isoformat(),
+            }
+            for row in res.data or []
+        ]
+
+        if schedule_records:
+            supabase.table("scheduled_emails").insert(schedule_records).execute()
+            logger.info(f"Scheduled {len(schedule_records)} email sequences")
+
     except Exception as e:
         logger.error(f"Supabase batch insert failed: {e}")
 

@@ -14,9 +14,11 @@ from configs.database import supabase
 from datetime import datetime
 
 STATUS_PRIORITY = {
-    ClinicStatus.GENERATED: 3,
-    ClinicStatus.EXPORTED: 2,
+    ClinicStatus.REPLIED: 4,
+    ClinicStatus.EXPORTED: 3,
+    ClinicStatus.GENERATED: 2,
     ClinicStatus.NOT_GENERATED: 1,
+    ClinicStatus.NO_RESPONSE: 0,
 }
 
 
@@ -31,6 +33,36 @@ def parse_comma_separated(values: Optional[List[str]]) -> Optional[List[str]]:
 
 def get_total_clinics_count() -> int:
     resp = supabase.table("leads").select("id", count="exact").execute()
+    return resp.count or 0
+
+
+def get_sent_count() -> int:
+    resp = (
+        supabase.table("scheduled_emails")
+        .select("id", count="exact")
+        .or_("status_1.eq.sent,status_2.eq.sent,status_3.eq.sent")
+        .execute()
+    )
+    return resp.count or 0
+
+
+def get_no_response_count() -> int:
+    resp = (
+        supabase.table("leads")
+        .select("id", count="exact")
+        .eq("email_status", ClinicStatus.NO_RESPONSE.value)
+        .execute()
+    )
+    return resp.count or 0
+
+
+def get_replied_count() -> int:
+    resp = (
+        supabase.table("leads")
+        .select("id", count="exact")
+        .eq("email_status", "Replied")
+        .execute()
+    )
     return resp.count or 0
 
 
@@ -139,16 +171,14 @@ def build_filters(
 
 
 def get_all_clinics_from_db(
-    limit: int = 10,
-    offset: int = 0,
     name: Optional[List[str]] = None,
     sub_type: Optional[List[str]] = None,
     city: Optional[List[str]] = None,
     province: Optional[List[str]] = None,
     email_status: Optional[List[ClinicStatus]] = None,
-    sort_by: Optional[str] = None,
-    sort_order: str = "desc",
     campaign_batch: Optional[List[str]] = None,
+    limit: int = 1000,
+    offset: int = 0,
 ) -> List[Clinic]:
     query = supabase.table("leads").select(
         """
@@ -174,11 +204,12 @@ def get_all_clinics_from_db(
             email_body_3
         )
         """
-    )
+    ).order("id")
 
     query = build_filters(
         query, name, city, province, sub_type, email_status, campaign_batch
     )
+    query = query.range(offset, offset + limit - 1)
     clinics_data = query.execute().data or []
 
     def get_lead_score(c):
@@ -186,20 +217,21 @@ def get_all_clinics_from_db(
         return scores[0].get("score") if scores else 0
 
     def get_email_status_priority(c):
-        return STATUS_PRIORITY.get(ClinicStatus(c.get("email_status")), 0)
+        status = c.get("email_status")
+        if not status:
+            return 0
+        try:
+            return STATUS_PRIORITY.get(ClinicStatus(status), 0)
+        except ValueError:
+            return 0
 
-    reverse = sort_order.lower() != "asc"
-    if sort_by == "lead_score" or sort_by is None:
-        clinics_data.sort(key=get_lead_score, reverse=reverse)
-    elif sort_by == "average_rating":
-        clinics_data.sort(key=lambda c: c.get("average_rating") or 0, reverse=reverse)
-    elif sort_by == "email_status":
-        clinics_data.sort(key=get_email_status_priority, reverse=reverse)
-
-    paginated_data = clinics_data[offset : offset + limit]
+    clinics_data.sort(
+        key=lambda c: (get_email_status_priority(c), get_lead_score(c)),
+        reverse=True,
+    )
 
     result = []
-    for row in paginated_data:
+    for row in clinics_data:
         lead_scores_list = row.get("lead_scores") or []
         lead_score_data = lead_scores_list[0] if lead_scores_list else {}
 
@@ -263,8 +295,6 @@ def get_total_filtered_clinics_count(
 
 
 def generate_dashboard(req: DashboardRequest):
-    offset = (req.page - 1) * req.limit
-
     name = parse_comma_separated(req.name)
     sub_type = parse_comma_separated(req.sub_type)
     city = parse_comma_separated(req.city)
@@ -273,17 +303,16 @@ def generate_dashboard(req: DashboardRequest):
     email_status = parse_comma_separated(req.email_status)
     email_status = [ClinicStatus(s) for s in email_status] if email_status else None
 
+    offset = (req.page - 1) * req.limit
     clinics = get_all_clinics_from_db(
-        limit=req.limit,
-        offset=offset,
         name=name,
         sub_type=sub_type,
         city=city,
         province=province,
         email_status=email_status,
-        sort_by=req.sort_by,
-        sort_order=req.sort_order,
         campaign_batch=campaign_batch,
+        limit=req.limit,
+        offset=offset,
     )
 
     total_clinics = get_total_clinics_count()
@@ -296,6 +325,9 @@ def generate_dashboard(req: DashboardRequest):
         campaign_batch=campaign_batch,
     )
     not_generated_count = get_not_generated_emails_count()
+    sent_count = get_sent_count()
+    replied_count = get_replied_count()
+    no_response_count = get_no_response_count()
     filter_values = get_all_filter_values()
 
     metrics = [
@@ -307,12 +339,18 @@ def generate_dashboard(req: DashboardRequest):
             key="campaign_batch",
             label="Campaign Batch ID",
             values=sorted(filter_values["campaign_batch"], reverse=True),
-            type="select",
+            type="search",
         ),
         Filter(
             key="email_status",
             label="Email Status",
-            values=[s.value for s in ClinicStatus],
+            values=[
+                ClinicStatus.REPLIED.value,
+                ClinicStatus.EXPORTED.value,
+                ClinicStatus.GENERATED.value,
+                ClinicStatus.NOT_GENERATED.value,
+                ClinicStatus.NO_RESPONSE.value,
+            ],
             type="select",
         ),
     ]
@@ -335,4 +373,7 @@ def generate_dashboard(req: DashboardRequest):
         filtered_clinics_count=filtered_clinics_count,
         show_export=has_lead_records(),
         not_generated_emails_count=not_generated_count,
+        sent_count=sent_count,
+        replied_count=replied_count,
+        no_response_count=no_response_count,
     )

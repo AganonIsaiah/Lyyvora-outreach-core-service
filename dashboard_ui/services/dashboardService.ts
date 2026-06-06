@@ -6,15 +6,16 @@ const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 
 export const dashboardService = {
   async fetchDashboardData(
-    page: number = 1,
-    limit: number = 25,
-    filters?: FilterState
+    filters?: FilterState,
+    backendPage: number = 1,
+    limit: number = 1000,
   ): Promise<DashboardResponse> {
     if (MOCK_DATA) return mockDashboardResponse;
 
     const params = new URLSearchParams();
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
+
+    params.append("page", String(backendPage));
+    params.append("limit", String(limit));
 
     if (filters) {
       if (filters.name?.length)
@@ -37,15 +38,6 @@ export const dashboardService = {
           params.append("campaign_batch", v)
         );
 
-      if (filters.lead_score?.length) {
-        params.append("sort_by", "lead_score");
-        params.append("sort_order", filters.lead_score[0].toLowerCase());
-      }
-
-      if (filters.average_rating?.length) {
-        params.append("sort_by", "average_rating");
-        params.append("sort_order", filters.average_rating[0].toLowerCase());
-      }
     }
 
     const res = await fetch(`${BASE_URL}/dashboard?${params.toString()}`, {
@@ -53,7 +45,9 @@ export const dashboardService = {
     });
 
     if (res.status === 401) {
-      if (typeof window !== "undefined") window.location.href = "/login";
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
       return Promise.reject(new Error("Not authenticated"));
     }
     
@@ -67,6 +61,9 @@ export const dashboardService = {
         total_clinics: 0,
         filtered_clinics_count: 0,
         not_generated_emails_count: 0,
+        sent_count: 0,
+        replied_count: 0,
+        no_response_count: 0,
       };
     }
 
@@ -81,6 +78,9 @@ export const dashboardService = {
       total_clinics: data.total_clinics ?? 0,
       filtered_clinics_count: data.filtered_clinics_count ?? 0,
       not_generated_emails_count: data.not_generated_emails_count ?? 0,
+      sent_count: data.sent_count ?? 0,
+      replied_count: data.replied_count ?? 0,
+      no_response_count: data.no_response_count ?? 0,
     };
   },
 };

@@ -1,7 +1,9 @@
 export enum ClinicStatus {
   NOT_GENERATED = "Not Generated",
   GENERATED = "Generated",
-  EXPORTED = "Exported"
+  EXPORTED = "Exported",
+  REPLIED = "Replied",
+  NO_RESPONSE = "No Response",
 };
 
 export enum Routes {
@@ -9,7 +11,7 @@ export enum Routes {
   CLINICS = "/clinics"
 };
 
-export type FilterType = "select" | "sort";
+export type FilterType = "select" | "sort" | "search";
 export type EmailType = "Email 1" | "Follow-up 1" | "Follow-up 2";
 export type FilterState = Record<string, string[]>;
 
@@ -31,6 +33,16 @@ export interface ClinicEmails {
   type: EmailType;
 }
 
+export interface EmailSchedule {
+  id: string;
+  send_1_at: string | null;
+  status_1: string;
+  send_2_at: string | null;
+  status_2: string;
+  send_3_at: string | null;
+  status_3: string;
+}
+
 export interface Clinic {
   id: number;
   name: string;
@@ -45,7 +57,8 @@ export interface Clinic {
   lead_score: number;
   notes: string;
   top_features: string;
-  emails_for_outreach: ClinicEmails[];  
+  emails_for_outreach: ClinicEmails[];
+  schedule: Partial<EmailSchedule>;
   campaign_batch: string;
   phone: string;
 };
@@ -73,4 +86,7 @@ export interface DashboardResponse {
   total_clinics: number;
   filtered_clinics_count: number;
   not_generated_emails_count: number;
+  sent_count: number;
+  replied_count: number;
+  no_response_count: number;
 }

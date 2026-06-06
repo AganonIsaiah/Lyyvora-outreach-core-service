@@ -114,6 +114,7 @@ export const mockClinicsData: Clinic[] = [
     lead_score: 91,
     notes: "New lead, no contact made yet.",
     emails_for_outreach: defaultEmails("Clinic Alpha"),
+    schedule: {},
     campaign_batch: "test batch",
     phone: "1234567890",
   },
@@ -132,6 +133,7 @@ export const mockClinicsData: Clinic[] = [
     lead_score: 91,
     notes: "New lead, no contact made yet.",
     emails_for_outreach: defaultEmails("Clinic Alpha"),
+    schedule: {},
     campaign_batch: "test batch",
     phone: "1234567890",
   },
@@ -150,6 +152,7 @@ export const mockClinicsData: Clinic[] = [
     lead_score: 91,
     notes: "New lead, no contact made yet.",
     emails_for_outreach: defaultEmails("Clinic Alpha"),
+    schedule: {},
     campaign_batch: "test batch",
     phone: "1234567890",
   },
@@ -255,4 +258,7 @@ export const mockDashboardResponse: DashboardResponse = {
   total_clinics: 500,
   filtered_clinics_count: 200,
   not_generated_emails_count: 120,
+  sent_count: 0,
+  replied_count: 0,
+  no_response_count: 0
 };

@@ -1,47 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Clinic, ClinicEmails } from "@/lib/types";
-
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchClinicDetail,
+  selectClinicDetail,
+  selectClinicEmails,
+} from "@/store/dashboardSlice";
 
 export default function useClinicDetail(clinicId: string) {
-  const [clinic, setClinic] = useState<Clinic | null | undefined>(undefined);
-  const [emails, setEmails] = useState<ClinicEmails[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+
+  const clinic = useAppSelector(selectClinicDetail(clinicId));
+  const emails = useAppSelector(selectClinicEmails(clinicId));
+  const loading = useAppSelector((s) => s.dashboard.clinicDetailLoading);
+  const error = useAppSelector((s) => s.dashboard.clinicDetailError);
 
   useEffect(() => {
     if (!clinicId) return;
+    // fetchClinicDetail's condition skips the network call if already cached
+    dispatch(fetchClinicDetail(clinicId));
+  }, [clinicId, dispatch]);
 
-    async function fetchClinic() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const res = await fetch(`${BASE_URL}/clinics/${clinicId}`, {
-          credentials: "include",
-        });
-
-        if (res.status === 404) {
-          setClinic(null);
-        } else if (!res.ok) {
-          throw new Error("Failed to fetch clinic");
-        } else {
-          const data = await res.json();
-          setClinic(data);
-          setEmails(data.emails_for_outreach || []);
-        }
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message || "Failed to fetch clinic");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchClinic();
-  }, [clinicId]);
-
-  return { clinic, emails, loading, error };
+  return { clinic, emails: emails ?? [], loading: clinic === null && !error, error };
 }

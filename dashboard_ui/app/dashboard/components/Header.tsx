@@ -1,9 +1,5 @@
-"use client";
+import Header from "@/shared/Header";
 
-export default function Header() {
-  return (
-    <div className="separator flex justify-between items-center px-8!">
-      <h1>Outreach Dashboard</h1>
-    </div>
-  );
+export default function DashboardHeader() {
+  return <Header title="Outreach Dashboard" />;
 }

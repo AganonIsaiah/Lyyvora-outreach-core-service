@@ -9,62 +9,63 @@ export default function LoginCard() {
   const { handleLogin, loading, error } = useLogin();
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault(); 
-    handleLogin(username.trim(), password.trim()); 
+    e.preventDefault();
+    handleLogin(username.trim(), password.trim());
   };
 
   return (
-    <form
-      id="login-form"
-      onSubmit={handleSubmit}
-      className="bg-white p-10 rounded-xl shadow-xl border border-gray-200 w-full max-w-sm"
-    >
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Outreach Dashboard</h2>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">Welcome back</h2>
+        <p className="text-sm text-gray-500 mt-1">Sign in to your Outreach account.</p>
+      </div>
 
       {error && (
-        <div className="bg-red-100 text-red-700 p-3 mb-4 rounded text-center font-medium">
+        <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
           {error}
         </div>
       )}
 
-      <div className="mb-4">
-        <label 
-        id="username"
-        className="block mb-2 font-medium text-gray-700">Username</label>
-        <input
-          type="text"
-          id="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Enter your username"
-          required
-          className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+      <div className="flex flex-col gap-4">
+        <div>
+          <label htmlFor="username" className="block mb-1.5 text-sm font-medium text-gray-700">
+            Username
+          </label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter your username"
+            required
+            className="w-full border border-gray-300 px-3 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a1311] focus:border-transparent transition"
+          />
+        </div>
 
-      <div className="mb-6">
-        <label 
-        id="password"
-        className="block mb-2 font-medium text-gray-700">Password</label>
-        <input
-        id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your password"
-          required
-          className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <div>
+          <label htmlFor="password" className="block mb-1.5 text-sm font-medium text-gray-700">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            required
+            className="w-full border border-gray-300 px-3 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2a1311] focus:border-transparent transition"
+          />
+        </div>
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className={`cursor-pointer w-full bg-blue-600 text-white p-3 rounded-lg font-semibold transition ${
-          loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+        className={`cursor-pointer w-full bg-[#2a1311] text-[#f3ece0] py-2.5 rounded-lg text-sm font-semibold transition ${
+          loading ? "opacity-50 cursor-not-allowed" : "hover:bg-[#5e261e]"
         }`}
       >
-        {loading ? "Logging in..." : "Login"}
+        {loading ? "Signing in..." : "Sign in"}
       </button>
     </form>
   );
