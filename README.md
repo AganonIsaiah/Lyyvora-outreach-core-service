@@ -1,18 +1,17 @@
-# Lyyvora Dev Outreach Core Service
+#Outreach Core Service
 
-A full-stack outreach automation platform built for Lyyvora to identify, score, and engage healthcare clinics with AI-generated personalized emails.
+A full-stack outreach automation platform built to identify, score, and engage healthcare clinics with AI-generated personalized emails.
 
 **Dev links**: use mock data for demonstration. Real production environment is separate for dev environment.
 
 **Live dev deployments:**
 - Dashboard: https://outreach.aganonlabs.com
-- API Docs: https://lyyvora-outreach-api-dev.aganonlabs.com/docs
 
 ---
 
 ## What This Project Does
 
-Lyyvora needs to reach out to healthcare clinics at scale. This service automates the entire pipeline:
+For companies that need to perform cold outreach at scale. This service automates the entire pipeline:
 
 1. **Ingest & Clean** — Uploads a raw CSV of clinic leads, validates and normalizes the data, then stores it in a PostgreSQL database.
 2. **Score** — Runs an ML-based lead scoring model (0–100) to rank clinics by their likelihood to convert, identifying which ones to prioritize.
@@ -74,7 +73,7 @@ Lyyvora needs to reach out to healthcare clinics at scale. This service automate
 ## Directory Structure
 
 ```
-Lyyvora-outreach-core-service/
+Outreach-flow-core-service/
 │
 ├── configs/                    # Centralized Python configuration modules
 │   ├── database.py             # Supabase/Postgres connection setup
