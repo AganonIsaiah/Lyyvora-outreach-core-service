@@ -5,7 +5,7 @@ A full-stack outreach automation platform built for Lyyvora to identify, score, 
 **Dev links**: use mock data for demonstration. Real production environment is separate for dev environment.
 
 **Live dev deployments:**
-- Dashboard: https://lyyvora-outreach-ui-dev.aganonlabs.com
+- Dashboard: https://outreach.aganonlabs.com
 - API Docs: https://lyyvora-outreach-api-dev.aganonlabs.com/docs
 
 ---
