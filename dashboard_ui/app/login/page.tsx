@@ -4,7 +4,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen">
       {/* Left branding panel — 60% */}
-      <div className="hidden lg:flex lg:w-3/5 bg-linear-to-br from-white to-gray-50 flex-col justify-between p-12 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-3/5 bg-gray-50 flex-col justify-between p-12 relative overflow-hidden border-r border-slate-200">
         
         {/* Logo */}
         <div className="relative z-10 flex flex-col">
